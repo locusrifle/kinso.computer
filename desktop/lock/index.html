@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- imperfect OS's lock screen (lock.mjs). Everything relative resolves in ../../website/, whose opener it plays. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<base href="../../website/">
+<title>locked</title>
+<script src="../desktop/lock/profile.js"></script>
+<link rel="stylesheet" href="style.css?v=plain-1">
+<link rel="stylesheet" href="opener/style.css">
+<link rel="stylesheet" href="boot/sequence.css?v=plain-1">
+<link rel="stylesheet" href="macos/lock.css?v=sequoia-4">
+<link rel="stylesheet" href="../desktop/lock/lock.css?v=sequoia-4">
+</head>
+<body>
+<div class="stage" id="stage" aria-label="Locus and Vaita, apart">
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="still" id="still" hidden></div>
+  <div class="layer"><div class="glow" id="glow"></div></div>
+</div>
+<!-- The native keeper owns every key. This page only draws its counts and results. -->
+<div class="app-sky" id="sky">
+  <canvas class="wordmark" id="wordmark" aria-hidden="true"></canvas>
+  <img class="goat" id="goat" alt="" aria-hidden="true" hidden>
+</div>
+<div id="box" hidden></div>
+<svg class="rim" id="rim" aria-hidden="true" hidden>
+  <path id="rimPath"/>
+</svg>
+<script type="module" src="../desktop/lock/lock.mjs?v=kinso-install-1"></script>
+</body>
+</html>

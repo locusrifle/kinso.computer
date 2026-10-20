@@ -1,0 +1,16 @@
+@import url('../macos/wallpaper.css?v=portal-1');
+/* Boot layers: one placement and reveal for the website and native lock. */
+.stage { position: absolute; inset: 0; overflow: hidden; background: #07060c; touch-action: none; }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.still { position: absolute; inset: 0; overflow: hidden; }
+.still img { position: absolute; display: block; transform-origin: 0 0; }
+.layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.glow { position: absolute; left: 0; top: 0; width: 240px; height: 240px;
+  background: radial-gradient(circle, rgba(255, 252, 238, 1) 0%, rgba(255, 240, 196, 0.85) 14%, rgba(255, 214, 140, 0.35) 38%, rgba(255, 200, 120, 0) 70%);
+  opacity: 0; transform: scale(0); will-change: transform, opacity; }
+.app-sky { position: absolute; inset: 0; z-index: 2; visibility: hidden; overflow: hidden; background: transparent; pointer-events: none; }
+.app-sky .wordmark { position: fixed; display: block; visibility: hidden; transform-origin: 50% 50%; }
+.app-sky .goat { position: fixed; display: block; max-width: none; transform-origin: 50% 50%; pointer-events: none; user-select: none; }
+.rim { position: absolute; inset: 0; z-index: 6; width: 100%; height: 100%; pointer-events: none; }
+/* One opaque silver from the wordmark's shine; half-width at rest and through every sound ripple. */
+.rim path { fill: none; stroke-width: 3.5; stroke-opacity: 1; }

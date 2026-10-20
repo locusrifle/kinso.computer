@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">imperfect</string>
+  <string name="attach">Attach</string>
+  <string name="attach_files">Choose existing files (audio, photos, documents)</string>
+  <string name="attach_photo">Take a photo</string>
+  <string name="attach_recording">Record new audio</string>
+  <string name="unreachable">Cannot reach %1$s. %2$s</string>
+  <string name="reaching">Looking for %1$s…</string>
+  <string name="first_machine">Which computer? On any one of yours, run ./install.sh phone and scan the code it shows. The others come with it.</string>
+  <string name="offered_machine">Connect this phone to %1$s?</string>
+  <string name="machine_hint">desk.your-tailnet.ts.net</string>
+  <string name="machine_invalid">That is not an address. It looks like desk.your-tailnet.ts.net.</string>
+  <string name="try_another">Is it on, and is this phone on the same tailnet? Try again, or type another computer.</string>
+  <string name="connect">Connect</string>
+  <string name="scan">Scan QR code</string>
+  <string name="scan_instead">Scan a QR code instead</string>
+  <string name="type_instead">Type its address instead</string>
+  <string name="scan_not_address">That code is not a computer\'s address. Scan the one ./install.sh phone shows.</string>
+  <string name="scan_unavailable">The scanner is not ready yet. Try again in a moment, or type the address (from tailscale serve status on the computer).</string>
+  <string name="update_title">A new imperfect</string>
+  <string name="update_message">Your computer has a newer version of this app. Install it now? The page reloads after.</string>
+  <string name="update_install">Install</string>
+  <string name="update_later">Later</string>
+  <!-- A file downloaded from Files, into the phone's Downloads (Downloads.kt, DownloadBand.kt). -->
+  <string name="download_going">Downloading %1$s · %2$s</string>
+  <string name="download_part">%1$d%% of %2$s</string>
+  <string name="download_more">%1$s · %2$d more after</string>
+  <string name="download_saved">Saved to Downloads: %1$s</string>
+  <string name="download_failed">Couldn\'t download %1$s. %2$s</string>
+  <string name="download_open">Open</string>
+  <string name="download_cancel">Cancel</string>
+  <string name="download_stopped">Stopped.</string>
+  <string name="download_dropped">The connection to the computer dropped. Try again.</string>
+  <string name="download_said">The computer said %1$d.</string>
+  <string name="download_no_file">The phone could not make the file in Downloads.</string>
+  <string name="download_needs_android_10">Saving downloads needs Android 10 or newer.</string>
+  <string name="download_not_sent">The computer did not send it as a download.</string>
+  <string name="download_unreachable">The computer could not be reached. Is the phone on the tailnet?</string>
+</resources>

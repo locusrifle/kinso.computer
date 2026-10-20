@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=imperfect
+Comment=Every agent you use, in one window
+Exec=__BIN__/imperfect-open code
+Icon=utilities-terminal
+Terminal=false
+Categories=Development;

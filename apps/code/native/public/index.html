@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="/js/face.js"></script>
+<!-- interactive-widget: the on-screen keyboard resizes the page instead of
+     covering it, so the composer stays above the keys on a phone. -->
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<title>imperfect</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<!-- With credentials: behind a rented computer's door it is fetched signed in. -->
+<link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials">
+<link rel="stylesheet" href="/css/look.css">
+<link rel="stylesheet" href="/css/guey.css">
+<link rel="stylesheet" href="/css/entry-terminal.css">
+<link rel="stylesheet" href="/css/imperfect.css">
+<link rel="stylesheet" href="/css/usage.css">
+<link rel="stylesheet" href="/css/settings.css">
+<link rel="stylesheet" href="/css/focus.css">
+<link rel="stylesheet" href="/css/phone.css">
+<link rel="stylesheet" href="/css/loading.css">
+<link rel="stylesheet" href="/css/kinso.css">
+<link rel="stylesheet" href="/theme.css" id="theme-css">
+</head>
+<body class="imperfect guey-tui code-open" data-seat="operator">
+<!-- The windows (windows.js): the conversation is the first; what it opens
+     tiles beside it. -->
+<div id="canvas" class="canvas">
+<div id="canvas-strip" class="canvas-strip">
+<section id="code-face" class="code-face" aria-label="imperfect">
+  <figure id="entry-terminal">
+    <div class="entry-screen">
+      <div id="entry-output" aria-live="polite"></div>
+      <div id="entry-queue" class="entry-queue" hidden></div>
+      <div id="entry-flash" class="entry-flash" hidden></div>
+      <section id="entry-dialog" hidden></section>
+    </div>
+    <div id="entry-pending" class="entry-pending" hidden></div>
+    <div class="entry-status">
+      <div class="entry-status-line">
+        <span class="entry-status-left"><button type="button" id="entry-pi-label">agent</button><span id="entry-thinking"></span></span>
+        <!-- The dock: Files, later and the mic go in front of + (harness.js). -->
+        <span class="entry-status-right"><span class="session-actions"><span class="entry-plus"><label id="entry-plus" class="entry-attach" for="entry-files" aria-label="attach"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z" fill="currentColor"/></svg></span></label><input id="entry-files" type="file" multiple accept="audio/*,image/*,.m4a,.mp3,.wav,.ogg,.opus,.aac,.mp4,.mov,.webm,.txt,.md,.json,.csv,.pdf,text/plain"></span><button type="button" id="entry-send" class="entry-send" aria-label="Send prompt" title="Send prompt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></span></span>
+      </div>
+    </div>
+    <div id="entry-input-zone">
+      <span class="entry-input-stack">
+        <textarea id="entry-input" rows="1" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Prompt"></textarea>
+        <!-- What the session is waiting on shares the prompt row, not the model row. -->
+        <span id="entry-model-status" class="entry-line-status" role="status">stopped</span>
+      </span>
+    </div>
+  </figure>
+</section>
+</div>
+</div>
+<script type="module" src="/js/site.js"></script>
+</body>
+</html>

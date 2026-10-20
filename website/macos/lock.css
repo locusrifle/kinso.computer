@@ -1,0 +1,35 @@
+@font-face { font-family: 'Outfit'; src: url('../fonts/outfit-regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+.macos-lock { position: fixed; inset: 0; z-index: 25; overflow: hidden; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Outfit', system-ui, sans-serif; -webkit-font-smoothing: antialiased; user-select: none; }
+.macos-lock [hidden] { display: none !important; }
+.macos-lock-content { position: absolute; inset: 0; transform-origin: 50% 50%; }
+.macos-lock-status { position: absolute; top: max(5px, env(safe-area-inset-top)); right: max(18px, env(safe-area-inset-right)); display: flex; align-items: center; gap: 18px; height: 20px; font-size: 12px; }
+.macos-lock-status svg { width: 18px; height: 16px; fill: currentColor; }
+.macos-lock-status .macos-battery { width: 25px; }
+.macos-lock-clock { position: absolute; top: var(--macos-dateTop); left: 0; right: 0; text-align: center; text-shadow: 0 1px 8px #0002; }
+.macos-date { display: block; font-size: var(--macos-dateSize); line-height: 1.25; font-weight: 600; letter-spacing: -.5px; }
+.macos-time { display: block; font-size: var(--macos-clockSize); line-height: var(--macos-clockLeading); font-weight: 700; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
+.macos-user { position: absolute; left: 50%; bottom: calc(var(--macos-userBottom) + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); }
+.macos-avatar { display: block; width: var(--macos-avatarSize); height: var(--macos-avatarSize); border-radius: 50%; object-fit: cover; box-shadow: 0 1px 5px #0004; }
+.macos-name { margin: 8px 0 12px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--macos-nameSize); line-height: 16px; font-weight: 600; text-shadow: 0 1px 3px #0005; }
+.macos-lock form { width: var(--macos-fieldWidth); margin: 0; }
+.macos-field { position: relative; display: flex; align-items: center; width: var(--macos-fieldWidth); height: var(--macos-fieldHeight); padding: 0 12px; border-radius: var(--macos-fieldRadius); background: #ffffff30; box-shadow: inset 0 0 0 .5px #ffffff24; -webkit-backdrop-filter: blur(var(--macos-fieldBlur)) saturate(1.6); backdrop-filter: blur(var(--macos-fieldBlur)) saturate(1.6); color: white; }
+.macos-field input { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: inherit; outline: 0; background: transparent; color: transparent; caret-color: white; padding: 0 30px 0 12px; font: 13px/1 -apple-system,BlinkMacSystemFont,'Outfit',system-ui,sans-serif; -webkit-text-fill-color: transparent; }
+.macos-field input::placeholder { color: transparent; }
+.macos-placeholder { pointer-events: none; font-size: 13px; opacity: .8; }
+.macos-dots { display: flex; align-items: center; gap: 3px; max-width: calc(100% - 18px); overflow: hidden; pointer-events: none; }
+.macos-dots i { display: block; width: 5px; min-width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.macos-field[data-typed="false"] .macos-dots, .macos-field[data-typed="true"] .macos-placeholder { display: none; }
+.macos-submit { position: absolute; right: 5px; top: 4px; display: grid; place-items: center; padding: 0; width: 20px; height: 20px; border: 0; border-radius: 50%; background: transparent; color: #fff; cursor: default; }
+.macos-submit svg { display: block; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.macos-field[data-typed="false"] .macos-submit { visibility: hidden; }
+.macos-submit:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.macos-check { display: none; position: absolute; right: 9px; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid #fff4; border-top-color: #fff; }
+.macos-lock[data-state="checking"] .macos-check { display: block; }
+.macos-lock[data-state="checking"] .macos-submit { visibility: hidden; }
+.macos-lock[data-state="leaving"] { pointer-events: none; }
+@media (max-width: 600px) { .macos-lock-clock { top: max(64px, env(safe-area-inset-top)); } .macos-time { font-size: min(var(--macos-clockSize), 23vw); } .macos-date { font-size: 23px; } .macos-field { height: max(var(--macos-fieldHeight), 36px); } .macos-submit { top: 8px; } }
+@media (max-height: 540px) { .macos-lock-clock { top: max(28px, env(safe-area-inset-top)); } .macos-date { font-size: 20px; } .macos-time { font-size: 64px; line-height: 72px; } .macos-user { bottom: max(20px, env(safe-area-inset-bottom)); } }
+.macos-lock[data-compact="true"] .macos-lock-clock { top: 28px; }
+.macos-lock[data-compact="true"] .macos-date { font-size: 20px; }
+.macos-lock[data-compact="true"] .macos-time { font-size: 64px; line-height: 72px; }
+.macos-lock[data-compact="true"] .macos-user { bottom: 20px; }

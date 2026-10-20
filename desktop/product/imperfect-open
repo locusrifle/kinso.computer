@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Open a face of the imperfect computer as its own desktop window.
+#
+#   imperfect-open code
+#   imperfect-open files [folder]        imperfect on its files panel; what xdg-open calls for a folder
+set -euo pipefail
+# The checkout this was installed from (install.sh writes it in).
+root="${IMPERFECT_ROOT:-__ROOT__}"
+face="${1:-}"
+arg="${2:-}"
+case "$face" in
+  code) ;;
+  files)
+    # xdg-open hands over file:///home/you/Downloads; a person hands over a path.
+    if [[ -n "$arg" ]]; then
+      arg="${arg#file://}"
+      arg="$(printf '%b' "${arg//%/\\x}")"
+      [[ -d "$arg" ]] || arg="$(dirname "$arg")"
+    fi
+    ;;
+  *) echo "usage: imperfect-open code | files [folder]" >&2; exit 1 ;;
+esac
+args=(--face "$face")
+if [[ "$face" == files && -n "$arg" ]]; then
+  args+=(--path "$arg")
+fi
+# The window is Electron, from the checkout's own dependencies (desktop/electron).
+# npm ci leaves its runtime out; the first open after one fetches it.
+electron="$root/node_modules/electron"
+if [[ ! -x "$electron/dist/electron" ]]; then
+  notify-send -t 4000 "imperfect: fetching its window (once)" 2>/dev/null || true
+  "${IMPERFECT_NODE:-__NODE__}" "$electron/install.js"
+fi
+# NixOS keeps its Vulkan drivers in /run/opengl-driver, where Electron's own
+# loader does not look. AMD's lets pages draw through Vulkan (gpu.mjs).
+for icd in /run/opengl-driver/share/vulkan/icd.d/radeon_icd.*.json; do
+  if [[ -e "$icd" ]]; then export VK_ADD_DRIVER_FILES="${VK_ADD_DRIVER_FILES:+$VK_ADD_DRIVER_FILES:}$icd"; fi
+done
+exec "$electron/dist/electron" "$root/desktop/electron" "${args[@]}"

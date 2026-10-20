@@ -1,0 +1,69 @@
+/* The standalone store keeps the site's quiet cream-on-black lettering, always, as the Mac around it does. */
+@font-face { font-family: 'Outfit'; src: url('/fonts/outfit-regular.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+:root { color-scheme: dark;
+  --shop-bg: #070707; --shop-ink: #f5eee0; --shop-body: #c1bcb3; --shop-label: #c7c7c7; --shop-unit: #b8b4ac; --shop-quiet: #aaa69f;
+  --shop-rule: #565451; --shop-edge: #aaa7a2; --shop-quiet-edge: #66635d; --shop-link: #d4d4d4; --shop-link-hover: #fff; --shop-fill: #d4d4d4; --shop-on-fill: #000; }
+.shop-body { margin: 0; background: var(--shop-bg); color: var(--shop-ink); font: 400 15px/1.55 'Outfit', system-ui, sans-serif; }
+.shop-page, .shop-page *, .shop-install, .shop-install * { box-sizing: border-box; }
+[hidden] { display: none !important; }
+.shop-page { max-width: 1060px; margin: 0 auto; padding: 26px 42px 32px; }
+.shop-page h1, .shop-page h2, .shop-page p { margin: 0; }
+.shop-page h1, .shop-page h2 { color: var(--shop-ink); font-weight: 400; }
+.shop-page h1 { font-size: 34px; line-height: 1.15; letter-spacing: -.025em; margin: 7px 0 8px; }
+.shop-page h2 { font-size: 27px; line-height: 1.15; letter-spacing: -.015em; margin: 10px 0 0; }
+.shop-page .shop-eyebrow { color: var(--shop-label); text-transform: uppercase; letter-spacing: .15em; font-size: 10px; }
+.shop-heading > a { text-decoration: none; }
+.shop-options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-top: 18px; border-top: 1px solid var(--shop-rule); }
+.shop-option { min-width: 0; padding-top: 18px; }
+.shop-option:first-child { padding-right: 35px; }
+.shop-option + .shop-option { border-left: 1px solid var(--shop-rule); padding-left: 35px; }
+.shop-option > p:not(.shop-eyebrow):not(.shop-price) { max-width: 360px; color: var(--shop-body); }
+.shop-option > p + p:not(.shop-price) { margin-top: 10px; }
+.shop-page .shop-price { margin: 14px 0 16px; color: var(--shop-ink); font-size: 31px; line-height: 1.2; letter-spacing: -.02em; }
+.shop-price span { color: var(--shop-unit); font-size: 14px; letter-spacing: 0; white-space: nowrap; }
+.shop-page a { color: var(--shop-link); text-underline-offset: .25em; }
+.shop-page a:hover { color: var(--shop-link-hover); }
+.shop-page button, .shop-page input, .shop-page [data-rent-link], .shop-install button { border: 1px solid var(--shop-edge); border-radius: 0; color: var(--shop-ink); background: var(--shop-bg); font: inherit; min-height: 42px; padding: 8px 15px; }
+.shop-page button, .shop-install button { cursor: pointer; }
+.shop-page button:hover:not(:disabled), .shop-page [data-rent-link]:hover, .shop-install button:hover { color: var(--shop-on-fill); background: var(--shop-fill); }
+.shop-page button:disabled, .shop-page input:disabled { opacity: .45; cursor: default; }
+.shop-page input { min-width: 0; width: 100%; font-size: 16px; }
+.shop-page :is(button, input, a, pre):focus-visible, .shop-install :is(button, pre):focus-visible { outline: 2px solid var(--shop-ink); outline-offset: 3px; }
+.shop-code-form { margin-top: 16px; }
+.shop-page label { display: block; margin-bottom: 8px; color: var(--shop-label); font-size: 13px; }
+.shop-buy-row { display: flex; gap: 10px; }
+.shop-buy-row button { min-width: 86px; white-space: nowrap; background: var(--shop-ink); color: var(--shop-bg); }
+.shop-page .shop-code-bypass { display: block; border: 0; padding: 0; min-height: 28px; margin-top: 10px; color: var(--shop-quiet); background: transparent; font-size: 13px; text-decoration: underline; text-underline-offset: .25em; }
+.shop-page .shop-code-bypass:hover:not(:disabled) { color: var(--shop-ink); background: transparent; }
+.shop-rent-state { margin-top: 23px; color: var(--shop-body); font-size: 14px; }
+.shop-rent-state a { display: inline-block; margin-top: 15px; }
+.shop-page [data-rent-link] { text-decoration: none; }
+.shop-page .shop-code-note { color: var(--shop-body); margin-top: 12px; font-size: 13px; }
+.shop-install { margin-top: 14px; min-width: 0; }
+.shop-install h3 { margin: 12px 0 9px; font-size: 18px; line-height: 1.25; font-weight: 400; }
+.shop-platforms { display: inline-flex; }
+.shop-install .shop-platforms button { min-height: 28px; padding: 3px 12px; font-size: 12px; color: var(--shop-quiet); border-color: var(--shop-quiet-edge); }
+.shop-platforms button + button { border-left: 0; }
+.shop-install .shop-platforms button[aria-pressed="true"] { color: var(--shop-on-fill); background: var(--shop-fill); }
+.shop-install .shop-small { color: var(--shop-quiet); font-size: 12px; margin-top: 8px; }
+.shop-install pre { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; padding: 12px; margin: 13px 0; border: 1px solid var(--shop-quiet-edge); color: var(--shop-ink); font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; user-select: text; }
+.shop-install pre code { font: inherit; }
+.shop-install #copy-status { margin: 8px 0 0; font-size: 12px; color: var(--shop-label); overflow-wrap: anywhere; }
+.shop-status { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-top: 22px; color: var(--shop-ink); font-size: 13px; }
+.shop-status p { overflow-wrap: anywhere; min-width: 0; }
+.shop-status:has([data-error]:empty) { display: none; }
+.shop-page [data-retry] { min-height: 34px; padding: 6px 12px; }
+/* Keep the existing thanks landing page; only its code and narrow gutters change. */
+.shop-thanks .handoff { box-sizing: border-box; max-width: 800px; }
+.shop-thanks .shop-install { margin-block: 26px; }
+@media (max-width: 650px) {
+  .shop-page { padding: 20px 16px 28px; }
+  .shop-page h1 { font-size: 28px; }
+  .shop-page h2 { font-size: 25px; }
+  .shop-options { grid-template-columns: minmax(0, 1fr); }
+  .shop-option:first-child { padding-right: 0; padding-bottom: 24px; }
+  .shop-option + .shop-option { border-left: 0; border-top: 1px solid var(--shop-rule); padding-left: 0; padding-top: 20px; }
+  .shop-rent-state { margin-top: 16px; }
+  .shop-thanks .handoff { padding: 28px 16px 48px; }
+  .shop-thanks .handoff h1 { font-size: 28px; }
+}

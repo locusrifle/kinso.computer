@@ -1,0 +1,1310 @@
+@import url('./gui-transcript.css');
+
+html[data-face] body.imperfect {
+  background: var(--theme-bar-bg, var(--theme-bg, var(--surface)));
+}
+html[data-face] body.imperfect .code-face {
+  animation: none;
+}
+/* The safe area belongs to the window, not to the document. The Android wrap
+   is the only thing that knows where the status bar, the gesture bar and the
+   on-screen keyboard actually are, and it writes them onto <html>. Declaring
+   them here on body as well meant body's own env() -- which is 0px inside a
+   WebView, because a WebView is never told about the cutout -- shadowed the
+   real numbers for every element inside it. The canvas read 0 and stayed
+   edge-to-edge: the composer sat under the keyboard instead of on it, and its
+   bottom row sat under Android's gesture bar, where taps are the system's and
+   the focus they take away closes the keyboard again. One declaration, on the
+   element the wrap writes to, and the whole document inherits it. */
+html:has(body.imperfect) {
+  --safe-top: var(--phone-top, env(safe-area-inset-top, 0px));
+  --safe-bottom: var(--phone-bottom, env(safe-area-inset-bottom, 0px));
+}
+html:has(body.imperfect),
+body.imperfect {
+  /* The theme's bar surface, with a fallback for a theme without one. */
+  --surface-bg: var(--theme-bar-bg, var(--theme-bg, var(--surface)));
+  --scene-void: var(--surface-bg);
+  touch-action: none;
+  overscroll-behavior: none;
+  --entry-terminal-height: 50dvh;
+  /* One height for every bar along the top of the window -- the agents'
+     strip, the browser's -- so they line up across it. A finger's on a phone. */
+  --frame-bar-height: 72px;
+  --bar-height: var(--frame-bar-height);
+  --frame-inset: 14px;
+  overflow: hidden;
+  background: var(--theme-bg, var(--paper));
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+
+body.imperfect #entry-terminal {
+  color: var(--label);
+  background: var(--surface);
+  border-top: 0;
+  border-bottom: 0;
+}
+/* The cursor and the attach button sit on the same line.
+   The button asked for a 32px minimum height, which is taller than the line it
+   shares, so it grew its own box and centred itself inside it — the block
+   cursor sat on the text line and the + floated below it. Both now share the
+   field's line box, and the row's padding is even top and bottom instead of a
+   12px bottom and nothing above. */
+body.imperfect .entry-input-stack { align-items: flex-start; }
+body.imperfect .entry-attach {
+  min-width: 0;
+  min-height: 0;
+  height: 1.35em;
+  padding: 0.15em 0 0.15em 0.75em;
+  line-height: 1.35em;
+}
+/* A finger needs more than a line box to land on. */
+@media (pointer: coarse) {
+  :where(html:not(.launch-framed)) body.imperfect .entry-attach { min-width: 32px; min-height: 32px; height: auto; padding: 0; }
+  :where(html:not(.launch-framed)) body.imperfect .entry-input-stack { align-items: center; }
+}
+/* The composer, under a rule of the accent. */
+body.imperfect #entry-input-zone {
+  min-height: 36px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  padding: 0;
+  border-top: 0;
+}
+body.imperfect .entry-screen:has(#entry-dialog.writing) #entry-input-zone {
+  border-top: 0;
+}
+
+/* One divider above the whole composer, never between its two rows. */
+body.imperfect #entry-input-zone::before { content: none; }
+body.imperfect .entry-input-stack {
+  grid-column: 1;
+  grid-row: 1;
+  padding: 4px var(--frame-inset) 8px;
+  line-height: 24px;
+}
+/* The field and the mirror that draws its letters share one line height and
+   one inset. They had two (1.35em in the field, the page's 1.5 in the mirror),
+   so the drawn text ran taller than the field that sized and scrolled it: a
+   long draft never scrolled, and its last lines were cut off below the box. */
+body.imperfect .entry-input-mirror #entry-input {
+  padding: 0;
+  height: 24px;
+  min-height: 24px;
+  line-height: inherit;
+  overflow-y: auto;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+body.imperfect .entry-caret-mirror { color: var(--label-bright); padding: 0; }
+body.imperfect #entry-input::placeholder { color: transparent; -webkit-text-fill-color: transparent; }
+body.imperfect .entry-block-caret {
+  animation: none;
+  display: inline-block;
+  min-width: 0.65em;
+  line-height: 1.35em;
+}
+body.imperfect #entry-terminal > #entry-pending { position: relative; }
+/* Files's single header. */
+body.imperfect .workbench-bar,
+body.imperfect .workbench-bar > *,
+body.imperfect .gui-window.browser .gui-window-bar,
+body.imperfect .gui-window.browser .gui-window-bar > * { position: relative; }
+/* What drops from the browser's bar (its Pages list) stays out of the bar's
+   flow, absolute below it and over the website. */
+body.imperfect .gui-window.browser .gui-window-bar > .browser-panel-list { position: absolute; }
+/* The bar stands above the tab stack: what drops from it (the list of tabs)
+   is drawn over the website and takes the click. */
+body.imperfect .gui-window.browser .gui-window-bar { inset: auto; isolation: isolate; z-index: 1; }
+body.imperfect .gui-window.browser .gui-window-address { background: transparent; }
+/* The secure native lock hides the UI; unlock returns to its own opaque ground. */
+html.locked-away body.imperfect > * { opacity: 0; }
+body.imperfect .entry-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  box-sizing: border-box;
+  height: 36px;
+  padding: 7px 0 4px;
+}
+body.imperfect .entry-status > .entry-status-line {
+  grid-column: 1;
+  grid-row: 1;
+  padding: 0 var(--frame-inset);
+  height: 24px;
+}
+body.imperfect .session-actions {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4.2px;
+}
+body.imperfect .session-actions > * { margin: 0; }
+body.imperfect .session-actions :is(button, label) { -webkit-tap-highlight-color: transparent; }
+body.imperfect .session-actions :is(button, label):focus:not(:focus-visible) { outline: none; box-shadow: none; }
+body.imperfect .session-actions button:focus-visible { outline: 1.4px solid var(--tint); outline-offset: 1.4px; }
+body.imperfect .session-actions .entry-attach {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+/* The mic is one box like the rest (it widens only for its clock), so the
+   gaps between the icons are even. */
+body.imperfect .session-actions :is(.entry-voice, .entry-browser, .entry-send) { min-width: 34px; height: 34px; padding: 0; gap: 0.245em; justify-content: center; }
+/* Vector glyphs at 70%; keep the existing touch targets on every screen. */
+body.imperfect .session-actions svg { display: block; flex: none; width: 14px; height: 14px; pointer-events: none; }
+body.imperfect .session-actions .entry-attach svg { width: 11.2px; height: 11.2px; }
+body.imperfect .session-actions .entry-voice[data-state="kept"] { outline-width: 0.7px; outline-offset: 1.4px; }
+/* The usage panel is usage.css. */
+/* Model and controls above the text, with one rule over the whole bar. */
+body.imperfect .entry-status {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--tint);
+}
+body.imperfect .entry-status-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+}
+body.imperfect .entry-status-left,
+body.imperfect .entry-status-right {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7em;
+  min-width: 0;
+}
+body.imperfect .entry-status-right { justify-content: flex-end; }
+/* One row, always: the icons keep the right, and when they are unfolded the
+   model's name gives way (cut short) rather than the icons wrapping under it. */
+body.imperfect .entry-status > .entry-status-line { flex-wrap: nowrap; align-items: center; }
+body.imperfect .entry-status-left { flex: 1 1 auto; align-items: center; overflow: hidden; white-space: nowrap; }
+body.imperfect .entry-status-left > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+body.imperfect .entry-status-right { flex: 0 0 auto; margin-left: auto; }
+body.imperfect .entry-status #entry-pi-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  margin: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--label);
+  font: inherit;
+  cursor: pointer;
+}
+body.imperfect .entry-status #entry-pi-label.working {
+  color: var(--tint);
+}
+body.imperfect #entry-pi-label .entry-model-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.imperfect #entry-pi-label svg,
+body.imperfect #entry-pi-label .brand-mark,
+body.imperfect #entry-terminal .session-rail-logo {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+}
+/* The harness, in words after the model: whose subscription it runs on. */
+body.imperfect #entry-pi-label .entry-harness-name { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; color: var(--label-2); }
+body.imperfect #entry-pi-label .entry-harness-name:empty { display: none; }
+body.imperfect #entry-pi-label .entry-model-name:not(:empty) + .entry-harness-name::before { content: '· '; }
+body.imperfect #entry-pi-label .entry-model-name:empty { display: none; }
+/* The brand's mark beside the model (brand.js): imperfect's goat in the
+   theme's ink (the accent while it works), Kinso's logo, or Kinso's name. */
+body.imperfect .brand-mark { display: inline-block; flex: 0 0 16px; }
+body.imperfect .brand-mark[data-brand="imperfect"] {
+  background: currentColor;
+  -webkit-mask: url("../favicon.svg") center / contain no-repeat;
+          mask: url("../favicon.svg") center / contain no-repeat;
+}
+body.imperfect .brand-mark > img { display: block; width: 100%; height: 100%; object-fit: contain; }
+body.imperfect #entry-pi-label .brand-mark.brand-word { width: auto; flex: none; height: auto; font: 500 13px/1 var(--brand-type, var(--ui)); }
+/* At work the goat butts, Kinso's two halves turn about each other, and the
+   word breathes. */
+#entry-pi-label .brand-mark.mark-working[data-brand="imperfect"] { transform-origin: 50% 72%; animation: mark-butt 1.15s cubic-bezier(0.3, 0.7, 0.3, 1) infinite; }
+@keyframes mark-butt { 0%, 58%, 100% { transform: none; } 22% { transform: rotate(-16deg) translateY(-1px); } 38% { transform: rotate(6deg) translateY(1px); } }
+#entry-pi-label .brand-mark.mark-working > img { animation: mark-turn 1.7s cubic-bezier(0.65, 0, 0.35, 1) infinite alternate; }
+@keyframes mark-turn { 0%, 12% { transform: none; } 88%, 100% { transform: rotate(180deg); } }
+#entry-pi-label .brand-mark.brand-word.mark-working { animation: mark-breathe 1.8s ease-in-out infinite; }
+@keyframes mark-breathe { 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) {
+  #entry-pi-label .brand-mark, #entry-pi-label .brand-mark > img { animation: none !important; }
+}
+html.harness-marks-still #entry-pi-label :is(.brand-mark, .brand-mark > img) { animation-play-state: paused; }
+/* Original working marks from 597b20da: Claude taps alternating claws,
+   Pi's blocks slide into place in turn, hold, and slide away again. */
+:is(#entry-pi-label .mark-working, .session-rail-logo.mark-working) .mark-claw { animation: mark-tap 0.36s steps(1, end) infinite; }
+:is(#entry-pi-label .mark-working, .session-rail-logo.mark-working) .mark-claw-right { animation-delay: -0.18s; }
+@keyframes mark-tap { 50% { transform: translateY(1px); } }
+:is(#entry-pi-label .mark-working, .session-rail-logo.mark-working)[data-agent="pi"] path { animation: mark-slide 1.5s cubic-bezier(.2, .8, .2, 1) infinite; }
+:is(#entry-pi-label .mark-working, .session-rail-logo.mark-working)[data-agent="pi"] path:nth-child(1) { --from: translate(0, -170px); }
+:is(#entry-pi-label .mark-working, .session-rail-logo.mark-working)[data-agent="pi"] path:nth-child(2) { --from: translate(-170px, 0); animation-delay: 0.14s; }
+:is(#entry-pi-label .mark-working, .session-rail-logo.mark-working)[data-agent="pi"] path:nth-child(3) { --from: translate(170px, 0); animation-delay: 0.28s; }
+@keyframes mark-slide { 0% { transform: var(--from); opacity: 0; } 24%, 76% { transform: none; opacity: 1; } 100% { transform: var(--from); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  :is(#entry-pi-label .mark-working, .session-rail-logo.mark-working) path { animation: none !important; }
+}
+html.harness-marks-still :is(#entry-pi-label .mark-working, .session-rail-logo.mark-working) path { animation-play-state: paused; }
+/* Out of view, what animates is held still (visible-animation.js). */
+[data-out-of-view], [data-out-of-view] * { animation-play-state: paused !important; }
+/* Claude's starburst stays still while its session works (Noah): the
+   spinner at the row's end says it is working. */
+/* The mic: at rest the accent, like the dock's other icons; recording, the
+   theme's brightest foreground (white on a dark theme) with the time;
+   transcribing, the accent, pulsing. */
+body.imperfect :is(.entry-voice, .entry-browser, .entry-send) { display: inline-flex; align-items: center; gap: 0.35em; background: none; border: 0; padding: 6px; color: var(--tint); font: inherit; cursor: pointer; line-height: 0; }
+body.imperfect .entry-voice[hidden] { display: none !important; }
+body.imperfect .entry-voice-clock { line-height: 1; font-variant-numeric: tabular-nums; }
+body.imperfect .entry-voice-clock:empty { display: none; }
+body.imperfect .entry-voice[data-state="recording"] { color: var(--label-bright); }
+/* A recording that was not sent waits in the mic, to try again. */
+body.imperfect .entry-voice[data-state="kept"] { color: var(--label-bright); outline: 1px dashed var(--tint); outline-offset: 2px; }
+body.imperfect .entry-voice[data-state="hearing"] { color: var(--tint); animation: entry-voice-pulse 1s ease-in-out infinite; cursor: progress; }
+@keyframes entry-voice-pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { body.imperfect .entry-voice[data-state="hearing"] { animation: none; } }
+/* A tab being opened: its row is lit already, and the conversation it is
+   replacing dims until the new one arrives. */
+body.imperfect #entry-output.entry-switching { opacity: 0.45; transition: opacity 0.12s 0.08s; }
+body.imperfect .entry-status #entry-thinking { flex: none; margin-left: 0; }
+body.imperfect .entry-status #entry-thinking,
+body.imperfect .entry-status #entry-harness {
+  color: var(--label-2);
+}
+/* Legacy session fields stay out of the compact model-and-effort line. */
+body.imperfect .entry-status #entry-spend,
+body.imperfect .entry-status #entry-source,
+body.imperfect .entry-status #entry-session-name,
+body.imperfect .entry-status #entry-cwd { display: none; }
+
+/* The canvas holds imperfect's windows, filling the window it is in. */
+body.imperfect .canvas {
+  position: fixed;
+  top: var(--safe-top, 0px);
+  right: 0;
+  bottom: var(--safe-bottom, 0px);
+  left: 0;
+  z-index: 28;
+  overflow: hidden;
+}
+/* The windows (windows.js). On a desk each is placed by its own left, top,
+   width and height, hard against its neighbours and the window's edges: no
+   ground between them, only the one hairline rule two windows share. */
+body.imperfect .canvas-strip {
+  position: relative;
+  height: 100%;
+}
+body.imperfect .wm-scroll {
+  overflow: hidden;
+  overscroll-behavior-x: contain;
+  overflow-anchor: none;
+  scrollbar-width: none;
+}
+body.imperfect .wm-scroll.wm-has-full { overflow-x: hidden; }
+body.imperfect .wm-extent { position: absolute; left: 0; top: 0; height: 1px; pointer-events: none; }
+body.imperfect .wm-phone > .wm-extent { display: none; }
+body.imperfect .wm-window {
+  position: absolute;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 0;
+  background: var(--surface-bg);
+}
+body.imperfect .wm-tiled > .wm-window {
+  border: 1px solid var(--sep);
+  border-image: linear-gradient(to bottom, transparent var(--bar-height), var(--sep) 0) 1;
+}
+/* In dwindle a window can sit below another: its rules run all round. */
+body.imperfect .wm-dwindle.wm-tiled > .wm-window { border-image: none; }
+/* MOD held (windows.js grab): a cover over each window, websites included,
+   so the pointer picks the window up; the place it would take is ruled in
+   the theme's brightest line, the window carried shown faint. */
+body.imperfect .wm-grab > .wm-window::before { content: ''; position: absolute; inset: 0; z-index: 8; cursor: grab; }
+body.imperfect .wm-dragging, body.imperfect .wm-dragging > .wm-window::before { cursor: grabbing; }
+body.imperfect .wm-window.wm-dragged { opacity: 0.5; }
+body.imperfect .wm-window.wm-drop::after {
+  content: ''; position: absolute; inset: 0; z-index: 9; pointer-events: none;
+  border: 1px solid var(--label-bright);
+}
+/* The browser's bar holds the keys for a website that could not hand them
+   back (pages.js); it is a bar, not a control, and draws no ring. */
+body.imperfect .gui-window-bar:focus { outline: none; }
+/* Full (MOD+F): one middle window over the others. The shared composer
+   remains outside it; other panes stay drawn beneath it. */
+body.imperfect .wm-tiled > .wm-window.wm-full { z-index: 2; border-width: 0; }
+body.imperfect .wm-tiled:has(> .wm-full) > .wm-window:not(.wm-full) { isolation: isolate; }
+/* Opening or closing one, the rest slide to their new places; a new one pops
+   in where it lands, as a window does on this desktop. */
+/* Column geometry changes atomically: moving content beneath a still
+   pointer or interpolating the hosted browser's bounds is not selection. */
+body.imperfect .wm-window.wm-arriving { animation: window-in 410ms cubic-bezier(0.23, 1, 0.32, 1); }
+/* Over a window full (MOD+Shift+Enter), the conversation's agents' strip and
+   input bar, the window still in sight between them. */
+body.imperfect .wm-frame.wm-over .entry-screen { z-index: 3; border-width: 0; background: none; pointer-events: none; }
+body.imperfect .code-face.wm-over .entry-screen { visibility: hidden; }
+body.imperfect .wm-frame.wm-over #entry-terminal > #session-rail.collapsed { z-index: 4; }
+/* On a phone the conversation fills the screen, its input bar stays put, and
+   the windows are the panel above it: a strip of whole panels the finger
+   swipes along, the conversation's own first. The agents' strip lies over
+   the top of it, the conversation's own: it leaves upwards as a finger
+   brings another window into view (windows.js, --wm-away), that window's
+   own bar in its place, and comes back with the conversation. */
+body.imperfect .canvas > .code-face { position: absolute; inset: 0; }
+body.imperfect #entry-terminal > .canvas-strip { grid-column: 1; grid-row: 1 / 3; height: auto; min-width: 0; min-height: 0; }
+body.imperfect .wm-frame .canvas-strip > .entry-screen { box-sizing: border-box; padding-top: var(--bar-height); }
+body.imperfect .wm-frame #session-rail.collapsed {
+  z-index: 2;
+  margin-left: var(--wm-home-left, 0px);
+  margin-top: var(--wm-home-top, 0px);
+  width: var(--wm-home-width, 100%);
+}
+body.imperfect #entry-terminal:has(> .wm-phone) > #session-rail.collapsed {
+  margin: 0;
+  width: 100%;
+  transform: translateY(calc(-100% * var(--wm-away, 0)));
+}
+body.imperfect .wm-frame:has(.wm-tiled > .wm-full:not(.entry-screen)):not(.wm-over) #entry-terminal > #session-rail.collapsed { visibility: hidden; }
+body.imperfect .code-face.wm-elsewhere #entry-terminal > #session-rail.collapsed { visibility: hidden; }
+body.imperfect .wm-phone {
+  display: flex;
+  overflow: auto hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+}
+body.imperfect .wm-phone > * { position: relative; flex: 0 0 100%; height: 100%; min-height: 0; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; }
+/* Full, the window in view covers both bars and its own, to play; a tab
+   hanging from the top edge brings them back. */
+body.imperfect .code-face.wm-fullscreen > #entry-terminal > :not(#canvas-strip) { display: none; }
+body.imperfect .code-face.wm-fullscreen .wm-phone { overflow: hidden; }
+body.imperfect .wm-phone > .wm-full .wm-bar { display: none; }
+body.imperfect .wm-phone > .wm-full .workbench > .workbench-bar,
+body.imperfect .wm-phone > .wm-full .workbench-view-line { display: none; }
+body.imperfect .wm-unfull {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  width: 96px;
+  height: 32px;
+  margin-left: -48px;
+  padding: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  border: 0;
+  background: none;
+}
+body.imperfect .wm-unfull::before {
+  content: "";
+  box-sizing: border-box;
+  width: 48px;
+  height: 14px;
+  background: var(--surface);
+  border: 1px solid var(--tint);
+  border-top: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.imperfect .wm-moving > .wm-window, body.imperfect .wm-window.wm-arriving { transition: none; animation: none; }
+}
+/* The conversation paints the solid bar colour, never element opacity. Native
+   window focus/blur opacity belongs to the compositor, not a CSS fade. */
+body.imperfect .code-face {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "main";
+  overflow: hidden;
+  background: var(--surface-bg);
+  color: var(--label);
+}
+body.imperfect .code-face > #entry-terminal {
+  position: relative; inset: auto; grid-area: main; width: auto; height: auto;
+  max-height: none; min-width: 0; min-height: 0; transform: none; box-shadow: none;
+}
+/* One layout on every screen, the phone's: the agents are a strip of tabs
+   across the top, the conversation under
+   it, and the composer with every control in its bar at the foot. */
+body.imperfect #entry-terminal {
+  --rail-gutter: 0.9em;
+  transition: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--bar-height) minmax(0, 1fr) auto auto auto auto auto;
+  align-items: stretch;
+  overflow: hidden;
+}
+/* A question replaces typing, not the dock: usage remains reachable. While
+   usage owns the middle pane, even an arriving question leaves the bars put. */
+body.imperfect #entry-terminal:has(> #entry-dialog.input-dialog:not([hidden])) > :is(#entry-pending, #entry-work, #entry-input-zone),
+body.imperfect #entry-terminal:has(> #entry-dialog.input-dialog:not([hidden])) .entry-screen > :is(#entry-queue, #entry-flash) {
+  display: none;
+}
+body.imperfect #entry-terminal > #session-rail { grid-column: 1; grid-row: 1; }
+body.imperfect #entry-terminal > #entry-dialog.input-dialog {
+  grid-column: 1; grid-row: 8;
+  align-self: end;
+  width: 100%;
+  max-height: min(55dvh, max(0px, calc(100dvh - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--bar-height) - 36px - 60px)));
+  padding: 14px var(--frame-inset);
+  font-size: .96rem;
+  z-index: 62;
+}
+body.imperfect .code-face.wm-fullscreen #entry-terminal > .canvas-strip { grid-row: 1 / -1; }
+/* Super+Shift+F: the pane, including its own heading, covers the shared bars.
+   Keep every other pane and draft mounted, with the original column order. */
+body.imperfect .code-face.wm-full-window { animation: none; transform: none; }
+body.imperfect .wm-full-window #entry-terminal > .canvas-strip { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 60; }
+body.imperfect .wm-full-window .wm-full { animation: none; }
+body.imperfect .wm-full-window #entry-terminal > :not(.canvas-strip):not(#entry-dialog) { visibility: hidden; pointer-events: none; }
+body.imperfect .wm-full-window .canvas-strip > .wm-window:not(.wm-full) { visibility: hidden; }
+body.imperfect .wm-full-window .canvas-strip > .wm-full { visibility: visible; border: 0; }
+body.imperfect .wm-full-window .wm-phone > .wm-full :is(.wm-bar, .workbench-bar, .workbench-view-line) { display: flex; }
+body.imperfect #entry-terminal > .entry-screen {
+  grid-column: 1; grid-row: 2;
+  min-width: 0; min-height: 0; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+body.imperfect #entry-terminal > #entry-pending,
+body.imperfect #entry-terminal > #entry-work,
+body.imperfect #entry-terminal > #entry-input-zone,
+body.imperfect #entry-terminal > .entry-status  {
+  grid-column: 1 / -1;
+}
+body.imperfect #entry-terminal > #session-rail {
+  position: relative; inset: auto; z-index: 1; box-sizing: border-box;
+  min-width: 0; min-height: 0; display: flex; flex-direction: column;
+  overflow: auto; transform: none;
+  border-right: 0; background: transparent; color: var(--label);
+}
+/* The agents rail. Two lines a row — where it is working, and which agent is
+   doing it — and no chrome around them. Everything that used to sit here (a
+   collapse chevron that could not be undone, + new, an X per row, the status
+   spelled out) is gone; the dot carries status and the keys carry the verbs. */
+body.imperfect #entry-terminal > #session-rail {
+  --rail-gutter: 0.9em;
+  --rail-tab-height: 38px;
+  gap: 0;
+  padding: 1.1em 0;
+}
+/* The heading's text starts on the same column as every row's dot, and its +
+   ends on the same column the rows end on. Before, the heading had one inset
+   and the rows had two others. */
+body.imperfect #entry-terminal .session-rail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  margin: 0 0 0.8em;
+  padding: 0 var(--rail-gutter);
+  color: var(--label);
+  font-weight: 700;
+}
+body.imperfect #entry-terminal .session-rail-agents {
+  display: flex;
+  flex-direction: column;
+}
+body.imperfect #entry-terminal .session-rail-item { gap: 0; }
+/* One line, one indent. The row's highlight runs to the rail's own edge — a
+   left inset on the box made the lit block float away from the column it
+   belongs to — and the dot and the name share a baseline inside it. */
+body.imperfect #entry-terminal .session-rail-open {
+  min-width: 34px;
+  display: flex;
+  align-items: center;
+  gap: 0.65em;
+  padding: 0.5em var(--rail-gutter) 0.5em var(--rail-gutter);
+}
+body.imperfect #entry-terminal .session-rail-line {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+body.imperfect #entry-terminal .session-rail-agent,
+body.imperfect #entry-terminal .session-rail-asked {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.imperfect #entry-terminal .session-rail-agent { color: var(--label-2); display: flex; align-items: center; gap: 0.45em; }
+/* The harness is the row's status as well as its mark: still at rest,
+   animated while its agent works. Blocked takes the red on the model's name and done
+   the bright foreground; a session not open here is dimmed. */
+body.imperfect #entry-terminal .session-rail-item[data-state="blocked"] .session-rail-model { color: var(--theme-red, #d05); }
+body.imperfect #entry-terminal .session-rail-item[data-state="done"] .session-rail-model { color: var(--label-bright); }
+body.imperfect #entry-terminal .session-rail-logo[data-state="unknown"] { opacity: 0.45; }
+body.imperfect #entry-terminal .session-rail-model { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+body.imperfect #entry-terminal .session-rail-number { flex-shrink: 0; min-width: 22px; text-align: center; color: var(--label-2); }
+body.imperfect #entry-terminal .session-rail-item.active .session-rail-number { color: var(--label-bright); }
+body.imperfect #entry-terminal .session-rail-item[data-state="working"] .session-rail-number { color: var(--tint); }
+body.imperfect #entry-terminal .session-rail-item[data-state="blocked"] .session-rail-number { color: var(--theme-red, #d05); }
+/* Each computer's name over its sessions, when there is more than one. */
+body.imperfect #entry-terminal .session-rail-machine {
+  margin: 0.9em 0 0.2em;
+  padding: 0 var(--rail-gutter);
+  color: var(--label-2);
+  font-size: 0.85em;
+  text-transform: lowercase;
+}
+body.imperfect #entry-terminal .session-rail-machine:first-child { margin-top: 0; }
+/* What the session was asked to do, so two agents in the same tree are told
+   apart by the work rather than by the order they happen to be listed in. */
+body.imperfect #entry-terminal .session-rail-asked {
+  color: var(--label-3);
+  font-size: 0.92em;
+}
+body.imperfect #entry-terminal .session-rail-item.active .session-rail-asked {
+  color: var(--tui-secondary, var(--label-2));
+}
+/* The strip. Folded (always, until the list is asked for), the agents are a
+   row of tabs across the top: each tab its mark and what it was asked, on the
+   desk; the marks alone on a phone, where the width is the thumb's. The fold
+   at the right end lays the whole list over the work until one is chosen.
+   The tabs start hard at the left edge. The divider is drawn inside the band
+   so the selected tab can stand on it and open into the panel below. */
+body.imperfect #entry-terminal > #session-rail.collapsed {
+  --rail-gutter: 0.8em;
+  flex-direction: row;
+  height: var(--bar-height);
+  padding: 0;
+  overflow: hidden;
+  box-shadow: inset 0 -1px var(--tint);
+}
+/* On a Mac the window is a Mac's (desktop/electron, preload.cjs): its three
+   buttons sit at the left of the band's empty space above the tabs, and that
+   space moves the window as a title bar does (double-click zooms it). Only
+   the empty top of the band: every tab, button and bar below it is a click. */
+body.imperfect.mac-window::before {
+  content: ''; position: fixed; top: 0; left: 0; right: 0; height: 28px;
+  -webkit-app-region: drag; pointer-events: none; z-index: 79;
+}
+/* Time, Wi-Fi and battery: one quiet line at the top centre of the screen,
+   in the band's empty space above the tabs, over whatever columns lie under
+   it (harness.js, system.js). Pressed, the glance opens the panel under the
+   band. On a phone it is the conversation's and leaves upwards with its bar. */
+body.imperfect #entry-terminal > .screen-status {
+  position: absolute; top: 4px; left: 50%; z-index: 80;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 4px; max-width: calc(100% - 16px); height: 20px;
+  font-size: 12px; line-height: 20px; font-weight: 400; white-space: nowrap;
+  color: var(--label); font-variant-numeric: tabular-nums; pointer-events: none;
+}
+body.imperfect #entry-terminal:has(> .wm-phone) > .screen-status {
+  transform: translate(-50%, calc(-1 * var(--bar-height) * var(--wm-away, 0)));
+}
+body.imperfect .code-face.wm-elsewhere #entry-terminal > .screen-status { visibility: hidden; }
+body.imperfect #entry-terminal > .screen-status:has(> .system-status:not([hidden])) { pointer-events: auto; cursor: pointer; }
+body.imperfect #entry-terminal .screen-clock { flex: none; background: transparent; }
+body.imperfect #entry-terminal:has(> .wm-phone) .screen-clock { display: none; }
+body.imperfect #entry-terminal .system-status {
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+  height: 20px; padding: 0 0 0 8px; border: 0; border-radius: 0;
+  background: transparent; color: var(--label); pointer-events: auto;
+  font: inherit; font-size: 12px; line-height: 20px; font-weight: 400;
+  font-variant-numeric: tabular-nums; white-space: nowrap; cursor: pointer;
+}
+body.imperfect #entry-terminal .system-status[hidden] { display: none; }
+body.imperfect #entry-terminal .system-status[aria-expanded="true"] { color: var(--label-bright); }
+body.imperfect #entry-terminal .system-status:focus-visible { outline: 1px solid var(--label-bright); outline-offset: 0; }
+body.imperfect .system-icon { display: block; flex: none; }
+body.imperfect .system-battery { display: flex; align-items: center; gap: 4px; }
+body.imperfect :is(.system-battery, .system-note).low { color: var(--theme-red, var(--danger)); }
+body.imperfect .screen-panel {
+  position: fixed; z-index: 90; box-sizing: border-box; overflow: auto;
+  display: flex; flex-direction: column;
+  padding: 0; border: 1px solid var(--tint); border-top: 0; border-radius: 0;
+  background: var(--surface-bg, var(--surface)); color: var(--label);
+  font-family: var(--ui);
+  font-size: 12px; line-height: 20px;
+}
+body.imperfect .screen-panel[hidden] { display: none; }
+body.imperfect .screen-panel.full { border-left: 0; border-right: 0; }
+body.imperfect .system-section { padding: 8px 12px; border-top: 1px solid var(--sep); }
+body.imperfect .system-section:first-child { border-top: 0; }
+body.imperfect .system-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; }
+body.imperfect .system-head h2 { margin: 0; font: inherit; color: var(--label-2); }
+body.imperfect .system-list { display: flex; flex-direction: column; }
+body.imperfect .system-item, body.imperfect .system-row { display: flex; align-items: center; gap: 8px; min-height: 28px; }
+body.imperfect .system-item .system-name { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+body.imperfect span.system-name { cursor: default; }
+body.imperfect .system-item.active .system-label { color: var(--label-bright); }
+body.imperfect .system-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.imperfect .system-note { color: var(--label-2); white-space: nowrap; }
+body.imperfect .system-key { flex: none; width: 3.5em; color: var(--label-2); }
+body.imperfect .system-value { flex: none; width: 2.5em; text-align: right; font-variant-numeric: tabular-nums; }
+body.imperfect .screen-panel button.system-action, body.imperfect .screen-panel button.system-toggle {
+  flex: none; min-height: 24px; padding: 0 8px; border: 1px solid var(--label-2); border-radius: 0;
+  background: transparent; color: var(--label); font: inherit; cursor: pointer;
+}
+body.imperfect .screen-panel button.system-toggle { min-width: 4em; }
+body.imperfect .screen-panel button.system-toggle[aria-pressed="true"] { border-color: var(--label-bright); background: var(--label-bright); color: var(--surface-bg, var(--surface)); }
+body.imperfect .screen-panel button:hover { border-color: var(--label-bright); }
+body.imperfect .screen-panel button.system-danger { border-color: var(--theme-red, var(--danger)); color: var(--theme-red, var(--danger)); }
+body.imperfect .screen-panel :is(button, input, select):focus-visible { outline: 1px solid var(--label-bright); outline-offset: 1px; }
+body.imperfect .system-join { gap: 0; }
+body.imperfect .system-join .system-password { flex: 1; min-width: 0; }
+body.imperfect .screen-panel :is(.system-password, .system-select) {
+  box-sizing: border-box; height: 24px; padding: 0 6px; border: 1px solid var(--label-2); border-radius: 0;
+  background: var(--surface-bg, var(--surface)); color: var(--label); font: inherit;
+}
+body.imperfect .screen-panel .system-select { flex: 1; min-width: 0; }
+body.imperfect .system-slider { flex: 1; min-width: 0; height: 24px; margin: 0; appearance: none; background: transparent; cursor: pointer; }
+body.imperfect .system-slider::-webkit-slider-runnable-track { height: 4px; background: color-mix(in srgb, var(--label-2) 35%, transparent); border-radius: 0; }
+body.imperfect .system-slider::-webkit-slider-thumb { appearance: none; width: 8px; height: 16px; margin-top: -6px; border: 0; border-radius: 0; background: var(--label-bright); }
+body.imperfect .system-line { margin: 0; padding: 4px 12px 8px; color: var(--label-2); overflow-wrap: anywhere; }
+body.imperfect .system-line.error { color: var(--theme-red, var(--danger)); }
+/* This computer's menu: the shared Mac shapes and surfaces, not the older
+   clipboard/screenshot panels that happen to share screen-panel helpers. */
+body.imperfect .system-panel {
+  padding: 6px; border: 0.5px solid var(--sep-strong); border-radius: var(--radius-l);
+  background: var(--surface-pop); box-shadow: var(--shadow-pop);
+  font-size: var(--text); line-height: 18px;
+}
+body.imperfect .system-panel.full { border-left: 0; border-right: 0; border-radius: 0 0 var(--radius-l) var(--radius-l); }
+/* The shared floating window supplies the frame, not the status popover. */
+body.imperfect .system-panel.system-panel-hosted {
+  position: relative; inset: auto; z-index: auto;
+  flex: 1; min-width: 0; min-height: 0; width: 100%; height: 100%; max-height: none;
+  border: 0; border-radius: 0; box-shadow: none;
+}
+body.imperfect .system-panel-hosted > .system-section { flex-shrink: 0; }
+body.imperfect .system-panel .system-section { padding: 8px 6px; }
+body.imperfect .system-panel .system-head { min-height: 32px; padding: 0 6px 4px; }
+body.imperfect .system-panel .system-head h2 { flex: 1; color: var(--label); font-weight: 600; }
+body.imperfect .system-panel .system-wifi .system-head { min-height: 36px; gap: 6px; }
+body.imperfect .system-panel .system-wifi h2 { font-size: var(--text-l); }
+body.imperfect .system-panel button.system-action,
+body.imperfect .system-panel button.system-toggle {
+  min-height: 28px; border: 0.5px solid var(--sep-strong); border-radius: var(--radius-s);
+  background: var(--fill); padding: 3px 10px;
+}
+body.imperfect .system-panel button.system-toggle[aria-pressed="true"],
+body.imperfect .system-panel button.system-primary { background: var(--tint); border-color: transparent; color: var(--on-tint); }
+body.imperfect .system-panel button.system-danger { color: var(--danger); }
+body.imperfect .system-panel button.system-action:hover { background: var(--fill-2); }
+body.imperfect .system-panel button.system-primary:hover { background: var(--tint); filter: brightness(1.08); }
+body.imperfect .system-panel :is(button, input, select):focus-visible { outline: 2px solid var(--tint); outline-offset: -2px; }
+body.imperfect .system-panel button:disabled { cursor: default; opacity: 0.45; }
+/* A button supplies Space/Enter and focus; the inset track supplies the
+   switch's shape independently of its comfortably sized hit area. */
+body.imperfect .system-panel button.system-switch {
+  flex: none; display: grid; place-items: center; width: 40px; min-height: 32px;
+  padding: 0; border: 0; border-radius: var(--radius-s); background: none; cursor: pointer;
+}
+body.imperfect .system-switch-track {
+  display: block; width: 32px; height: 20px; padding: 2px; box-sizing: border-box;
+  border-radius: var(--radius-pill); background: var(--fill-2); box-shadow: inset 0 0 0 0.5px var(--sep-strong);
+}
+body.imperfect .system-switch-track::after {
+  content: ''; display: block; width: 16px; height: 16px; border-radius: var(--radius-pill);
+  background: var(--on-tint); box-shadow: 0 1px 2px var(--sep-strong); transition: transform 140ms ease;
+}
+body.imperfect .system-switch[aria-checked="true"] .system-switch-track { background: var(--tint); }
+body.imperfect .system-switch[aria-checked="true"] .system-switch-track::after { transform: translateX(12px); }
+body.imperfect .system-scanning { display: flex; align-items: center; gap: 5px; color: var(--label-2); font-size: var(--text-s); white-space: nowrap; }
+body.imperfect .system-spinner {
+  box-sizing: border-box; width: 11px; height: 11px; border: 1.5px solid var(--sep-strong);
+  border-top-color: var(--label-2); border-radius: var(--radius-pill); animation: system-spin 800ms linear infinite;
+}
+@keyframes system-spin { to { transform: rotate(360deg); } }
+body.imperfect .system-panel button.system-refresh,
+body.imperfect .system-panel button.system-network-options {
+  flex: none; display: grid; place-items: center; width: 28px; min-height: 28px; padding: 0;
+  border: 0; border-radius: var(--radius-s); background: none; color: var(--label-2); font: 18px/1 var(--ui); cursor: pointer;
+}
+body.imperfect .system-panel button.system-refresh:hover,
+body.imperfect .system-panel button.system-network-options:hover,
+body.imperfect .system-panel button.system-network-options[aria-expanded="true"] { background: var(--fill-2); color: var(--label); }
+body.imperfect .system-network-heading { margin: 10px 8px 4px; color: var(--label-2); font-size: var(--text-s); line-height: 16px; font-weight: 600; }
+body.imperfect .system-network-group + .system-network-group { margin-top: 4px; padding-top: 2px; border-top: 0.5px solid var(--sep); }
+body.imperfect .system-wifi .system-item { gap: 0; padding-right: 4px; border-radius: var(--radius-s); }
+body.imperfect .system-wifi .system-item:not(:has(.system-network-options))::after { content: ''; flex: none; width: 28px; }
+body.imperfect .system-wifi .system-item:has(:is(:hover, :focus-visible)) { background: var(--fill-2); }
+body.imperfect .system-wifi .system-item .system-name { gap: 9px; min-height: 38px; padding: 4px 8px; border-radius: var(--radius-s); }
+body.imperfect .system-wifi .system-item.active .system-name { min-height: 48px; }
+body.imperfect .system-signal { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--radius-pill); }
+body.imperfect .system-signal .system-wifi-icon { width: 18px; height: 14px; }
+body.imperfect .system-item.active .system-signal { background: var(--tint); color: var(--on-tint); }
+body.imperfect .system-wifi .system-label { display: flex; flex-direction: column; }
+body.imperfect .system-ssid { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.imperfect .system-item.active .system-ssid { font-weight: 500; }
+body.imperfect .system-wifi .system-note { font-size: var(--text-s); line-height: 15px; }
+body.imperfect .system-lock { margin: 0 4px 0 8px; color: var(--label-2); }
+body.imperfect .system-network-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; padding: 6px 8px 10px 47px; }
+body.imperfect .system-forget-note { flex: 0 0 100%; margin: 0 0 4px; color: var(--label-2); font-size: 12px; overflow-wrap: anywhere; }
+body.imperfect .system-panel .system-join { gap: 6px; padding: 6px 8px 10px 47px; }
+body.imperfect .system-panel :is(.system-password, .system-select) {
+  height: 28px; padding: 3px 8px; border-color: var(--sep-strong); border-radius: var(--radius-s); background: var(--fill);
+}
+body.imperfect .system-panel .system-password::placeholder { color: var(--label-2); opacity: 1; }
+body.imperfect .system-wifi-message { margin: 6px 8px 8px; color: var(--label-2); font-size: 12px; }
+/* The other modules use the Wi-Fi menu's content insets and icon column. */
+body.imperfect .system-panel .system-section:not(.system-wifi) .system-head { min-height: 36px; gap: 6px; }
+body.imperfect .system-panel .system-section:not(.system-wifi) .system-head h2 { font-size: var(--text-l); }
+body.imperfect .system-panel .system-section:not(.system-wifi) > .system-row { gap: 9px; padding: 4px 8px; min-height: 40px; }
+body.imperfect .system-panel .system-control-glyph,
+body.imperfect .system-panel button.system-glyph-button {
+  flex: none; display: grid; place-items: center; width: 30px; min-height: 32px;
+  padding: 0; border: 0; border-radius: var(--radius-s); background: none; color: var(--label);
+}
+body.imperfect .system-panel button.system-glyph-button { cursor: pointer; }
+body.imperfect .system-panel button.system-glyph-button:hover { background: var(--fill-2); }
+body.imperfect .system-panel button.system-glyph-button[aria-pressed="true"] { color: var(--label-2); }
+body.imperfect .system-panel :is(.system-glyph-button, .system-control-glyph, .system-bluetooth .system-signal) > svg:not(.system-battery-icon) { width: 20px; height: 20px; }
+body.imperfect .system-panel .system-slider { height: 32px; }
+body.imperfect .system-panel .system-slider::-webkit-slider-runnable-track {
+  height: 8px; border-radius: var(--radius-pill);
+  background: linear-gradient(to right, var(--tint) 0 var(--slider-fill), var(--fill-2) var(--slider-fill) 100%);
+}
+body.imperfect .system-panel .system-slider::-webkit-slider-thumb {
+  width: 16px; height: 16px; margin-top: -4px; border-radius: var(--radius-pill);
+  background: var(--on-tint); box-shadow: 0 1px 3px var(--scrim), 0 0 0 0.5px var(--sep);
+}
+body.imperfect .system-panel .system-section > .system-row.system-device-chooser { padding-left: 47px; }
+body.imperfect .system-panel .system-section.system-battery { display: block; }
+body.imperfect .system-battery-detail { white-space: normal; font-size: 12px; }
+body.imperfect .system-power-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 4px 8px; }
+body.imperfect .system-panel .system-power-choices .system-action { min-height: 32px; }
+body.imperfect .system-power-confirm { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px; padding: 4px 8px; }
+body.imperfect .system-confirm-question { flex: 0 0 100%; margin: 0 0 4px; color: var(--label); }
+body.imperfect .system-bluetooth .system-item { gap: 0; padding-right: 4px; border-radius: var(--radius-s); }
+body.imperfect .system-bluetooth .system-item:is(:hover, :focus-within) { background: var(--fill-2); }
+body.imperfect .system-bluetooth .system-item .system-name { padding: 4px 8px; gap: 9px; min-height: 48px; }
+body.imperfect .system-bluetooth .system-label { display: flex; flex-direction: column; }
+body.imperfect .system-bluetooth .system-note { font-size: var(--text-s); line-height: 15px; }
+body.imperfect .system-device-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 6px 8px 10px 47px; }
+body.imperfect .system-device-message { margin: 6px 8px; color: var(--label-2); font-size: 12px; }
+@media (pointer: coarse), (max-width: 500px) {
+  body.imperfect .system-panel button.system-glyph-button { min-width: 44px; min-height: 44px; margin-inline: -7px; }
+  body.imperfect .system-panel .system-slider { height: 44px; }
+}
+body.imperfect .system-panel .system-line {
+  position: sticky; bottom: 0; flex: none; padding: 8px 12px;
+  border-top: 0.5px solid var(--sep); border-radius: var(--radius-s);
+  background: var(--surface-pop); box-shadow: 0 -4px 12px var(--surface-pop);
+}
+@media (pointer: coarse), (max-width: 500px) {
+  body.imperfect .screen-panel.system-panel button.system-action,
+  body.imperfect .screen-panel.system-panel button.system-toggle,
+  body.imperfect .screen-panel.system-panel button.system-switch,
+  body.imperfect .screen-panel.system-panel button.system-refresh,
+  body.imperfect .screen-panel.system-panel button.system-network-options { min-width: 44px; min-height: 44px; }
+  body.imperfect .system-panel .system-wifi .system-name { min-height: 44px; }
+  body.imperfect .system-wifi .system-item:not(:has(.system-network-options))::after { width: 44px; }
+  body.imperfect .system-panel :is(.system-password, .system-select) { height: 44px; font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.imperfect .system-switch-track::after { transition: none; }
+  body.imperfect .system-spinner { animation: none; }
+}
+/* What was copied (Mod+V) and a screenshot just taken: the system panel's
+   frame, under the same group (clipboard-history.js, screenshot-preview.js). */
+body.imperfect .clip-section { padding-bottom: 4px; }
+body.imperfect .clip-head .system-action { margin-left: auto; }
+body.imperfect .clip-head .system-action + .system-action { margin-left: 0; }
+body.imperfect .clip-list { display: flex; flex-direction: column; }
+body.imperfect .clip-item { display: flex; align-items: stretch; border-top: 1px solid var(--sep); }
+body.imperfect .clip-pick {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 6px 0 6px 12px; border: 0; border-radius: 0; background: none; color: var(--label);
+  font: inherit; text-align: left; cursor: pointer;
+}
+body.imperfect .clip-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+body.imperfect .clip-image { display: block; max-width: 100%; max-height: 72px; object-fit: contain; }
+body.imperfect .clip-delete { flex: none; width: 36px; padding: 0; border: 0; border-radius: 0; background: none; color: var(--label-2); font: inherit; cursor: pointer; }
+body.imperfect :is(.clip-pick, .clip-delete):hover { color: var(--label-bright); }
+body.imperfect .screen-panel :is(.clip-pick, .clip-delete):focus-visible { outline: 1px solid var(--label-bright); outline-offset: -1px; color: var(--label-bright); }
+body.imperfect .shot-image { display: block; width: 100%; max-height: 240px; object-fit: contain; border-bottom: 1px solid var(--sep); }
+body.imperfect .shot-actions { padding: 4px 12px; flex-wrap: wrap; }
+body.imperfect .shot-actions .system-label { flex: 0 0 100%; }
+@media (pointer: coarse) {
+  :where(html:not(.launch-framed)) body.imperfect .system-item, :where(html:not(.launch-framed)) body.imperfect .system-row { min-height: 44px; }
+  :where(html:not(.launch-framed)) body.imperfect .screen-panel button.system-action, :where(html:not(.launch-framed)) body.imperfect .screen-panel button.system-toggle { min-height: 36px; }
+}
+/* New session follows the tabs; the fold stays at the far edge. */
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-heading {
+  order: 1;
+  flex: 1 0 auto;
+  align-self: stretch;
+  align-items: flex-end;
+  margin: 0;
+  padding: 0;
+  background: none;
+}
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-heading .session-rail-new .session-rail-open { min-height: 0; padding: 0; }
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-fold { width: var(--rail-tab-height); height: var(--rail-tab-height); min-height: 0; }
+/* Only the tabs scroll; the trailing new-session and fold slot never does. */
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-agents {
+  flex-direction: row; align-items: flex-end; gap: 0;
+  flex: 0 1 auto; min-width: 0; overflow: auto hidden;
+  height: 100%;
+}
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-item { width: auto; height: var(--rail-tab-height); flex: 0 0 auto; min-width: 0; max-width: 18em; background: none; }
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-open { padding: 0 9px; background: none; border: 1px solid transparent; border-bottom: 0; }
+/* The selected tab is a folder's: its sides run down through the divider and
+   the panel's own colour fills the gap between them, so no line is under it. */
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-item.active .session-rail-open {
+  border-color: var(--label-bright);
+  background: linear-gradient(to top, var(--surface-bg) 1px, transparent 1px);
+}
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-item.active { background: none; }
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-line { flex-direction: row; align-items: center; gap: 8px; }
+/* Only the caption clips: the numeral has no inner clipping box, including
+   wide marks such as VIII and XIII in a tab seated against the rail edge. */
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-agent { flex: 0 0 auto; min-width: max-content; overflow: visible; }
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-model { display: none; }
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-asked { max-width: 16em; }
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-open { height: 100%; justify-content: center; white-space: nowrap; }
+body.imperfect #entry-terminal .session-rail-fold { transform: rotate(90deg); }
+/* A second computer's sessions follow its name, a word in the strip. */
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-machine {
+  align-self: center;
+  margin: 0 0 0 0.6em;
+  padding: 0 0.3em 0 0.6em;
+  border-left: 1px solid var(--label-3);
+  white-space: nowrap;
+}
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-machine:first-child { margin-left: 0; border-left: 0; }
+/* Unfolded: the whole list, in the session's own panel (its column, from the
+   band down to the composer) until a session is chosen. The band stays the
+   band: its divider, + and fold where they were, only the tabs become the list
+   below it. */
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) {
+  position: absolute;
+  inset: 0;
+  grid-row: 1 / 3;
+  margin-left: var(--wm-home-left, 0px);
+  margin-top: var(--wm-home-top, 0px);
+  width: var(--wm-home-width, 100%);
+  z-index: 70;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+body.imperfect #entry-terminal .session-rail-list {
+  flex: 1; min-height: 0; overflow: auto;
+  background: var(--surface);
+}
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-heading {
+  position: relative;
+  flex: none; background: transparent;
+  box-sizing: border-box;
+  height: var(--bar-height);
+  align-items: flex-end;
+  margin: 0;
+  padding: 0 0 0 var(--rail-gutter);
+  justify-content: flex-end;
+  box-shadow: inset 0 -1px var(--tint);
+}
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-heading > * { height: var(--rail-tab-height); min-height: 0; }
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-heading .session-rail-new { width: auto; order: -1; margin-right: auto; }
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-heading .session-rail-new .session-rail-open { flex: none; width: 44px; height: 100%; min-height: 0; padding: 0; }
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-fold { width: var(--rail-tab-height); }
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-heading .session-rail-theme {
+  position: absolute; top: 0; left: 0; height: 24px; min-height: 24px; font-size: 12px;
+}
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-machine { margin-top: 1.1em; }
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-agents,
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-history { flex: none; }
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-open { width: 100%; text-align: left; }
+body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-asked {
+  white-space: normal; overflow: visible; overflow-wrap: anywhere;
+}
+body.imperfect #entry-terminal .session-rail-heading .session-rail-new { flex: none; }
+body.imperfect #entry-terminal .session-rail-heading .session-rail-new .session-rail-open {
+  width: 44px; min-height: 44px; padding: 0; justify-content: center;
+}
+body.imperfect #entry-terminal .session-rail-theme {
+  appearance: none;
+  padding: 0 0.6em;
+  border: 0;
+  background: transparent;
+  color: var(--label-2);
+  font: inherit;
+  font-weight: 400;
+}
+body.imperfect #entry-terminal .session-rail-fold {
+  appearance: none;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  padding: 0 0.25em;
+  border: 0;
+  background: transparent;
+  color: var(--label-2);
+  font: inherit;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+}
+body.imperfect #entry-terminal .session-rail-fold:hover,
+body.imperfect #entry-terminal .session-rail-fold:focus-visible {
+  color: var(--label);
+}
+
+/* ---- the phone ----------------------------------------------------------
+   The phone is one app, not a desk in miniature: no clock, no
+   workspace numbers, no window margins. The computer's wallpaper shows only in
+   the conversation, behind its messages (below). imperfect fills the screen between the
+   status band (--safe-top) and the gesture bar or the keys (--safe-bottom),
+   and those bands are the app's own ground, the bars' dust carried on into
+   them (above). The strip is marks alone, and
+   every control is thumb-sized. */
+@media (pointer: coarse) {
+  html:where(:not(.launch-framed)):has(body.imperfect),
+  :where(html:not(.launch-framed)) body.imperfect { background: var(--surface-bg); }
+  :where(html:not(.launch-framed)) body.imperfect .code-face:not([hidden]) { animation: none; }
+  :where(html:not(.launch-framed)) body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-asked { display: none; }
+  :where(html:not(.launch-framed)) body.imperfect #entry-terminal > #session-rail { --rail-tab-height: 44px; }
+  :where(html:not(.launch-framed)) body.imperfect #entry-terminal > #entry-dialog.input-dialog { font-size: .85rem; }
+  :where(html:not(.launch-framed)) body.imperfect #entry-terminal .session-rail-open,
+  :where(html:not(.launch-framed)) body.imperfect #entry-terminal .session-rail-fold,
+  :where(html:not(.launch-framed)) body.imperfect #entry-terminal .session-rail-theme { min-width: 44px; min-height: 44px; }
+  /* A row swiped away: upwards off the strip, sideways out of the list. The
+     other direction still scrolls. */
+  :where(html:not(.launch-framed)) body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-item { touch-action: pan-x; }
+  :where(html:not(.launch-framed)) body.imperfect #entry-terminal > #session-rail:not(.collapsed) .session-rail-item { touch-action: pan-y; }
+}
+body.imperfect #entry-terminal .session-rail-item.active .session-rail-agent {
+  color: var(--label);
+}
+/* Two lit rows read as two selections, so the cursor is only painted while the
+   rail is actually being driven from the keyboard — the row class is not set
+   otherwise. Declared before `.active` so a row that is both stays lit. */
+body.imperfect #entry-terminal .session-rail-item.active {
+  background: var(--theme-raised-2, color-mix(in srgb, var(--label) 8%, transparent));
+}
+
+/* A window here opens the way every other window on this desktop opens.
+   The numbers are a tiling compositor's window animation: `windowsIn` is
+   easeOutQuint (0.23, 1, 0.32, 1) over 4.1ds with `popin 87%`, so a window arrives at 87% of its size and settles. */
+@keyframes window-in {
+  from { opacity: 0; transform: scale(0.87); }
+  to { opacity: 1; transform: scale(1); }
+}
+body.imperfect .code-face:not([hidden]) {
+  animation: window-in 410ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  body.imperfect .code-face:not([hidden]) { animation: none; }
+}
+
+
+.entry-attach {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tint);
+  font: inherit;
+  cursor: pointer;
+}
+#entry-files {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.entry-plus { position: relative; display: flex; align-items: center; }
+body.imperfect .entry-pending { display: flex; flex-wrap: wrap; gap: 0.5em; padding: 0.25em var(--entry-gutter, 24px); }
+body.imperfect .entry-pending[hidden] { display: none; }
+.entry-inline-attachment {
+  padding: 0;
+  background: transparent;
+  color: var(--tint);
+}
+.entry-pending-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  min-height: 0;
+  padding: 0.1em 0.35em;
+  border: 0;
+  background: var(--theme-band, var(--sep));
+  color: var(--label);
+  font: inherit;
+  cursor: pointer;
+}
+.entry-pending-chip span { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0; }
+.entry-pending-progress,
+.entry-pending-remove { color: var(--tint); }
+.entry-line.user .entry-image,
+#entry-output > .entry-image,
+.gui-message .entry-image {
+  display: block;
+  max-width: min(100%, 22rem);
+  max-height: 40vh;
+  width: auto;
+  height: auto;
+  margin-top: 0.6em;
+  border: 1px solid var(--tint);
+}
+
+/* ---- a fresh session ------------------------------------------------------
+   A new session is its question, lowercase, over its input bar, the two a
+   little under the middle of the conversation: harness.js (paintFresh) lifts
+   the bar there by --fresh-lift from its own place at the foot, and puts the
+   question over it (--fresh-bar-top). The first prompt sends it down: the
+   question fades, and the bar resizes and glides to its place while the
+   conversation appears (.fresh-move, only then). With less motion it is
+   simply there. */
+body.imperfect .fresh-question {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  top: calc(var(--fresh-bar-top, 50%) - 26px);
+  transform: translateY(-100%);
+  margin: 0;
+  padding: 0 24px;
+  color: var(--label-bright);
+  font: 300 34px/1.15 var(--ui);
+  letter-spacing: -0.02em;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+body.imperfect #entry-terminal.fresh .fresh-question { opacity: 1; visibility: visible; }
+body.imperfect #entry-terminal.fresh:not(.focus-full-panel) > :is(#entry-pending, .entry-connection, #entry-input-zone, .entry-status),
+body.imperfect #entry-terminal.fresh.focus-layout:not(.focus-full-panel)::after { transform: translateY(var(--fresh-lift, 0px)); }
+/* In focus the fresh bar is the size of Kinso's reference, about 618 by 88
+   (narrower and thicker than the one it becomes at the foot); a smaller
+   window keeps the column's own margins. */
+body.imperfect #entry-terminal.focus-layout { --fresh-column: max(var(--focus-column), calc((100% - 618px) / 2)); }
+body.imperfect #entry-terminal.focus-layout.fresh:not(.focus-full-panel) > #entry-input-zone .entry-input-stack { min-height: 45px; padding-top: 12px; }
+body.imperfect #entry-terminal.focus-layout.fresh:not(.focus-full-panel) > .entry-status { height: 38px; }
+body.imperfect #entry-terminal.focus-layout.fresh > :is(#entry-pending, .entry-connection, #entry-input-zone, .entry-status),
+body.imperfect #entry-terminal.focus-layout.fresh::after { margin-left: var(--fresh-column); margin-right: var(--fresh-column); }
+body.imperfect #entry-terminal.fresh-move > :is(#entry-pending, .entry-connection, #entry-input-zone, .entry-status),
+body.imperfect #entry-terminal.fresh-move::after {
+  transition: transform 420ms cubic-bezier(0.22, 0.8, 0.24, 1), margin 420ms cubic-bezier(0.22, 0.8, 0.24, 1), height 420ms cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+body.imperfect #entry-terminal.fresh-move > #entry-input-zone .entry-input-stack { transition: min-height 420ms cubic-bezier(0.22, 0.8, 0.24, 1), padding 420ms cubic-bezier(0.22, 0.8, 0.24, 1); }
+body.imperfect #entry-terminal.fresh-move .fresh-question { transition: opacity 160ms ease-out, visibility 0s linear 160ms; }
+/* The picker opened from a fresh bar floats over it, not under it. */
+body.imperfect #entry-terminal.fresh #entry-dialog.centre-box { z-index: 70; }
+/* A model's row names its harness and billing in full. */
+body.imperfect #entry-dialog.model-picker .entry-dialog-option small { max-width: 28ch; }
+/* What was first asked comes in as the bar goes down. */
+body.imperfect #entry-terminal.fresh-move #entry-output > * { animation: fresh-arrive 360ms cubic-bezier(0.22, 0.8, 0.24, 1) 60ms both; }
+@keyframes fresh-arrive { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) {
+  body.imperfect #entry-terminal.fresh-move > *,
+  body.imperfect #entry-terminal.fresh-move::after,
+  body.imperfect #entry-terminal.fresh-move .entry-input-stack,
+  body.imperfect #entry-terminal.fresh-move .fresh-question,
+  body.imperfect #entry-terminal.fresh-move #entry-output > * { transition: none; animation: none; }
+}
+
+/* ---- the keys -----------------------------------------------------------
+   One sheet: the key on the left, what it does beside it. Nothing here
+   writes the list; it is the binding registry asked what currently applies. */
+body.imperfect .keys-face {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: var(--scrim);
+}
+body.imperfect .keys-face[hidden] { display: none; }
+body.imperfect .keys-box {
+  width: min(30rem, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: 20px 22px;
+  border-radius: var(--radius-l);
+  background: var(--surface-pop);
+  box-shadow: var(--shadow-sheet);
+  color: var(--label);
+  font: var(--text)/1.45 var(--ui);
+}
+body.imperfect .keys-title { margin: 0 0 14px; color: var(--label); font: 600 17px/1.25 var(--ui); }
+body.imperfect .keys-list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+body.imperfect .keys-row {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: baseline;
+  column-gap: 18px;
+  padding: 6px 0;
+  border-top: 0.5px solid var(--sep);
+}
+body.imperfect .keys-row:first-child { border-top: 0; }
+body.imperfect .keys-key { color: var(--label); font: 500 12px/1.4 var(--ui); white-space: nowrap; }
+body.imperfect .keys-act { color: var(--label-2); }
+body.imperfect .keys-hint { margin: 14px 0 0; color: var(--label-3); font-size: var(--text-s); }
+
+/* The composer is a block cursor on an empty line, and nothing else.
+   It carried a `›` and the placeholder "ask" because the caret was a thin
+   line over an empty box and read as a pane with no input. The block reads as
+   an input on its own, the way the terminal's does, so both came out on
+   2026-09-19 and the gutter that separated them came out with them. */
+body.imperfect .entry-input-stack { gap: 0; }
+/* An empty status span still takes its slot's gap, which is why the right-hand
+   end of the status line stopped landing on the same column as the composer's
+   + above it. */
+body.imperfect .entry-status-left > :empty,
+body.imperfect .entry-status-right > :empty { display: none; }
+
+
+body.imperfect #entry-work { display: none; }
+
+/* The composer and its status line stay over whatever the conversation lays
+   out above them. */
+body.imperfect #entry-input-zone { position: relative; z-index: 59; }
+body.imperfect .entry-status { position: relative; z-index: 61; }
+
+/* The theme picker (site.js): a scrim, the chosen theme large, the rest
+   beside it, dimmed; each a rounded card, the chosen one ringed in the tint. */
+body.imperfect .picker {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  overflow: hidden;
+  background: var(--scrim);
+  outline: none;
+}
+body.imperfect .picker[hidden] { display: none; }
+body.imperfect .picker-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  transform: translate(-50%, -50%) scale(var(--pick-scale, 1));
+  font: 600 var(--text-l)/1.3 var(--ui);
+  color: var(--label);
+}
+body.imperfect .picker-strip { position: relative; }
+body.imperfect .pick {
+  --skew: 0px;
+  --edge: var(--sep-strong);
+  position: absolute;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-l);
+  background: var(--edge);
+  box-shadow: var(--shadow-pop);
+  cursor: default;
+}
+body.imperfect .pick[hidden] { display: none; }
+body.imperfect .pick.chosen { --edge: var(--tint); }
+body.imperfect .pick-image {
+  position: absolute;
+  inset: 1px;
+  overflow: hidden;
+  border-radius: var(--radius-l);
+  background: var(--theme-bg);
+}
+body.imperfect .pick.chosen .pick-image { inset: 3px; border-radius: var(--radius); }
+body.imperfect .pick:not(.chosen) .pick-image::after { content: ''; position: absolute; inset: 0; background: color-mix(in srgb, var(--theme-bg) 42%, transparent); }
+/* A theme's face is always the chosen one's size, centred, so a slice shows
+   the middle of the same picture. */
+body.imperfect .pick-face {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 762px;
+  height: 469px;
+  transform: translate(-50%, -50%);
+  background: url("../goat/goat.webp") var(--face-bg) center / auto 58% no-repeat;
+}
+
+/* A look turning (turn.js) holds the old one still; only the opening part moves.
+   A session's turn opens its conversation column alone. */
+html:is(.turn, .session-turn)::view-transition-group(*),
+html:is(.turn, .session-turn)::view-transition-old(*),
+html:is(.turn, .session-turn)::view-transition-new(*) { animation: none; mix-blend-mode: normal; }
+html.session-turn .entry-screen { view-transition-name: session-panel; }
+html.session-turn::view-transition-new(session-panel) { background: var(--surface); }
+
+
+
+/* Past sessions: only in the unfolded list, under the open ones. */
+body.imperfect #entry-terminal > #session-rail.collapsed .session-rail-history { display: none; }
+body.imperfect #entry-terminal .session-rail-history { display: flex; flex-direction: column; }
+body.imperfect #entry-terminal .session-rail-past .session-rail-model { opacity: 0.7; }
+/* While text is selected the mirror steps aside, so the field shows its own
+   letters under the highlight; left transparent, a selection read as the
+   words vanishing. */
+body.imperfect .entry-input-mirror:has(> .entry-caret-mirror[hidden]) #entry-input {
+  color: var(--label-bright);
+  -webkit-text-fill-color: var(--label-bright);
+}
+/* Status takes its own space beside the prompt, never over its text or the dock.
+   Narrow phones keep typing room and truncate only the status visually. */
+body.imperfect .entry-input-stack > .entry-line-status {
+  flex: 0 1 auto;
+  align-self: flex-start;
+  min-width: 0;
+  max-width: 65%;
+  margin-left: 0.75em;
+  color: var(--label-bright);
+  font: inherit;
+  line-height: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+body.imperfect .entry-input-stack > .entry-line-status:empty { display: none; }
+/* On a phone the code window is fixed over the whole screen; the page under
+   it must not move. With the keyboard up, a swipe used to scroll that page
+   and open empty space under the input bar. */
+@media (pointer: coarse) {
+  html:where(:not(.launch-framed)):has(> body.code-open),
+  :where(html:not(.launch-framed)) body.code-open { overflow: hidden; overscroll-behavior: none; }
+}
+body.imperfect .picker-name { margin: 0; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--surface-pop); box-shadow: var(--shadow-pop); color: var(--label); font: 600 var(--text)/1.3 var(--ui); }
+
+/* The launch frame uses this product's own fresh session and panes. Its plain
+   ground is unchanged; only the pieces not dropped yet are out of sight. */
+/* The inert phone demonstration leaves the device status/gesture areas clear. */
+/* Its own notch and home bar, through the one declaration above (and still
+   under whatever a wrap writes on the element itself). */
+html.launch-phone:has(body.imperfect) { --phone-top: 54px; --phone-bottom: 26px; }
+html:is([data-assembly-step="bare"], [data-assembly-step="claude"], [data-assembly-step="codex"]) body.imperfect #entry-terminal.focus-layout { --focus-rail-w: 0px; --focus-panel-column: 0px !important; }
+html:is([data-assembly-step="bare"], [data-assembly-step="claude"], [data-assembly-step="codex"]) #session-rail,
+html:is([data-assembly-step="bare"], [data-assembly-step="claude"], [data-assembly-step="codex"]) .canvas-strip > :not(.entry-screen) { visibility: hidden !important; pointer-events: none; }
+html:is([data-assembly-step="bare"], [data-assembly-step="claude"], [data-assembly-step="codex"]) .canvas-strip > .entry-screen { width: 100% !important; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) .session-actions button.entry-send { border-radius: 0; }

@@ -1,0 +1,13 @@
+{"type":"session_meta","timestamp":"2026-09-30T01:00:00Z","payload":{"id":"synthetic-codex-mac","cwd":"/Users/synthetic/imperfect","source":"cli"}}
+{"type":"turn_context","timestamp":"2026-09-30T01:00:00Z","payload":{"model":"synthetic-model"}}
+{"type":"response_item","timestamp":"2026-09-30T01:00:00Z","payload":{"type":"message","role":"developer","content":[{"type":"input_text","text":"Injected developer instructions"}]}}
+{"type":"response_item","timestamp":"2026-09-30T01:00:00Z","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"# AGENTS.md instructions for /Users/synthetic\n\n<INSTRUCTIONS>Injected harness instructions</INSTRUCTIONS>"}]}}
+{"type":"response_item","timestamp":"2026-09-30T01:00:00Z","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"<environment_context>Injected environment</environment_context>"}]}}
+{"type":"event_msg","timestamp":"2026-09-30T01:00:00Z","payload":{"type":"user_message","message":"Keep the Mac work in ~/workbench/mac-piece"}}
+{"type":"response_item","timestamp":"2026-09-30T01:00:00Z","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Keep the Mac work in ~/workbench/mac-piece"}]}}
+{"type":"response_item","timestamp":"2026-09-30T01:01:00Z","payload":{"type":"function_call","name":"exec_command","call_id":"synthetic-tool","arguments":"{\"command\":\"git status --short\"}"}}
+{"type":"response_item","timestamp":"2026-09-30T01:01:01Z","payload":{"type":"function_call_output","call_id":"synthetic-tool","output":"Synthetic working tree is clean"}}
+{"type":"event_msg","timestamp":"2026-09-30T01:02:00Z","payload":{"type":"agent_message","message":"The Mac work is preserved."}}
+{"type":"response_item","timestamp":"2026-09-30T01:02:00Z","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"The Mac work is preserved."}]}}
+{"type":"response_item","timestamp":"2026-09-30T01:02:00Z","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"The Mac work is preserved."}]}}
+{"type":"event_msg","timestamp":"2026-09-30T01:02:01Z","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":100,"output_tokens":10}}}}

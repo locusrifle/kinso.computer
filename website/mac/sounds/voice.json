@@ -1,0 +1,54 @@
+{
+  "voice": "VMXigKbZ87s0JTqCj2sl",
+  "seed": 7,
+  "characters": 223,
+  "lines": [
+    {
+      "text": "This is a Mac. And this is imperfect. Let's build it.",
+      "voice": "mac/sounds/line-0.m4a",
+      "durationMs": 4720,
+      "speechEndMs": 4800
+    },
+    {
+      "text": "Drop in Claude Code.",
+      "voice": "mac/sounds/line-1.m4a",
+      "durationMs": 1680,
+      "speechEndMs": 1760
+    },
+    {
+      "text": "Then ChatGPT.",
+      "voice": "mac/sounds/line-2.m4a",
+      "durationMs": 1840,
+      "speechEndMs": 1920
+    },
+    {
+      "text": "Your files.",
+      "voice": "mac/sounds/line-3.m4a",
+      "durationMs": 1200,
+      "speechEndMs": 1040
+    },
+    {
+      "text": "And a browser.",
+      "voice": "mac/sounds/line-4.m4a",
+      "durationMs": 1120,
+      "speechEndMs": 1120
+    },
+    {
+      "text": "And it's on your phone.",
+      "voice": "mac/sounds/line-phone.m4a",
+      "durationMs": 1520
+    },
+    {
+      "text": "Now that software is one sentence away, you don't need apps other people made.",
+      "voice": "mac/sounds/line-5.m4a",
+      "durationMs": 4720,
+      "speechEndMs": 4800
+    },
+    {
+      "text": "It's yours.",
+      "voice": "mac/sounds/line-6.m4a",
+      "durationMs": 1120,
+      "speechEndMs": 1120
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+/* Native Mac points. The parent scales the entire 1600×900 stage, not its children. */
+/* macOS's Dark appearance, always (desktop.css). */
+.mac {
+  --bar-bg: rgb(22 14 52 / 34%); --bar-ink: #fff; --bar-open: #fff3; --bar-focus: #fff9;
+  --menu-bg: rgb(38 36 46 / 80%); --menu-ink: #ffffffeb; --menu-rim: #ffffff2b; --menu-edge: #000c; --menu-shadow: #0008; --menu-rule: #ffffff24;
+  --muted-ink: #98989d; --well: #ffffff0d; --tile: #ffffff14; --tile-edge: inset 0 0 0 .5px #ffffff1a; --switch-off: #5b5b60; --media: #ffffff1f; --search-ink: #f2f2f7; --search-icon: #98989d;
+  --dock-bg: rgb(36 28 58 / 46%); --dock-rim: #ffffff38; --dock-edge: #000a; --dock-shadow: #0005; --dock-run: #ffffffa8; --dock-rule: #ffffff38; --dock-focus: #ffffffb3;
+  --label-bg: #2c2b31ed; --label-ink: #f2f2f7; --label-edge: #000b;
+  --light-off: #4d4d51; --light-off-edge: #ffffff14;
+  --win-bg: #1e1e20; --win-ink: #e5e5ea; --win-bar: linear-gradient(#323234,#2b2b2d); --win-bar-edge: #000; --win-bar-ink: #d1d1d6; --win-bar-idle: #262628; --win-bar-idle-ink: #6e6e73;
+  --about-mark: #d1d1d6; --about-quiet: #98989d;
+  --finder-side: #2a2930cf; --finder-side-edge: #000; --finder-head: #8e8e93; --finder-item: #c7c7cc; --finder-main: #1e1e20; --finder-tool: #2b2b2d; --finder-rule: #3a3a3c; --finder-dim: #8e8e93;
+  --button-edge: #ffffff26; --button-ink: #e5e5ea; --button-bg: linear-gradient(#5a5a5e,#4a4a4e);
+  --mini-bg: #121214; --mini-ink: #98989d; --mini-head: #121214; --mini-rule: #2c2c2f; --mini-side: #121214; --mini-line: #2c2c2f; --mini-line-soft: #222225; --mini-card-edge: #2c2c2f; --mini-field: #222225; --mini-bar: #222225; --mini-mark: #7c7c82; --mini-page: #222225;
+}
+.mac .shell-bar { --pt: 1px; position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; height: 24px; padding: 0 10px 0 12px; z-index: 1000; background: var(--bar-bg); backdrop-filter: blur(40px) saturate(1.5); -webkit-backdrop-filter: blur(40px) saturate(1.5); color: var(--bar-ink); font: 13px/1 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif; letter-spacing: -.1px; }
+.shell-menu-side,.shell-status-side { display: flex; align-items: center; height: 100%; }
+.shell-status-side { margin-left: auto; gap: 3px; }
+.mac .shell-menu-trigger { appearance: none; border: 0; background: none; color: inherit; height: 24px; padding: 0 10px; font: inherit; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: default; white-space: nowrap; box-shadow: none; min-width: 0; }
+.mac .shell-app-menu { font-weight: 650; padding: 0 12px; }
+.mac .shell-menu-apple { width: 31px; padding: 0 8px; margin-right: 2px; }
+.shell-menu-apple svg { width: 14px; height: 17px; fill: currentColor; }
+.shell-status-side .shell-menu-trigger { padding: 0 7px; }
+.shell-status-side svg { display: block; width: 18px; height: 18px; fill: currentColor; }
+.shell-status-side .shell-menu-battery svg { width: 27px; }
+.mac .shell-menu-trigger.is-open { background: var(--bar-open); }
+.mac .shell-menu-trigger:focus-visible { outline: 2px solid var(--bar-focus); outline-offset: -2px; }
+.mac .shell-status-side .mac-clock { font-variant-numeric: tabular-nums; padding: 0 7px; font-size: 13px; }
+.shell-siri-orb { display: inline-block; flex: none; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(ellipse at 38% 22%,#c4ffec 1%,transparent 52%),radial-gradient(ellipse at 65% 75%,#fc74cb,transparent 56%),conic-gradient(#115fd3,#4de4dd,#9b71f1,#e840a2,#115fd3); box-shadow: inset 0 0 2px #fff9; }
+.mac .shell-window { --pt: 1px; position: absolute; transform-origin: 0 0; border-radius: 11px; overflow: hidden; box-shadow: 0 0 0 .6px #0009,0 0 0 1px #fff2 inset,0 20px 65px #0006,0 3px 13px #0005; }
+.mac .shell-window[data-focused="false"] { box-shadow: 0 0 0 .6px #0006,0 12px 40px #0004; }
+.mac .shell-window[data-window-state="closed"],.mac .shell-window[data-window-state="minimized"] { visibility: hidden; pointer-events: none; }
+.mac .shell-window iframe { pointer-events: auto; }
+.mac .shell-window .shell-lights { position: absolute; display: flex; top: 11px; left: 20px; gap: 8px; z-index: 10; pointer-events: auto; height: 12px; }
+.mac .shell-light { appearance: none; padding: 0; border: 0; border-radius: 50%; width: 12px; height: 12px; display: grid; place-items: center; font: bold 12px/12px Arial,sans-serif; cursor: default; color: transparent; box-shadow: inset 0 0 0 .5px #0003; min-width: 12px; }
+.mac .shell-light-close { background: #ff5f57; }
+.mac .shell-light-minimize { background: #febc2e; }
+.mac .shell-light-zoom { background: #28c840; font-size: 11px; }
+.mac .shell-light-zoom svg { width: 8px; height: 8px; fill: currentColor; }
+.mac .shell-window[data-focused="false"] .shell-light { background: var(--light-off); box-shadow: inset 0 0 0 .5px var(--light-off-edge); }
+.mac .shell-lights:hover .shell-light { color: #0009; }
+.mac .shell-window[data-focused="false"] .shell-lights:hover .shell-light-close { background: #ff5f57; }
+.mac .shell-window[data-focused="false"] .shell-lights:hover .shell-light-minimize { background: #febc2e; }
+.mac .shell-window[data-focused="false"] .shell-lights:hover .shell-light-zoom { background: #28c840; }
+.mac .shell-light:focus-visible { outline: 2px solid #007aff; outline-offset: 3px; }
+.shell-managed { background: var(--win-bg); color: var(--win-ink); font: 13px/1.4 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif; display: flex; flex-direction: column; }
+.shell-titlebar { height: 42px; min-height: 42px; box-sizing: border-box; padding: 12px 90px 8px; text-align: center; background: var(--win-bar); border-bottom: .5px solid var(--win-bar-edge); color: var(--win-bar-ink); font-weight: 600; cursor: default; touch-action: none; }
+.mac .shell-managed .shell-lights { top: 15px; }
+.shell-body { flex: 1; min-height: 0; overflow: auto; user-select: text; }
+.shell-managed[data-focused="false"] .shell-titlebar { background: var(--win-bar-idle); color: var(--win-bar-idle-ink); }
+.shell-menu,.shell-popover { position: absolute; z-index: 1100; min-width: 238px; box-sizing: border-box; padding: 5px; border-radius: 7px; background: var(--menu-bg); color: var(--menu-ink); box-shadow: inset 0 0 0 .5px var(--menu-rim),0 0 0 .5px var(--menu-edge),0 9px 32px var(--menu-shadow); backdrop-filter: blur(45px) saturate(1.5); -webkit-backdrop-filter: blur(45px) saturate(1.5); font: 13px/1.35 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif; letter-spacing: -.05px; text-shadow: none; }
+.mac .shell-menu-item { width: 100%; min-height: 23px; border: 0; border-radius: 4px; padding: 3px 8px; display: flex; align-items: center; justify-content: space-between; gap: 28px; color: inherit; background: none; font: inherit; text-align: left; cursor: default; white-space: nowrap; }
+.mac .shell-menu-item:hover:not(:disabled),.mac .shell-menu-item:focus-visible { outline: none; background: #0069df; color: white; }
+.mac .shell-menu-item:disabled { opacity: .36; }
+.shell-shortcut { color: currentColor; opacity: .65; text-align: right; font-size: 12px; letter-spacing: .1px; }
+.shell-menu-separator { height: .5px; background: var(--menu-rule); margin: 5px 8px; }
+.shell-popover { padding: 15px; border-radius: 12px; width: 300px; }
+.shell-popover p { margin: 8px 0; }
+.shell-pop-heading { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 13px; }
+.shell-popover small,.shell-muted { color: var(--muted-ink); }
+.shell-network { border-radius: 6px; background: var(--well); padding: 10px 5px; margin: 6px 0; }
+.shell-network span { float: right; }
+.mac .shell-switch { width: 32px; height: 19px; background: var(--switch-off); border-radius: 20px; border: 0; padding: 2px; }
+.shell-switch::before { content: ''; display: block; width: 15px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px #0003; }
+.mac .shell-switch[aria-pressed="true"] { background: #007aff; }
+.shell-switch[aria-pressed="true"]::before { transform: translateX(13px); }
+.shell-popover-control { width: 330px; padding: 12px; }
+.shell-control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.shell-control-tile { background: var(--tile); border-radius: 9px; padding: 10px 13px; margin-bottom: 9px; box-shadow: var(--tile-edge); font-size: 13px; }
+.shell-control-tile p { margin: 2px 0 11px; font-weight: 550; }
+.shell-control-tile p:last-child { margin-bottom: 1px; }
+.shell-control-tile small { display: block; font-size: 10px; padding-left: 21px; font-weight: 400; }
+.shell-control-tile label { font-weight: 600; display: block; }
+.shell-control-tile input[type="range"] { display: block; width: 100%; margin: 10px 0 1px; accent-color: white; }
+.shell-media { display: flex; align-items: center; gap: 14px; margin: 0; }
+.shell-media>span { display: grid; place-items: center; width: 42px; height: 42px; background: var(--media); font-size: 28px; border-radius: 6px; }
+.shell-media small { padding: 0; }
+.shell-media button { margin-left: auto; background: transparent; border: 0; color: #888; }
+.shell-popover-spotlight { width: 600px; padding: 0; }
+.shell-search { display: flex; align-items: center; gap: 15px; padding: 17px 20px; }
+.shell-search svg { width: 23px; height: 23px; fill: currentColor; color: var(--search-icon); }
+.mac .shell-search input { border: 0; outline: none; background: none; width: 100%; color: var(--search-ink); font: 23px/1.5 -apple-system,BlinkMacSystemFont,sans-serif; padding: 0; user-select: text; }
+.shell-search-results:not(:empty) { padding: 5px 10px 12px; border-top: .5px solid var(--menu-rule); }
+.mac .shell-search-result { display: block; width: 100%; padding: 8px 13px; border: 0; border-radius: 5px; text-align: left; background: none; color: inherit; font: inherit; }
+.mac .shell-search-result:hover { background: #007aff; color: white; }
+.shell-popover-siri .shell-siri-orb { width: 30px; height: 30px; vertical-align: middle; margin-right: 12px; }
+.shell-popover-clock { width: 330px; padding: 20px; }
+.shell-popover-clock h3 { margin: 22px 0 12px; font-size: 14px; }
+.shell-calendar { display: grid; grid-template-columns: repeat(7,1fr); gap: 6px; text-align: center; }
+.shell-calendar span,.shell-calendar small { display: grid; place-items: center; height: 28px; width: 28px; }
+.shell-calendar .is-today { background: #ff453a; color: #fff; border-radius: 50%; font-weight: 600; }
+.mac .shell-dock { --pt: 1px; position: absolute; left: 50%; transform: translateX(-50%); display: flex; width: max-content; align-items: flex-end; z-index: 900; height: 72px; box-sizing: border-box; padding: 0 5px; bottom: 6px; border-radius: 20px; gap: 0; background: var(--dock-bg); backdrop-filter: blur(35px) saturate(1.6); -webkit-backdrop-filter: blur(35px) saturate(1.6); box-shadow: inset 0 0 0 .5px var(--dock-rim),0 0 0 .5px var(--dock-edge),0 7px 25px var(--dock-shadow); }
+/* The parent's narrated pointer/carry stay above the shell's always-front Dock. */
+.mac .mac-cursor { z-index: 1200; }
+.mac .mac-ghost { z-index: 1199; }
+.mac .dock-slot { position: relative; width: 64px; height: 72px; flex: 0 0 64px; transition: width .25s ease,flex-basis .25s ease,opacity .2s; }
+.mac .dock-icon { position: absolute; left: 0; top: 1px; width: 64px; height: 64px; border: 0; background: none; color: inherit; padding: 0; border-radius: 13px; cursor: default; min-width: 0; display: block; }
+.mac .dock-icon img { position: static; display: block; width: 64px; height: 64px; margin: 0; object-fit: contain; filter: drop-shadow(0 2px 1px #0003); pointer-events: none; }
+.mac .dock-icon:active img { filter: brightness(.65); }
+.mac .dock-icon:focus-visible { outline: 2px solid var(--dock-focus); outline-offset: -3px; }
+.mac .dock-slot .mac-run { position: absolute; width: 4px; height: 4px; bottom: 3px; left: 50%; margin-left: -2px; background: var(--dock-run); border-radius: 50%; }
+.shell-dock-divider { height: 48px; width: 1px; margin: 0 9px 12px; background: var(--dock-rule); flex: none; }
+.shell-dock-label { position: absolute; bottom: 84px; left: 50%; transform: translateX(-50%); padding: 5px 11px; border-radius: 6px; box-shadow: 0 0 0 .5px var(--label-edge),0 5px 15px #0004; background: var(--label-bg); color: var(--label-ink); backdrop-filter: blur(20px); font: 13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif; white-space: nowrap; visibility: hidden; pointer-events: none; }
+.shell-dock-label::after { content: ''; position: absolute; top: 100%; left: calc(50% - 5px); border: 5px solid transparent; border-bottom: 0; border-top-color: var(--label-bg); }
+.dock-slot:hover .shell-dock-label,.dock-slot:focus-within .shell-dock-label { visibility: visible; }
+.mac .dock-slot[data-consumed="true"],.mac .dock-slot[consumed],.mac .dock-slot.mac-consumed,.mac .dock-slot.consumed { width: 0; flex-basis: 0; opacity: 0; pointer-events: none; overflow: hidden; }
+/* Miniatures are authored CSS chrome, not copies of the product document. */
+.mac .shell-thumbnail-button { display: flex; align-items: center; justify-content: center; }
+.shell-miniature-viewport { position: relative; flex: none; overflow: hidden; border-radius: 3px; box-shadow: 0 0 0 .5px #fff6,0 2px 3px #0005; pointer-events: none; }
+.shell-miniature { position: absolute; inset: 0 auto auto 0; transform-origin: 0 0; border-radius: 11px; overflow: hidden; background: var(--mini-bg); color: var(--mini-ink); }
+.shell-miniature-header { height: 34px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--mini-rule); background: var(--mini-head); font: 13px -apple-system,BlinkMacSystemFont,sans-serif; }
+.shell-miniature-lights { position: absolute; left: 20px; top: 11px; display: flex; gap: 8px; }
+.shell-miniature-lights i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+.shell-miniature-lights i:nth-child(2) { background: #febc2e; }
+.shell-miniature-lights i:nth-child(3) { background: #28c840; }
+.shell-miniature-content { position: absolute; inset: 35px 0 0; background: var(--mini-bg); }
+.shell-miniature-sidebar { position: absolute; inset: 0 auto 0 0; width: 20%; border-right: 1px solid var(--mini-rule); background: linear-gradient(var(--mini-line) 0 0) 18px 34px / 60% 8px no-repeat,linear-gradient(var(--mini-line-soft) 0 0) 18px 66px / 72% 8px no-repeat,linear-gradient(var(--mini-line-soft) 0 0) 18px 96px / 63% 8px no-repeat,linear-gradient(var(--mini-line-soft) 0 0) 18px 126px / 70% 8px no-repeat,var(--mini-side); }
+.shell-miniature-card { position: absolute; top: 21%; left: 29%; width: 27%; height: 38%; border: 1px solid var(--mini-card-edge); background: linear-gradient(var(--mini-line) 0 0) center 24% / 40% 10px no-repeat,linear-gradient(var(--mini-field) 0 0) center 49% / 72% 36px no-repeat,linear-gradient(var(--mini-field) 0 0) center 76% / 72% 36px no-repeat,var(--mini-bg); }
+.shell-miniature-browser { position: absolute; inset: 0 0 0 64%; border-left: 1px solid var(--mini-rule); background: linear-gradient(var(--mini-bar) 0 0) center 18px / 80% 24px no-repeat,linear-gradient(var(--mini-mark) 0 0) center 37% / 32% 17px no-repeat,linear-gradient(var(--mini-page) 0 0) center 46% / 80% 30px no-repeat,var(--mini-bg); }
+.mac .shell-thumbnail-button .shell-thumbnail-app { position: absolute; right: -1px; bottom: -1px; width: 26px; height: 26px; filter: drop-shadow(0 1px 1px #0005); }
+.shell-about { text-align: center; padding: 30px 24px 20px; color: var(--win-ink); }
+.shell-about>svg { width: 55px; height: 65px; fill: var(--about-mark); margin-bottom: 8px; }
+.shell-about h1 { font-size: 23px; font-weight: 650; margin: 8px 0 16px; }
+.shell-about p { font-size: 13px; margin: 5px 0; }
+.shell-about-divider { height: .5px; background: var(--menu-rule); margin: 18px 5px; }
+.shell-about-window .shell-titlebar { font-weight: 400; color: var(--about-quiet); }
+.shell-finder { display: flex; height: 100%; min-height: 0; }
+.shell-finder-sidebar { flex: none; box-sizing: border-box; width: 160px; background: var(--finder-side); padding: 13px 14px; border-right: .5px solid var(--finder-side-edge); }
+.shell-finder-sidebar small { font-size: 11px; color: var(--finder-head); font-weight: 600; }
+.shell-finder-sidebar p { margin: 9px 0; color: var(--finder-item); font-size: 12px; }
+.shell-finder-main { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--finder-main); }
+.shell-finder-toolbar { display: flex; align-items: center; gap: 20px; min-height: 45px; padding: 0 18px; border-bottom: .5px solid var(--finder-rule); background: var(--finder-tool); }
+.shell-finder-toolbar>span { color: var(--finder-dim); font-size: 24px; line-height: 1; }
+.mac .shell-empty-trash { margin-left: auto; border: .5px solid var(--button-edge); padding: 3px 13px; font: inherit; color: var(--button-ink); background: var(--button-bg); box-shadow: 0 1px 1px #0001; border-radius: 5px; }
+.mac .shell-empty-trash:disabled { opacity: .45; }
+.shell-finder-grid { display: flex; align-items: flex-start; align-content: flex-start; flex-wrap: wrap; flex: 1; overflow: auto; padding: 18px; gap: 16px; }
+.shell-finder-item { text-align: center; width: 105px; font-size: 12px; display: flex; align-items: center; flex-direction: column; }
+.shell-finder-item img { width: 72px; height: 72px; margin-bottom: 5px; object-fit: contain; }
+.shell-finder-empty { color: var(--finder-dim); margin: auto; align-self: center; font-size: 14px; }
+.shell-finder-footer { border-top: .5px solid var(--finder-rule); background: var(--finder-tool); font-size: 11px; color: var(--finder-dim); padding: 5px 15px; }
+@media(prefers-reduced-motion:reduce) { .mac .dock-slot { transition: none; } }

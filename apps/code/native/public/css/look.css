@@ -1,0 +1,135 @@
+/* The look: every surface's type, colours, lines, corners and shadows, in
+   one place. A theme (system/theme.mjs, a small JSON file of colours) gives
+   the colours; everything here is made from them, so a theme restyles all of
+   imperfect, and changing the feel of all of it is a change to this file.
+
+   Surfaces never name a colour of their own: they use these. The names are
+   the Mac's (labels, separators, fills), because the look is meant to feel
+   like a Mac app on any computer, Mac · Light and Mac · Dark following the
+   system when the theme is auto.
+
+     type        --ui  --mono  --text-s  --text  --text-l
+     ink         --label  --label-2  --label-3  --label-bright  --tint  --on-tint
+     surfaces    --surface  --surface-side  --surface-card  --surface-raised  --surface-pop
+     lines       --sep  --sep-strong
+     fills       --fill  --fill-2  --fill-tint
+     shape       --radius-xs  --radius-s  --radius  --radius-l  --radius-xl  --radius-pill  --radius-window
+     depth       --shadow-pop  --shadow-sheet  --scrim
+     state       --danger  --ok  --warn
+*/
+
+:root {
+  --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, "JetBrainsMono Nerd Font", "JetBrains Mono", "DejaVu Sans Mono", monospace;
+  --text-s: 11px;
+  --text: 13px;
+  --text-l: 15px;
+
+  --label: var(--theme-ink);
+  --label-2: var(--theme-muted);
+  --label-3: var(--theme-dim);
+  --label-bright: var(--theme-bright);
+  --tint: var(--theme-accent);
+  --on-tint: #ffffff;
+
+  --surface: var(--theme-bar-bg, var(--theme-raised));
+  --surface-side: var(--surface);
+  --surface-card: color-mix(in srgb, var(--theme-ink) 3.5%, var(--surface));
+  --surface-raised: color-mix(in srgb, var(--theme-ink) 7%, var(--surface));
+  /* Menus, sheets and popovers: a step lighter than the window in the dark,
+     the window itself in the light, as a Mac draws them. */
+  --surface-pop: color-mix(in srgb, var(--theme-bright) 6%, var(--surface));
+
+  --sep: color-mix(in srgb, var(--theme-ink) 11%, transparent);
+  --sep-strong: color-mix(in srgb, var(--theme-ink) 17%, transparent);
+
+  --fill: color-mix(in srgb, var(--theme-ink) 5%, transparent);
+  --fill-2: color-mix(in srgb, var(--theme-ink) 9%, transparent);
+  --fill-tint: color-mix(in srgb, var(--theme-accent) 16%, transparent);
+
+  --radius-xs: 3px;
+  --radius-s: 6px;
+  --radius: 10px;
+  --radius-l: 14px;
+  --radius-xl: 18px;
+  --radius-pill: 999px;
+  /* A Mac window's own corners: what floats in imperfect's window (the
+     panel, the field) is rounded as the window is. */
+  --radius-window: 10px;
+
+  --shadow-pop: 0 0 0 0.5px var(--sep-strong), 0 10px 30px rgb(0 0 0 / 0.22), 0 2px 6px rgb(0 0 0 / 0.12);
+  --shadow-sheet: 0 0 0 0.5px var(--sep-strong), 0 24px 64px rgb(0 0 0 / 0.32), 0 4px 14px rgb(0 0 0 / 0.16);
+  --scrim: rgb(0 0 0 / 0.32);
+
+  --danger: var(--theme-red);
+  --ok: var(--theme-green);
+  --warn: var(--theme-orange);
+
+  /* A document's icon is paper, as a Mac draws it in light and dark alike. */
+  --doc-paper: #fbfbfd;
+  --doc-fold: #d9d9de;
+
+  /* The bubbles in a conversation. */
+  --me-bg: var(--theme-bright);
+  --me-fg: var(--surface);
+  --them-bg: color-mix(in srgb, var(--theme-ink) 7%, var(--surface));
+}
+
+/* The older names some surfaces still use (the terminal's --pi-*, the TUI's
+   --tui-*), said once here in terms of the above, so nothing reads a theme
+   colour except through this file. */
+html:has(body.imperfect),
+body.imperfect {
+  --pi-bg: var(--surface);
+  --pi-bg-raised: var(--surface);
+  --pi-text: var(--label);
+  --pi-text-bright: var(--label-bright);
+  --pi-muted: var(--label-2);
+  --pi-dim: var(--label-3);
+  --pi-accent: var(--tint);
+  --pi-cursor: var(--label-bright);
+  --pi-user: var(--theme-band);
+  --tui-pageBg: var(--surface);
+  --tui-cardBg: var(--surface);
+  --tui-userMessageBg: var(--theme-band);
+  --tui-text: var(--label);
+  --tui-userMessageText: var(--label-bright);
+  --tui-muted: var(--label-2);
+  --tui-dim: var(--label-3);
+  --tui-accent: var(--tint);
+  --tui-border: var(--sep);
+  --font-pi: var(--mono);
+}
+
+/* ---- the pieces every surface is made of ------------------------------ */
+/* A sheet: a dialog over the window. */
+.look-sheet {
+  box-sizing: border-box;
+  margin: auto;
+  padding: 20px;
+  border: 0;
+  border-radius: var(--radius-l);
+  background: var(--surface-pop);
+  color: var(--label);
+  box-shadow: var(--shadow-sheet);
+  font: var(--text)/1.45 var(--ui);
+  -webkit-font-smoothing: antialiased;
+}
+.look-sheet::backdrop { background: var(--scrim); }
+
+/* A button: quiet unless it is the one to press. */
+.look-button {
+  appearance: none;
+  height: 28px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--fill-2);
+  color: var(--label);
+  font: 500 var(--text)/1 var(--ui);
+  cursor: default;
+}
+.look-button:hover { background: color-mix(in srgb, var(--theme-ink) 14%, transparent); }
+.look-button.primary { background: var(--tint); color: var(--on-tint); }
+.look-button.primary:hover { background: color-mix(in srgb, var(--tint) 88%, black); }
+.look-button:focus-visible { outline: 2px solid var(--fill-tint); outline-offset: 1px; }

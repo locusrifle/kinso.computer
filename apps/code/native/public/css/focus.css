@@ -1,0 +1,718 @@
+/* Focus: the window's own layout on every desk, a Mac's and the laptop's
+   alike (windows.js starts every desk in it; MOD+L leaves it). The agents are a sidebar down the
+   left, which folds away; the conversation is in the middle, top to bottom,
+   with its composer floating over its foot; Files or the browser is a
+   floating panel the size of a phone on the right, the sidebar's Files and
+   Sites choosing which. MOD+F fills the whole window with either (below).
+   Only the look: every piece is the one the other layouts use, placed and
+   drawn differently. Nothing here applies anywhere else. It is meant to feel
+   like a Mac app on any computer: the system's type, Messages' bubbles,
+   Finder's quiet lists, and the theme's colours (Mac · Light and Mac · Dark
+   when the theme is auto, following the system's appearance). */
+
+body.imperfect #entry-terminal.focus-layout {
+  --focus-rail-w: 248px;
+  grid-template-columns: var(--focus-rail-w) minmax(0, 1fr) var(--focus-panel-column, 0px);
+  grid-template-rows: minmax(0, 1fr) auto auto auto auto;
+  background: var(--surface);
+}
+body.imperfect #entry-terminal.focus-layout:has(> #session-rail.collapsed) { --focus-rail-w: 0px; }
+/* A narrow window: the sidebar floats over the middle rather than taking
+   the room the conversation and the panel need. */
+@media (max-width: 999px) {
+  body.imperfect #entry-terminal.focus-layout { --focus-rail-w: 0px; }
+  body.imperfect #entry-terminal.focus-layout > #session-rail:not(.collapsed) {
+    width: 248px;
+    z-index: 70;
+    box-shadow: inset -1px 0 var(--sep), 14px 0 34px rgb(0 0 0 / 0.42);
+  }
+}
+
+
+/* ---- the canvas: the middle and the panel ---------------------------- */
+body.imperfect #entry-terminal.focus-layout > .canvas-strip { grid-column: 2 / 4; grid-row: 1 / -1; }
+body.imperfect #entry-terminal.focus-layout .canvas-strip > .wm-window { border-color: transparent; }
+body.imperfect .focus-layout .canvas-strip > .entry-screen { padding-top: 0; background: transparent; }
+body.imperfect .focus-layout .canvas-strip > .wm-window.wm-tucked { visibility: hidden; pointer-events: none; }
+/* The panel is one card with a Mac window's corners: the card draws its
+   colour, edge and shadow, and the window in it lies exactly on it, clear,
+   only clipping what it shows to the same corners. One surface, so no
+   corner is drawn twice. */
+body.imperfect .focus-layout .canvas-strip > .wm-window.wm-in-panel {
+  border: 0;
+  border-radius: var(--radius-window);
+  overflow: hidden;
+  background: transparent;
+}
+body.imperfect .focus-layout .canvas-strip > .wm-panel-card {
+  position: absolute;
+  z-index: 0;
+  border-radius: var(--radius-window);
+  background: var(--surface-card);
+  box-shadow: 0 0 0 1px var(--sep), 0 18px 40px rgb(0 0 0 / 0.38), 0 2px 8px rgb(0 0 0 / 0.22);
+  pointer-events: none;
+}
+
+/* ---- the composer, over the foot of the conversation wherever it is ---- */
+body.imperfect #entry-terminal.focus-layout > #entry-pending { grid-column: 2; grid-row: 2; }
+body.imperfect #entry-terminal.focus-layout > .entry-status { grid-column: 2; grid-row: 3; }
+body.imperfect #entry-terminal.focus-layout > .entry-connection { grid-column: 2; grid-row: 4; }
+body.imperfect #entry-terminal.focus-layout > #entry-input-zone { grid-column: 2; grid-row: 5; }
+body.imperfect #entry-terminal.focus-layout > #entry-dialog.input-dialog { grid-column: 2; grid-row: 1 / -1; }
+body.imperfect #entry-terminal.focus-layout > .entry-status { border-top-color: var(--sep); }
+
+/* ---- the conversation: the middle's whole height ---------------------- */
+/* It runs up under the band, where the time was, and down under the field,
+   which floats over it: its first words start level with the sidebar's
+   first heading, and its last stay above the field (--focus-dock,
+   windows.js). Queued prompts and a passing note keep their place over the
+   field, on the window's colour. */
+body.imperfect .focus-layout .canvas-strip > .entry-screen { box-sizing: border-box; padding-bottom: var(--focus-dock, 0px); }
+body.imperfect .focus-layout .canvas-strip > .entry-screen > #entry-output { margin-bottom: calc(-1 * var(--focus-dock, 0px)); }
+body.imperfect .focus-layout .canvas-strip > .entry-screen > :is(#entry-queue, #entry-flash) { position: relative; z-index: 1; background: var(--surface); }
+
+/* ---- the sidebar: the agents ------------------------------------------- */
+body.imperfect #entry-terminal.focus-layout > #session-rail {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  position: relative;
+  inset: auto;
+  z-index: 4;
+  margin: 0;
+  width: auto;
+  height: auto;
+  padding: var(--focus-top, 38px) 0 10px;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface-side);
+  box-shadow: inset -1px 0 var(--sep);
+  font-family: var(--ui);
+  font-size: 13px;
+}
+/* Folded, nothing of it is left but its two buttons beside the Mac's three. */
+body.imperfect #entry-terminal.focus-layout > #session-rail.collapsed {
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+body.imperfect #entry-terminal.focus-layout > #session-rail.collapsed > :not(.session-rail-heading) { display: none; }
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  z-index: 81;
+  height: var(--focus-top, 38px);
+  margin: 0;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  background: none;
+  box-shadow: none;
+  -webkit-app-region: no-drag;
+}
+body.imperfect.mac-window #entry-terminal.focus-layout > #session-rail .session-rail-heading,
+html.launch-framed body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading { left: 76px; }
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading > * { height: 32px; min-height: 0; width: auto; }
+/* Flex, not grid: the button's own word (« or », its size 0) would be a
+   second grid row and lift the icon off the traffic lights' line. */
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-fold {
+  order: -2;
+  width: 32px;
+  height: 32px;
+  transform: none;
+  border-radius: var(--radius-s);
+  color: var(--label-2);
+  font-size: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* A Mac's sidebar button: a window with its left part ruled off, 18 by 14,
+   so it sits on whole pixels on the traffic lights' centre. */
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-fold::before {
+  content: '';
+  flex: none;
+  box-sizing: content-box;
+  width: 15px;
+  height: 11px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(currentColor, currentColor) 4px 0 / 1.5px 100% no-repeat;
+}
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading .session-rail-new { order: -1; margin: 0; }
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading .session-rail-new .session-rail-open {
+  width: 32px;
+  height: 32px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: none;
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--label-2);
+}
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading :is(.session-rail-fold, .session-rail-new .session-rail-open):hover {
+  background: color-mix(in srgb, var(--label) 7%, transparent);
+  color: var(--label);
+}
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) .session-rail-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 4px 8px 12px;
+  background: none;
+}
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-agents,
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-history { display: flex; flex-direction: column; gap: 0; }
+/* History, in Sessions under New session: folded, one row; opened, its
+   rows under it, scrolling with the rest of the list. */
+body.imperfect .session-rail-sidebar .sidebar-past { display: flex; flex-direction: column; gap: 0; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-machine {
+  margin: 14px 10px 4px;
+  padding: 0;
+  border: 0;
+  color: var(--label-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+  background: none;
+}
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-agents > .session-rail-machine:first-child { margin-top: 2px; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-item { background: none; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-agents .session-rail-open,
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-history .session-rail-item .session-rail-open {
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  text-align: left;
+  cursor: default;
+}
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-open:hover { background: var(--fill); }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-item.active .session-rail-open { background: var(--fill-2); }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-line {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 0;
+}
+/* What it was asked first, then which agent and model, small. */
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-asked {
+  order: -1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  max-width: none;
+  color: var(--label);
+  font-size: 13px;
+  line-height: 1.3;
+}
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-item.active .session-rail-asked { color: var(--label-bright); }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-agent { font-size: 11.5px; color: var(--label-2); gap: 5px; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-agent svg { width: 12px; height: 12px; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-model { display: inline; }
+
+/* ---- what the panel holds: Files and the browser, on the card ---------- */
+body.imperfect .focus-layout .wm-window .workbench {
+  background: transparent;
+  --workbench-line: var(--sep);
+}
+body.imperfect .focus-layout .wm-window .workbench-bar {
+  height: 44px;
+  background: transparent;
+  border-bottom: 1px solid var(--sep);
+}
+/* In the panel, Files is Finder's icon view: a grid of big icons, each name
+   under its icon, and at the foot how many there are. */
+body.imperfect .focus-layout .wm-in-panel .workbench-items.workbench-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  grid-auto-rows: 104px;
+  gap: 4px 2px;
+  padding: 10px 12px 8px;
+  counter-reset: items;
+}
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px;
+  min-width: 0; padding: 4px 2px 0; border-radius: var(--radius); background: none !important; box-shadow: none !important;
+  counter-increment: items;
+}
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-icon,
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-preview {
+  width: 60px; height: 60px; padding: 2px; border-radius: var(--radius);
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.12));
+}
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-name {
+  max-width: 88px; padding: 1px 6px; border-radius: var(--radius-s);
+  font-size: 11.5px; line-height: 1.25; text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+body.imperfect .focus-layout .wm-in-panel .workbench-list :is(.workbench-size, .workbench-date) { display: none; }
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-launchable .workbench-name::after { content: none; }
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-ext { display: block; bottom: 14%; padding: 1px 4px; border-radius: var(--radius-xs); font-size: 9px; }
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-launch { inset: auto 0 0 auto; padding: 2px; border-radius: var(--radius-xs); }
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-launch svg { width: 14px; height: 14px; }
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-item:hover .workbench-icon { background: var(--fill); }
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-item[aria-selected="true"] .workbench-icon { background: var(--fill-2); }
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-item[aria-selected="true"] .workbench-name { background: var(--tint); color: var(--on-tint); font-weight: 500; }
+body.imperfect .focus-layout .wm-in-panel .workbench-list .workbench-device .workbench-size { display: block; font-size: var(--text-s); }
+/* The count sits at the panel's foot: the items' counter reaches the
+   folder's own ::after, which follows them. */
+body.imperfect .focus-layout .wm-in-panel .workbench-main::after {
+  content: counter(items) " items";
+  flex: none;
+  padding: 11px 16px 12px;
+  border-top: 0.5px solid var(--sep);
+  color: var(--label-2);
+  font: var(--text-s)/1 var(--ui);
+}
+body.imperfect .focus-layout .wm-in-panel .workbench-main:has(> .workbench-items[hidden])::after { content: none; display: none; }
+/* Usage opens over the conversation, from under the window's band down to
+   the field. */
+body.imperfect .focus-layout .wm-window .gui-window.browser,
+body.imperfect .focus-layout .wm-window .gui-window.browser .gui-window-bar { background: transparent; }
+/* A website in the panel is Electron's <webview>, drawn apart from the page:
+   the panel's rounded clip does not reach it, so it rounds its own foot, or
+   its square corners show past the card's. */
+body.imperfect .focus-layout .wm-in-panel .browser-page > :is(webview, iframe) {
+  border-radius: 0 0 var(--radius-window) var(--radius-window);
+  clip-path: inset(0 round 0 0 var(--radius-window) var(--radius-window));
+}
+body.imperfect .focus-layout .wm-window .gui-window.browser .gui-window-bar { border-bottom-color: var(--sep); }
+/* The browser's two rows, without the quiet band kept for the clock (focus
+   has no clock over the windows). */
+body.imperfect .focus-layout .wm-window .gui-window.browser { --bar-height: 64px; }
+body.imperfect .focus-layout .wm-window .browser-tab-strip { margin-top: 0; flex-basis: 30px; padding: 0 6px; box-sizing: border-box; }
+body.imperfect .focus-layout .wm-window .browser-tab-item { border-radius: var(--radius-s) var(--radius-s) 0 0; }
+body.imperfect .focus-layout .wm-window .browser-controls { padding: 3px 10px 7px; gap: 4px; }
+body.imperfect .focus-layout .wm-window .gui-window-go { width: 26px; border-radius: var(--radius-s); }
+body.imperfect .focus-layout .wm-window .gui-window-address {
+  margin-left: 4px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--fill);
+  font-family: var(--ui);
+  font-size: 12.5px;
+}
+body.imperfect .focus-layout .wm-window .gui-window-address:focus { box-shadow: 0 0 0 1px var(--tint); }
+/* In the middle, a window's own bar starts where the conversation does. */
+body.imperfect .focus-layout .canvas-strip > .wm-window:not(.wm-in-panel):not(.entry-screen) { background: transparent; }
+
+/* No rules between windows: the panel floats, the middle is the window's. */
+body.imperfect #entry-terminal.focus-layout .canvas-strip > .wm-window { border: 0; border-image: none; }
+
+/* ---- the composer: a field, with the model and its controls above ------ */
+body.imperfect #entry-terminal.focus-layout > .entry-status {
+  border-top: 0;
+  padding: 6px 22px 6px;
+  font-family: var(--ui);
+  font-size: 12px;
+}
+body.imperfect #entry-terminal.focus-layout > #entry-input-zone {
+  margin: 0 16px 14px;
+  padding: 9px 14px;
+  min-height: 0;
+  border-radius: var(--radius);
+  background: var(--surface-card);
+  box-shadow: 0 0 0 1px var(--sep);
+}
+
+
+/* ==== the Mac feel ======================================================= */
+/* The colours, type and shapes are look.css's, shared by every surface. */
+body.imperfect #entry-terminal.focus-layout {
+  font-family: var(--ui);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "kern";
+}
+
+/* ---- the sidebar: Finder's quiet list ----------------------------------- */
+body.imperfect #entry-terminal.focus-layout > #session-rail { box-shadow: inset -0.5px 0 var(--sep-strong); }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-machine {
+  margin: 14px 10px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--label-2); text-transform: none;
+}
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-agents .session-rail-open,
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-history .session-rail-item .session-rail-open {
+  min-height: 28px; padding: 5px 10px 5px 8px; border-radius: 0;
+}
+/* One line a row: the agent's mark, then what it was asked, cut at the
+   row's end rather than ended with an ellipsis, so more of it shows. */
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-line { flex-direction: row; align-items: center; gap: 8px; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-asked {
+  order: 0; flex: 1; min-width: 0; display: block; -webkit-line-clamp: unset;
+  white-space: nowrap; overflow: hidden; text-overflow: clip; font-size: 13px; line-height: 18px; color: var(--label);
+}
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-agent { order: -1; flex: none; min-width: 16px; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-model { display: none; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-item.active .session-rail-asked { color: var(--label); font-weight: 600; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-past .session-rail-asked { color: var(--label-2); }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-history > .session-rail-machine { width: auto; padding: 0; border-radius: 0; }
+
+/* The sidebar's foot: Settings, then under a line what is left of each
+   subscription, a line each. */
+body.imperfect #entry-terminal > #session-rail > .session-rail-foot { display: none; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) > .session-rail-foot {
+  display: flex; flex-direction: column; gap: 4px; flex: none; margin: 0 10px; padding: 2px 0 0;
+}
+body.imperfect .session-rail-foot > .session-rail-settings {
+  appearance: none; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px;
+  border: 0; border-radius: var(--radius-s); background: none;
+  color: var(--label); font: var(--text)/1 var(--ui); text-align: left; cursor: default;
+}
+body.imperfect .session-rail-foot > .session-rail-settings > svg { width: 15px; height: 15px; color: var(--label-2); flex: none; }
+body.imperfect .session-rail-foot > .session-rail-settings:hover,
+body.imperfect .session-rail-foot > .session-rail-settings[aria-expanded="true"] { background: var(--fill-2); }
+body.imperfect .session-rail-foot > .session-rail-usage {
+  appearance: none; display: grid; grid-template-columns: auto minmax(30px, 1fr) auto auto; align-items: center; gap: 7px 8px;
+  width: 100%; min-height: 0; margin: 0; padding: 12px 8px 12px;
+  border: 0; border-top: 0.5px solid var(--sep-strong); border-radius: 0; background: none;
+  color: var(--label); font: 11.5px/1.2 var(--ui); text-align: left; white-space: nowrap; cursor: default;
+}
+body.imperfect .session-rail-foot > .session-rail-usage:hover { background: var(--fill); }
+body.imperfect .session-rail-usage:has(> .usage-summary-icon) { display: flex; gap: 6px; }
+body.imperfect .session-rail-usage .usage-summary-icon svg { width: 13px; height: 13px; display: block; }
+body.imperfect .session-rail-usage .usage-row { display: contents; }
+body.imperfect .session-rail-usage .usage-row-window { color: var(--label-2); }
+body.imperfect .session-rail-usage .usage-row-meter { position: relative; height: 4px; border-radius: var(--radius-xs); background: var(--fill-2); overflow: hidden; }
+body.imperfect .session-rail-usage .usage-row-fill { position: absolute; inset: 0 auto 0 0; border-radius: var(--radius-xs); background: var(--label); }
+body.imperfect .session-rail-usage [data-pace="ahead"] .usage-row-fill { background: var(--warn); }
+body.imperfect .session-rail-usage [data-low="true"] .usage-row-fill { background: var(--danger); }
+body.imperfect .session-rail-usage .usage-row-left { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+body.imperfect .session-rail-usage .usage-row-reset { min-width: 22px; text-align: right; color: var(--label-3); font-variant-numeric: tabular-nums; }
+/* Usage is the sidebar's foot and the browser is the sidebar's Sites: the
+   line over the field keeps only the mic and +. */
+body.imperfect #entry-terminal.focus-layout .session-actions > :is(.entry-usage, .entry-browser) { display: none; }
+
+/* ---- the conversation: Messages ---------------------------------------- */
+body.imperfect .focus-layout .gui-transcript {
+  --turn-gap: 18px;
+  padding: 1.25rem max(1.25rem, calc((100% - 700px) / 2)) 1.5rem !important;
+}
+/* The conversation's look is every layout's, the phone's too (below, to its padding). */
+body.imperfect .gui-transcript > :is(.gui-message, .gui-window, .gui-turn-time) + :is(.gui-message, .gui-window) { border-top: 0; padding-top: 0; }
+body.imperfect .gui-message { font-family: var(--ui); font-size: 14px; line-height: 1.55; color: var(--label); }
+/* What was asked: the column's full width, on the same edges as the
+   answer, in a quiet rounded block (Noah: not offset to the right). */
+body.imperfect .gui-user { display: block; }
+body.imperfect .gui-prompt {
+  padding: 10px 14px 11px; border-radius: var(--radius);
+  background: var(--them-bg); color: var(--label);
+  font-size: 14px; line-height: 21px;
+}
+body.imperfect .gui-message h1 { font-size: 1.45em; font-weight: 700; letter-spacing: -0.01em; }
+body.imperfect .gui-message h2 { font-size: 1.2em; font-weight: 650; }
+body.imperfect .gui-message h3 { font-size: 1.05em; font-weight: 650; }
+body.imperfect .gui-message a { color: var(--tint); text-decoration: none; }
+body.imperfect .gui-message a:hover { text-decoration: underline; }
+body.imperfect .gui-message ul { list-style: disc; padding-left: 1.3em; }
+body.imperfect .gui-message :not(pre) > code {
+  padding: 1px 5px; border-radius: var(--radius-s); background: var(--fill-2); font: 12.5px/1 var(--mono);
+}
+body.imperfect .gui-code,
+body.imperfect .gui-message > pre {
+  padding: 10px 14px; border-radius: var(--radius); background: var(--surface-card); box-shadow: inset 0 0 0 0.5px var(--sep-strong);
+}
+body.imperfect .gui-code > pre,
+body.imperfect .gui-message pre { font: 12px/18px var(--mono); }
+body.imperfect .gui-copy {
+  margin: -4px -6px 4px 10px; min-height: 0; padding: 4px 9px; border: 0; border-radius: var(--radius-s);
+  background: var(--fill-2); color: var(--label-2); font: 500 11px/1 var(--ui); opacity: 1;
+}
+body.imperfect .gui-table table { border-collapse: separate; border-spacing: 0; border-radius: var(--radius); box-shadow: inset 0 0 0 0.5px var(--sep-strong); overflow: hidden; }
+body.imperfect .gui-table th { font-weight: 600; background: var(--fill); }
+body.imperfect .gui-table :is(th, td) { border-bottom: 0.5px solid var(--sep); }
+/* What the agent did: quiet system lines, as Messages says a thing happened. */
+body.imperfect .gui-overview { margin: 0 0 var(--turn-gap); font: 11.5px/1.6 var(--ui); color: var(--label-2); }
+body.imperfect .gui-overview-harness { color: var(--label); font-weight: 600; }
+body.imperfect .gui-overview-part ul { color: var(--label-2); font-family: var(--mono); font-size: 11px; }
+body.imperfect .gui-overview-part summary:hover .gui-overview-label,
+body.imperfect .gui-overview-part[open] .gui-overview-label { color: var(--label); }
+body.imperfect .gui-window { border-radius: var(--radius-l); overflow: hidden; box-shadow: 0 0 0 0.5px var(--sep-strong), 0 8px 24px rgb(0 0 0 / 0.12); }
+
+/* ---- the composer: one rounded field ------------------------------------ */
+body.imperfect #entry-terminal.focus-layout > #entry-input-zone {
+  margin: 0 18px 16px; padding: 6px 6px; min-height: 46px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--label) 2.5%, var(--surface));
+  box-shadow: 0 0 0 0.5px var(--sep-strong), 0 10px 30px rgb(0 0 0 / 0.10), 0 2px 6px rgb(0 0 0 / 0.05);
+}
+body.imperfect #entry-terminal.focus-layout > #entry-input-zone .entry-input-stack { padding: 7px 12px; font-family: var(--ui); font-size: 14.5px; }
+/* The mic and + in the line over the field: quiet round buttons. */
+body.imperfect #entry-terminal.focus-layout .session-actions :is(.entry-send, .entry-voice, .entry-attach) {
+  width: 26px; min-width: 26px; height: 26px; padding: 0; border-radius: 50%; color: var(--label-2);
+}
+body.imperfect #entry-terminal.focus-layout .session-actions :is(.entry-send, .entry-voice, .entry-attach):hover { background: var(--fill-2); color: var(--label); }
+body.imperfect #entry-terminal.focus-layout .session-actions .entry-voice:has(.entry-voice-clock:not(:empty)) { width: auto; padding: 0 10px; }
+body.imperfect #entry-terminal.focus-layout .session-actions .entry-voice:is([data-state="recording"], [data-state="kept"]) { color: var(--danger); outline: 0; }
+body.imperfect #entry-terminal.focus-layout .session-actions svg { width: 16px; height: 16px; }
+/* The + is the sidebar's own, New session's and New view's: two thin
+   strokes, not the filled cross. */
+body.imperfect #entry-terminal.focus-layout .session-actions .entry-attach svg path {
+  d: path("M12 6v12M6 12h12"); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round;
+}
+/* The model and its controls: a quiet line over the field. */
+body.imperfect #entry-terminal.focus-layout > .entry-status { padding: 4px 30px 6px; color: var(--label); background: transparent; }
+body.imperfect #entry-terminal.focus-layout #entry-pi-label { background: transparent; color: var(--label); font: 500 12px/1 var(--ui); }
+body.imperfect #entry-terminal.focus-layout #entry-pi-label:hover { color: var(--label); }
+/* The system's thin cursor, not the terminal's block, and a word in the empty field. */
+body.imperfect #entry-terminal.focus-layout #entry-input { caret-color: var(--tint); }
+body.imperfect #entry-terminal.focus-layout .entry-block-caret { background: none; color: inherit; animation: none; }
+body.imperfect #entry-terminal.focus-layout #entry-input::placeholder { color: var(--label-3); -webkit-text-fill-color: var(--label-3); }
+
+/* ---- the sidebar's sections: Sessions, Files, Sites, Messages ------------ */
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-sidebar { --sidebar-row-height: 31px; padding: 2px 10px 12px 12px; }
+body.imperfect .session-rail-sidebar .sidebar-head {
+  display: flex; align-items: center; gap: 6px; padding: 14px 10px 4px;
+  font: 600 11px/1.2 var(--ui); color: var(--label-2);
+}
+body.imperfect .session-rail-sidebar .sidebar-head:first-child { padding-top: 4px; }
+body.imperfect .session-rail-sidebar > .sidebar-head:not(:first-child) { border-top: 0.5px solid var(--sep-strong); }
+body.imperfect .session-rail-sidebar .session-rail-item { position: relative; }
+/* The line is the row's width, so a time, a dot or the spinner sits at its end. */
+body.imperfect .session-rail-sidebar .session-rail-line { flex: 1; }
+body.imperfect .session-rail-sidebar .sidebar-icon { width: 16px; flex: none; display: grid; place-items: center; color: var(--label-2); }
+body.imperfect .session-rail-sidebar .sidebar-icon svg { width: 15px; height: 15px; display: block; }
+body.imperfect .session-rail-sidebar .sidebar-favicon img { width: 15px; height: 15px; border-radius: var(--radius-xs); display: block; }
+body.imperfect .session-rail-sidebar .sidebar-meta,
+body.imperfect .session-rail-sidebar .session-rail-state {
+  flex: none; margin-left: auto; font: 11px/1 var(--ui); color: var(--label-2); font-variant-numeric: tabular-nums;
+}
+body.imperfect .session-rail-sidebar .sidebar-row.dim .session-rail-asked { color: var(--label-2); }
+body.imperfect .session-rail-sidebar .sidebar-row.dim .sidebar-icon svg { width: 13px; height: 13px; }
+body.imperfect .session-rail-sidebar .session-rail-past .session-rail-asked,
+body.imperfect .session-rail-sidebar .sidebar-row.dim .session-rail-agent { opacity: 1; }
+body.imperfect .session-rail-sidebar .sidebar-row.dim .session-rail-agent svg { opacity: 0.45; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-sidebar .sidebar-row.active .session-rail-open { background: var(--fill-2); }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail .session-rail-sidebar .sidebar-row.active .session-rail-asked { font-weight: 600; color: var(--label); }
+/* A session's state at the row's end: the activity spinner while it works,
+   a blue dot when it has finished and is unread, red when it waits on you. */
+body.imperfect .session-rail-sidebar .session-rail-state { width: 12px; height: 12px; }
+body.imperfect .session-rail-sidebar [data-state="working"] .session-rail-state {
+  border-radius: 50%; border: 1.6px solid var(--fill-2); border-top-color: var(--label-2);
+  box-sizing: border-box; animation: sidebar-spin 0.9s linear infinite;
+}
+body.imperfect .session-rail-sidebar [data-state="done"] .session-rail-state,
+body.imperfect .session-rail-sidebar .sidebar-unread {
+  width: 7px; height: 7px; margin-right: 2px; border-radius: 50%; background: var(--tint);
+}
+body.imperfect .session-rail-sidebar [data-state="blocked"] .session-rail-state { width: 7px; height: 7px; margin-right: 2px; border-radius: 50%; background: var(--danger); }
+body.imperfect .session-rail-sidebar .session-rail-item.active[data-state="done"] .session-rail-state { background: none; }
+@keyframes sidebar-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { body.imperfect .session-rail-sidebar [data-state="working"] .session-rail-state { animation: none; } }
+/* A session, a folder or a site closes from the × its row shows on hover. */
+body.imperfect .session-rail-sidebar .sidebar-remove {
+  appearance: none; position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  width: 18px; height: 18px; padding: 0; border: 0; border-radius: var(--radius-s); display: none; place-items: center;
+  background: none; color: var(--label-3); cursor: default;
+}
+body.imperfect .session-rail-sidebar .sidebar-remove svg { width: 11px; height: 11px; }
+body.imperfect .session-rail-sidebar .session-rail-item:is(:hover, :focus-within) .sidebar-remove { display: grid; }
+body.imperfect .session-rail-sidebar .session-rail-item:is(:hover, :focus-within):has(.sidebar-remove) :is(.sidebar-meta, .session-rail-state) { visibility: hidden; }
+body.imperfect .session-rail-sidebar .sidebar-remove:hover { background: var(--fill-2); color: var(--label); }
+body.imperfect .session-rail-sidebar .sidebar-more {
+  appearance: none; display: block; margin: 2px 0 0 32px; padding: 3px 0; border: 0; background: none;
+  font: 11.5px/1.2 var(--ui); color: var(--label-2); cursor: default;
+}
+body.imperfect .session-rail-sidebar .sidebar-more:hover { color: var(--label); }
+/* Every row's highlight runs the sidebar's whole width, edge to edge, and
+   the words of every row (sessions, folders, sites, headings, History,
+   Settings and usage) start on one line, 20px in. */
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) .session-rail-list.session-rail-sidebar { padding-left: 0; padding-right: 0; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) .session-rail-sidebar .session-rail-item .session-rail-open {
+  height: var(--sidebar-row-height); min-height: var(--sidebar-row-height);
+  display: flex; align-items: center; padding: 0 14px 0 20px;
+}
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) .session-rail-sidebar :is(.sidebar-head, .sidebar-history) { padding-left: 20px; padding-right: 14px; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) .session-rail-sidebar .session-rail-machine { margin-left: 20px; margin-right: 14px; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) .session-rail-sidebar .sidebar-remove { right: 10px; }
+/* Settings sits down on the line, and the usage under it down on the
+   window's foot (Noah): no space between them, nor under them. */
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) > .session-rail-foot { margin: 0; gap: 0; }
+body.imperfect #entry-terminal.focus-layout > #session-rail:not(.collapsed) { padding-bottom: 0; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) > .session-rail-foot > .session-rail-settings { border-radius: 0; padding: 0 14px 0 20px; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) > .session-rail-foot > .session-rail-usage { padding: 12px 14px 12px 20px; }
+
+/* ==== one column ========================================================= */
+/* The conversation, what was asked, the model's line and the field share
+   one column: the same left and right edges, at most 720px, centred in the
+   middle. */
+body.imperfect #entry-terminal.focus-layout { --focus-column: max(24px, calc((100% - 720px) / 2)); }
+body.imperfect .focus-layout .gui-transcript { padding: calc(var(--focus-top, 38px) + 20px) var(--focus-column) calc(var(--focus-dock, 0px) + 20px) !important; }
+/* Its top: the words fade out as they scroll up into the band, gone before
+   they reach its button, rather than cut clean across under it. */
+body.imperfect .focus-layout .gui-transcript {
+  -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--focus-top, 38px) - 4px), #000 calc(var(--focus-top, 38px) + 18px));
+  mask-image: linear-gradient(to bottom, transparent calc(var(--focus-top, 38px) - 4px), #000 calc(var(--focus-top, 38px) + 18px));
+}
+body.imperfect #entry-terminal.focus-layout > #entry-input-zone { margin: 0 var(--focus-column) 0; }
+body.imperfect #entry-terminal.focus-layout > .entry-status { margin: 0 var(--focus-column) var(--focus-foot, 16px); }
+body.imperfect #entry-terminal.focus-layout > .entry-status .entry-status-line { padding: 0; }
+body.imperfect #entry-terminal.focus-layout #entry-pi-label { padding-left: 0; margin-left: 0; }
+/* The middle's own width is what the column is measured from, not the window's. */
+body.imperfect #entry-terminal.focus-layout > :is(#entry-input-zone, .entry-status) { box-sizing: border-box; }
+
+/* ---- the band: its buttons on the traffic lights' line ------------------ */
+/* The traffic lights (main.mjs, trafficLightPosition y 9) centre 17px down: so do these. */
+body.imperfect.mac-window #entry-terminal.focus-layout > #session-rail .session-rail-heading,
+html.launch-framed body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading { height: 34px; }
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading .session-rail-new .session-rail-open { font-size: 0; display: flex; align-items: center; justify-content: center; }
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading .session-rail-new .session-rail-open::before {
+  content: ''; width: 12px; height: 12px;
+  background: linear-gradient(currentColor, currentColor) center / 12px 1.5px no-repeat, linear-gradient(currentColor, currentColor) center / 1.5px 12px no-repeat;
+}
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading .session-rail-new .session-rail-agent { display: none; }
+
+/* ---- the panel: no tab rows; the sidebar's Sites and Files are its tabs -- */
+body.imperfect .focus-layout .wm-window .browser-tab-strip { display: none; }
+body.imperfect .focus-layout .wm-window .gui-window.browser { --bar-height: 40px; }
+body.imperfect .focus-layout .wm-window .browser-controls { padding: 6px 10px; }
+/* One row at the panel's top: the window's own bar (the browser's arrows
+   and address, Files' path), kept from moving the window where a Mac's band
+   lies over it (imperfect.css). */
+body.imperfect .focus-layout .wm-in-panel .gui-window.browser { --bar-height: var(--focus-bar, 44px); }
+body.imperfect .focus-layout .wm-in-panel :is(.browser-controls, .workbench-bar) {
+  padding-left: 10px;
+  padding-right: 10px;
+  -webkit-app-region: no-drag;
+}
+body.imperfect .focus-layout .wm-in-panel .browser-controls { padding-top: 0; padding-bottom: 0; gap: 2px; }
+body.imperfect .focus-layout .wm-in-panel .gui-window-go { width: 26px; height: 28px; }
+body.imperfect .focus-layout .wm-in-panel .gui-window-go:hover:not(:disabled) { background: var(--fill-2); color: var(--label); }
+body.imperfect .focus-layout .wm-in-panel .gui-window-address { height: 28px; min-width: 0; }
+/* Typing an address, the arrows step aside and the field takes the row. */
+body.imperfect .focus-layout .wm-in-panel .browser-controls:has(> .gui-window-address:focus) > .gui-window-go { display: none; }
+body.imperfect .focus-layout .wm-in-panel .workbench-bar { --workbench-row: 32px; height: var(--focus-bar, 44px); align-items: center; gap: 4px; }
+body.imperfect .focus-layout .wm-in-panel .workbench-bar > button { width: 28px; border-radius: var(--radius-s); }
+body.imperfect .focus-layout .wm-in-panel .workbench-address { align-items: center; }
+
+/* History: a row that folds the past sessions away. */
+body.imperfect .session-rail-sidebar .sidebar-history {
+  appearance: none; display: flex; align-items: center; gap: 8px; width: 100%; height: var(--sidebar-row-height); margin: 0; padding: 0 10px 0 8px;
+  border: 0; border-radius: 0; background: none; color: var(--label-2); font: 13px/1 var(--ui); text-align: left; cursor: default;
+}
+body.imperfect .session-rail-sidebar .sidebar-history:hover { background: var(--fill); color: var(--label); }
+body.imperfect .session-rail-sidebar .sidebar-chevron { width: 16px; height: 16px; flex: none; display: grid; place-items: center; }
+body.imperfect .session-rail-sidebar .sidebar-chevron::before {
+  content: ''; width: 5px; height: 5px; border: solid currentColor; border-width: 0 1.5px 1.5px 0;
+  transform: rotate(-45deg); transition: transform 0.15s ease;
+}
+body.imperfect .session-rail-sidebar .sidebar-history.open .sidebar-chevron::before { transform: rotate(45deg) translate(-1px, -1px); }
+
+/* ==== the field: one floating bar ======================================= */
+/* The words on top; under them, inside the same rounded bar, the model on
+   the left and the mic and + on the right (the status line, drawn as the
+   bar's bottom row); over the words, files waiting to go and a lost
+   connection. One surface draws the whole bar (the frame's ::after, laid
+   on their rows), so it has one edge and a window's corners, and it floats:
+   the conversation runs on under it, seen through it a little. */
+body.imperfect #entry-terminal.focus-layout > #entry-pending { grid-row: 2; }
+body.imperfect #entry-terminal.focus-layout > .entry-connection { grid-row: 3; }
+body.imperfect #entry-terminal.focus-layout > #entry-input-zone { grid-row: 4; min-height: 0; padding: 5px 8px 0; border-radius: 0; background: transparent; box-shadow: none; }
+body.imperfect #entry-terminal.focus-layout > #entry-input-zone .entry-input-stack { padding: 4px 8px 0; min-height: 24px; }
+body.imperfect #entry-terminal.focus-layout > .entry-status {
+  grid-row: 5; box-sizing: border-box; height: 30px; padding: 0 6px 6px 14px !important;
+  border-radius: 0; background: transparent; box-shadow: none;
+}
+body.imperfect #entry-terminal.focus-layout > :is(#entry-pending, .entry-connection, #entry-input-zone, .entry-status) { position: relative; z-index: 61; background: transparent; }
+body.imperfect #entry-terminal.focus-layout > :is(#entry-pending, .entry-connection) { margin: 0 var(--focus-column); }
+body.imperfect #entry-terminal.focus-layout::after {
+  content: '';
+  grid-column: 2;
+  grid-row: 2 / 6;
+  position: relative;
+  z-index: 60;
+  margin: 0 var(--focus-column) var(--focus-foot, 16px);
+  border-radius: var(--radius-window);
+  background: color-mix(in srgb, var(--surface-card) 84%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+          backdrop-filter: blur(18px) saturate(1.3);
+  box-shadow: 0 0 0 1px var(--sep), 0 12px 32px rgb(0 0 0 / 0.30), 0 2px 8px rgb(0 0 0 / 0.16);
+  pointer-events: none;
+}
+/* Folded into another layout, or a phone, there is no bar to draw. */
+body.imperfect #entry-terminal:not(.focus-layout)::after { content: none; }
+
+/* ==== full: MOD+F ======================================================== */
+/* Whichever of the two has the keys fills the whole window (windows.js),
+   the sidebar and the time out of the way. The conversation full, its input
+   bar stays as it is. The panel's window full, it is edge to edge, off the
+   card and without its corners, its row starting after a Mac's three
+   buttons, and the input bar is a Mac's Dock. */
+body.imperfect #entry-terminal.focus-layout:is(.focus-full-middle, .focus-full-panel) { --focus-rail-w: 0px; }
+body.imperfect #entry-terminal.focus-layout:is(.focus-full-middle, .focus-full-panel) > :is(#session-rail, .screen-status) { display: none; }
+body.imperfect #entry-terminal.focus-full-panel .canvas-strip > .wm-window.wm-in-panel { border-radius: 0; background: var(--surface-card); }
+body.imperfect.mac-window #entry-terminal.focus-full-panel .wm-in-panel :is(.browser-controls, .workbench-bar),
+html.launch-framed body.imperfect #entry-terminal.focus-full-panel .wm-in-panel :is(.browser-controls, .workbench-bar) { padding-left: 76px; }
+/* and a website in it, square with it, gives up the corners it rounds on the card */
+body.imperfect #entry-terminal.focus-full-panel .wm-in-panel .browser-page > :is(webview, iframe) { border-radius: 0; clip-path: none; }
+/* A picker opened from the bar (the model's) floats over the panel, though
+   the conversation it belongs to waits under it. */
+body.imperfect #entry-terminal.focus-full-panel .canvas-strip > .entry-screen.wm-tucked > #entry-dialog.centre-box { visibility: visible; pointer-events: auto; }
+/* The Dock: down out of sight under the window's foot, and up again when
+   the pointer reaches the reach along the foot or the input takes the keys
+   (windows.js). Hidden, it takes no clicks. Up, the reach lies under it and
+   a little round it, so the pointer coming to it, or about it, keeps it. */
+body.imperfect #entry-terminal.focus-full-panel > :is(#entry-pending, .entry-connection, #entry-input-zone, .entry-status),
+body.imperfect #entry-terminal.focus-full-panel::after { transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 200ms ease; }
+body.imperfect #entry-terminal.focus-full-panel.dock-hidden > :is(#entry-pending, .entry-connection, #entry-input-zone, .entry-status),
+body.imperfect #entry-terminal.focus-full-panel.dock-hidden::after {
+  transform: translateY(calc(var(--focus-dock, 0px) + 24px));
+  opacity: 0;
+  pointer-events: none;
+}
+body.imperfect #entry-terminal > .focus-dock-reach { display: none; }
+body.imperfect #entry-terminal.focus-full-panel > .focus-dock-reach { display: block; position: absolute; z-index: 59; left: 0; right: 0; bottom: 0; height: 6px; }
+body.imperfect #entry-terminal.focus-full-panel.dock-shown > .focus-dock-reach {
+  left: calc(var(--focus-column) - 16px); right: calc(var(--focus-column) - 16px); height: calc(var(--focus-dock, 0px) + 16px);
+}
+/* With less motion it only fades, where it is. */
+@media (prefers-reduced-motion: reduce) {
+  body.imperfect #entry-terminal.focus-full-panel > :is(#entry-pending, .entry-connection, #entry-input-zone, .entry-status),
+  body.imperfect #entry-terminal.focus-full-panel::after { transition: opacity 150ms linear; }
+  body.imperfect #entry-terminal.focus-full-panel.dock-hidden > :is(#entry-pending, .entry-connection, #entry-input-zone, .entry-status),
+  body.imperfect #entry-terminal.focus-full-panel.dock-hidden::after { transform: none; }
+}
+
+/* ==== the time: at the top of the conversation ========================== */
+/* A Mac's menu bar has the time, Wi-Fi and the battery already: none of it
+   here. Elsewhere (sway has no bar of its own) they sit at the top centre of
+   the middle (Noah), between the sidebar and the panel beside it, in the
+   band above the conversation's first words. */
+body.imperfect #entry-terminal.focus-layout > .screen-status { display: flex; }
+body.imperfect.mac-window #entry-terminal.focus-layout > .screen-status,
+html.launch-framed body.imperfect #entry-terminal.focus-layout > .screen-status { display: none; }
+body.imperfect #entry-terminal.focus-layout > .screen-status {
+  left: calc(var(--focus-rail-w) + (100% - var(--focus-rail-w) - var(--focus-panel-column, 0px)) / 2);
+  top: 9px; transform: translateX(-50%);
+  color: var(--label-2); font-family: var(--ui);
+}
+/* The sidebar's New session row is the way to one: the band keeps only
+   the sidebar's button, open or folded. */
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-heading .session-rail-new { display: none; }
+/* The panel's left edge: drawn to make it wider (windows.js). */
+body.imperfect .focus-layout .canvas-strip > .wm-panel-edge {
+  position: absolute; z-index: 4; width: 10px; cursor: col-resize; touch-action: none;
+  -webkit-app-region: no-drag;
+}
+body.imperfect .focus-layout .canvas-strip > .wm-panel-edge::after {
+  content: ''; position: absolute; top: 50%; left: 3px; width: 4px; height: 36px; transform: translateY(-50%);
+  border-radius: var(--radius-pill); background: var(--sep-strong); opacity: 0; transition: opacity 120ms;
+}
+body.imperfect .focus-layout .canvas-strip > .wm-panel-edge:is(:hover, .dragging)::after { opacity: 1; }
+body.imperfect .wm-resizing .canvas-strip > * { transition: none !important; }
+
+/* Noah's sidebar is words, without empty slots where marks used to sit.
+   The phone's folded tab strip is not a sidebar and keeps its tab marks. */
+body.imperfect #entry-terminal.focus-layout > #session-rail .session-rail-agent,
+body.imperfect #entry-terminal.phone-layout > #session-rail:not(.collapsed) .session-rail-agent { display: none; }
+body.imperfect .session-rail-foot .usage-summary-icon { display: none; }

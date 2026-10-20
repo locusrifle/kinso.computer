@@ -1,0 +1,276 @@
+/* Usage (usage.js, usage-page.js, usage-graphs.js): the shared right panel,
+   in look.css's colours and type. A title, controls for what to show, and
+   each subscription as a card of its limits. */
+
+body.imperfect .usage-box {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 20px max(24px, calc((100% - 760px) / 2)) 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--surface);
+  color: var(--label);
+  font: var(--text)/1.45 var(--ui);
+  -webkit-font-smoothing: antialiased;
+}
+body.imperfect .wm-usage { container-type: inline-size; }
+body.imperfect .usage-panel { position: relative; width: 100%; height: 100%; }
+body.imperfect .wm-usage .usage-box { padding: 16px 16px 0; }
+body.imperfect .usage-content { min-height: 0; overflow: auto; margin: 0 -4px; padding: 0 4px 24px; }
+
+/* ---- header: back, the title and where it is read from, refresh ------- */
+body.imperfect .usage-header { display: flex; align-items: center; gap: 12px; }
+body.imperfect .usage-heading { flex: 1; min-width: 0; }
+body.imperfect .usage-title { margin: 0; color: var(--label); font: 600 20px/1.2 var(--ui); letter-spacing: -0.01em; }
+body.imperfect .usage-owner-scope { margin-top: 2px; font-size: var(--text-s); }
+
+/* Every button in it is look.css's quiet button. */
+body.imperfect .usage-box button {
+  appearance: none;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--fill-2);
+  color: var(--label);
+  font: 500 var(--text)/1 var(--ui);
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+body.imperfect .usage-box button:hover:not(:disabled) { background: color-mix(in srgb, var(--label) 14%, transparent); }
+body.imperfect .usage-box button:disabled { opacity: 0.4; }
+body.imperfect .usage-box :is(button, [tabindex], select, summary):focus-visible { outline: 2px solid var(--fill-tint); outline-offset: 1px; }
+body.imperfect .usage-box :is(button, [tabindex]):focus:not(:focus-visible) { outline: none; }
+body.imperfect .usage-header > .usage-back { background: none; color: var(--tint); padding: 0 6px; }
+body.imperfect .usage-header > .usage-back::before { content: "‹ "; font-size: 1.25em; line-height: 0; }
+body.imperfect .usage-header > .usage-back:hover { background: var(--fill); }
+
+/* ---- the segmented controls: what, over how long, which computers ----- */
+body.imperfect .usage-toolbar { display: flex; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
+body.imperfect .usage-toggle { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius-s); background: var(--fill-2); }
+body.imperfect .usage-toggle[hidden] { display: none; }
+body.imperfect .usage-box .usage-toggle button { height: 24px; padding: 0 11px; border-radius: var(--radius-s); background: transparent; color: var(--label-2); font-size: 12px; }
+body.imperfect .usage-box .usage-toggle button:hover:not(:disabled) { background: transparent; color: var(--label); }
+body.imperfect .usage-box .usage-toggle button[aria-pressed="true"] {
+  background: var(--surface-pop);
+  color: var(--label);
+  box-shadow: 0 0 0 0.5px var(--sep-strong), 0 1px 2px rgb(0 0 0 / 0.12);
+}
+
+/* ---- limits: each subscription a card ---------------------------------- */
+body.imperfect .usage-limits { display: flex; flex-direction: column; gap: 12px; padding: 4px 0; }
+body.imperfect .usage-account {
+  padding: 14px 16px;
+  border-radius: var(--radius-l);
+  background: var(--surface-card);
+  box-shadow: inset 0 0 0 0.5px var(--sep);
+}
+body.imperfect .usage-name { margin: 0 0 10px; font: 600 var(--text)/1.3 var(--ui); overflow-wrap: anywhere; }
+body.imperfect .usage-line { margin: 0; color: var(--label-2); overflow-wrap: anywhere; }
+body.imperfect .usage-account > .usage-line + .usage-line { margin-top: 4px; }
+body.imperfect .usage-window { display: grid; grid-template-columns: minmax(0, 14rem) minmax(3rem, 1fr) auto; column-gap: 16px; align-items: center; min-width: 0; padding: 3px 0; }
+body.imperfect .usage-window-label { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+body.imperfect .usage-window-name { color: var(--label-2); overflow-wrap: anywhere; }
+body.imperfect .usage-percent { margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
+body.imperfect .usage-bar { position: relative; display: block; min-width: 0; height: 18px; }
+body.imperfect .usage-track { position: absolute; inset: 6px 0; border-radius: var(--radius-xs); background: var(--fill-2); overflow: hidden; }
+body.imperfect .usage-fill { display: block; position: relative; height: 100%; border-radius: var(--radius-xs); background: var(--tint); }
+/* The level flows away, without changing the normal / pace / low colours.
+   Kept inside the fill, so the unspent track never looks active. */
+body.imperfect :is(.usage-fill, .usage-row-fill) { overflow: hidden; transition: width 600ms cubic-bezier(.2, .65, .3, 1); }
+body.imperfect [data-draining="false"] :is(.usage-fill, .usage-row-fill) { transition: none; }
+@starting-style { body.imperfect .usage-fill { width: var(--usage-previous) !important; } }
+body.imperfect [data-draining="true"] :is(.usage-fill, .usage-row-fill)::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 15%, color-mix(in srgb, var(--surface) 48%, transparent) 50%, transparent 85%);
+  animation: usage-drain 1.6s linear infinite; pointer-events: none;
+}
+@keyframes usage-drain { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+/* A low allowance's fill is too short for the band to show, so it breathes as well. */
+body.imperfect .usage-row[data-draining="true"][data-low="true"] .usage-row-fill { animation: usage-drain-breathe 1.6s ease-in-out infinite; }
+body.imperfect .usage-ring[data-draining="true"] .usage-ring-arc { animation: usage-drain-breathe 1.6s ease-in-out infinite; }
+@keyframes usage-drain-breathe { 50% { opacity: .6; } }
+@media (prefers-reduced-motion: reduce) {
+  body.imperfect :is(.usage-fill, .usage-row-fill) { transition: none; }
+  body.imperfect [data-draining="true"] :is(.usage-fill, .usage-row-fill)::after {
+    animation: none; transform: none; inset: 0 0 0 auto; width: 2px; background: var(--surface); opacity: .9;
+  }
+  body.imperfect .usage-row[data-draining="true"][data-low="true"] .usage-row-fill { animation: none; }
+  body.imperfect .usage-ring[data-draining="true"] .usage-ring-arc { animation: none; opacity: .7; }
+}
+body.imperfect .usage-time-mark { position: absolute; top: 3px; bottom: 3px; width: 1.5px; border-radius: var(--radius-xs); background: var(--label-2); transform: translateX(-50%); }
+body.imperfect .usage-reset { color: var(--label-3); font-size: var(--text-s); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Under a limit: whether spending is on pace, in words; orange when it
+   runs ahead of even. */
+body.imperfect .usage-pace { margin: 0 0 4px; color: var(--label-3); font-size: var(--text-s); }
+body.imperfect .usage-pace[data-pace="ahead"] { color: var(--warn); }
+body.imperfect .usage-account > button { margin-top: 10px; margin-right: 8px; }
+
+/* ---- Limits at a glance: each week a ring, and what today used --------- */
+body.imperfect .usage-glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+body.imperfect .usage-glance > section {
+  min-width: 0; padding: 16px; border-radius: var(--radius-l);
+  background: var(--surface-card); box-shadow: inset 0 0 0 0.5px var(--sep);
+}
+body.imperfect .usage-glance .usage-ring { display: flex; flex-direction: column; align-items: center; text-align: center; }
+body.imperfect .usage-ring-dial { position: relative; width: 104px; height: 104px; flex: none; }
+body.imperfect .usage-ring-dial svg { display: block; overflow: visible; }
+body.imperfect .usage-ring-track { fill: none; stroke: var(--fill-2); stroke-width: 5; }
+body.imperfect .usage-ring-arc { fill: none; stroke: var(--label); stroke-width: 5; stroke-linecap: round; }
+body.imperfect .usage-pace-gap { stroke: var(--surface-card); stroke-width: 4; stroke-linecap: round; }
+body.imperfect .usage-pace-mark { stroke: var(--label-bright); stroke-width: 1.4; stroke-linecap: round; }
+body.imperfect .usage-ring[data-pace="ahead"] .usage-ring-arc { stroke: var(--warn); }
+body.imperfect .usage-ring[data-low="true"] .usage-ring-arc { stroke: var(--danger); }
+body.imperfect .usage-ring-value { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+body.imperfect .usage-ring-percent { font: 600 26px/1 var(--ui); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+body.imperfect .usage-ring-left { margin-top: 2px; font-size: var(--text-s); color: var(--label-2); }
+body.imperfect .usage-ring-name { margin: 10px 0 0; font: 600 var(--text)/1.3 var(--ui); }
+body.imperfect .usage-ring-note { margin: 2px 0 0; color: var(--label-2); font-size: var(--text-s); font-variant-numeric: tabular-nums; }
+body.imperfect .usage-ring[data-pace="ahead"] .usage-ring-note { color: var(--warn); }
+body.imperfect .usage-ring-reset { margin: 1px 0 0; color: var(--label-3); font-size: var(--text-s); }
+body.imperfect .usage-today { display: flex; flex-direction: column; }
+body.imperfect .usage-today p { margin: 0; }
+body.imperfect .usage-today-cap { display: flex; justify-content: space-between; gap: 8px; color: var(--label-2); font-size: var(--text-s); }
+body.imperfect .usage-today-big { display: flex; align-items: baseline; gap: 6px; margin-top: 4px !important; }
+body.imperfect .usage-today-tokens { font: 600 30px/1.1 var(--ui); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+body.imperfect .usage-today-unit { color: var(--label-2); }
+body.imperfect .usage-today-sub { color: var(--label-2); font-size: var(--text-s); }
+body.imperfect .usage-today-spark { display: flex; align-items: flex-end; gap: 6px; height: 54px; margin-top: auto; padding-top: 12px; box-shadow: inset 0 -1px var(--fill-2); }
+body.imperfect .usage-today-spark > span { flex: 1; border-radius: var(--radius-xs) var(--radius-xs) 0 0; background: color-mix(in srgb, var(--label) 16%, transparent); }
+body.imperfect .usage-today-spark > .now { background: var(--label); }
+body.imperfect .usage-today-days { display: flex; gap: 6px; margin-top: 4px; color: var(--label-3); font-size: 10px; }
+body.imperfect .usage-today-days > span { flex: 1; text-align: center; }
+body.imperfect .usage-reset-confirm { margin-top: 10px; padding: 12px; border-radius: var(--radius); background: var(--fill); }
+body.imperfect .usage-reset-confirm button { margin-top: 10px; margin-right: 8px; }
+body.imperfect .usage-reset-confirm button:last-child { background: var(--tint); color: var(--on-tint); }
+
+/* ---- cost and tokens (usage-page.js) ----------------------------------- */
+body.imperfect .usage-page-main { display: flex; flex-direction: column; gap: 24px; padding: 4px 0 24px; }
+body.imperfect .usage-page-main > .usage-line { font-size: var(--text-s); }
+body.imperfect .usage-overview { display: grid; grid-template-columns: minmax(0, 18rem) minmax(0, 1fr); gap: 24px; }
+body.imperfect .usage-provider-summary { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+body.imperfect .usage-headline { font: 600 34px/1.1 var(--ui); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+body.imperfect .usage-provider-row { display: flex; flex-direction: column; gap: 4px; }
+body.imperfect .usage-provider-row > div { display: flex; align-items: baseline; gap: 8px; }
+body.imperfect .usage-provider-row strong { margin-left: auto; font-weight: 500; font-variant-numeric: tabular-nums; }
+body.imperfect :is(.usage-provider-row, .usage-share-legend) i { display: inline-block; width: 8px; height: 8px; flex: none; border-radius: 50%; }
+body.imperfect .usage-provider-row .usage-line { font-size: var(--text-s); }
+body.imperfect .usage-section-title { margin: 0 0 12px; font: 600 var(--text)/1.3 var(--ui); }
+body.imperfect .usage-totals { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px 24px; }
+body.imperfect .usage-metric { display: flex; flex-direction: column; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+body.imperfect .usage-metric .usage-line { font-size: var(--text-s); }
+body.imperfect .usage-metric strong { font: 500 18px/1.2 var(--ui); font-variant-numeric: tabular-nums; }
+body.imperfect .usage-share-bar { display: flex; height: 8px; gap: 2px; border-radius: var(--radius-xs); overflow: hidden; }
+body.imperfect .usage-share-bar span { min-width: 4px; }
+body.imperfect .usage-share-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 10px; font-size: var(--text-s); }
+body.imperfect .usage-share-legend span { display: flex; align-items: center; gap: 6px; }
+body.imperfect .usage-chart-plot { display: grid; grid-template-columns: 6ch minmax(0, 1fr); gap: 8px; }
+body.imperfect .usage-chart { display: block; width: 100%; height: 224px; touch-action: pan-y; }
+body.imperfect .usage-chart-axis { position: relative; height: 224px; color: var(--label-3); font-size: var(--text-s); }
+body.imperfect .usage-chart-axis span { position: absolute; right: 0; transform: translateY(-50%); }
+body.imperfect :is(.usage-chart-grid, .usage-chart-cursor) { stroke: var(--label-2); opacity: 0.25; vector-effect: non-scaling-stroke; }
+body.imperfect .usage-chart-cursor { opacity: 0.8; }
+body.imperfect .usage-chart-dates { display: flex; justify-content: space-between; margin: 6px 0 0 7ch; font-size: var(--text-s); color: var(--label-3); }
+body.imperfect .usage-chart-readout { min-height: 2.8em; font-size: var(--text-s); color: var(--label-2); overflow-wrap: anywhere; }
+body.imperfect .usage-breakdown-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+body.imperfect .usage-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+body.imperfect .usage-table :is(th, td) { text-align: right; font-weight: normal; padding: 8px 6px; border-bottom: 0.5px solid var(--sep); overflow-wrap: anywhere; }
+body.imperfect .usage-table :is(th, td):first-child { text-align: left; width: 40%; }
+body.imperfect .usage-table th { color: var(--label-2); font-size: var(--text-s); font-weight: 500; }
+body.imperfect .usage-box .usage-table button { height: auto; padding: 0; background: none; text-align: left; overflow-wrap: anywhere; max-width: 100%; }
+body.imperfect .usage-box .usage-table button:hover { background: none; color: var(--tint); }
+body.imperfect .usage-model-provider { display: block; margin: 3px 0; color: var(--label-2); font-size: var(--text-s); }
+body.imperfect .usage-model-share { height: 3px; width: 100%; max-width: 12rem; border-radius: var(--radius-xs); background: var(--fill-2); overflow: hidden; }
+body.imperfect .usage-model-share span { display: block; height: 100%; background: var(--tint); }
+body.imperfect .usage-model-dialog {
+  position: absolute;
+  inset: 90px 16px 16px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 20px;
+  overflow: auto;
+  border-radius: var(--radius-l);
+  background: var(--surface-pop);
+  box-shadow: var(--shadow-sheet);
+}
+body.imperfect .usage-model-close { align-self: flex-end; }
+
+/* ---- graphs (usage-graphs.js) ------------------------------------------ */
+body.imperfect .usage-graphs { min-width: 0; }
+body.imperfect .usage-graph-controls { display: flex; gap: 8px 20px; flex-wrap: wrap; }
+body.imperfect .usage-graph-computers { display: flex; align-items: center; gap: 10px; color: var(--label-2); }
+body.imperfect .usage-graph-computers select {
+  min-width: 0; max-width: 100%; height: 26px; padding: 0 8px;
+  border: 0; border-radius: var(--radius-s); background: var(--fill-2);
+  color: var(--label); font: inherit;
+}
+body.imperfect .usage-graph-estimate { display: flex; flex-direction: column; gap: 12px; }
+body.imperfect .usage-graph-estimate .usage-totals { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+body.imperfect .usage-graph-estimate > .usage-line { font-size: var(--text-s); }
+body.imperfect .usage-graph-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 16px; }
+body.imperfect .usage-box .usage-graph-legend button { display: flex; align-items: center; gap: 6px; height: auto; padding: 4px 0; background: none; font-size: var(--text-s); font-weight: 400; overflow-wrap: anywhere; text-align: left; }
+body.imperfect .usage-graph-legend i { width: 8px; height: 8px; flex: none; border-radius: 50%; }
+body.imperfect .usage-box .usage-graph-legend button[aria-pressed="false"] { color: var(--label-3); text-decoration: line-through; }
+body.imperfect .usage-graph-legend button[aria-pressed="false"] i { opacity: 0.25; }
+body.imperfect .usage-graph-plot { display: grid; grid-template-columns: 7ch minmax(0, 1fr); gap: 8px; }
+body.imperfect .usage-stacked-chart { width: 100%; height: 240px; display: block; touch-action: pan-y; cursor: default; }
+body.imperfect .usage-graph-plot .usage-chart-axis { height: 240px; }
+body.imperfect .usage-graph-cursor { pointer-events: none; }
+body.imperfect .usage-graph-tooltip { min-height: 3em; margin: 12px 0 6px; color: var(--label); font-size: var(--text-s); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+body.imperfect .usage-graph-help { margin-bottom: 12px; font-size: var(--text-s); }
+body.imperfect .usage-graph-data { margin-top: 12px; font-size: var(--text-s); }
+body.imperfect .usage-graph-data summary { padding: 6px 0; color: var(--label-2); cursor: default; }
+body.imperfect .usage-graph-table-wrap { overflow-x: auto; max-width: 100%; }
+body.imperfect .usage-graph-table-wrap caption { text-align: left; padding: 8px 0; }
+body.imperfect .usage-time-table .usage-table { min-width: 560px; }
+body.imperfect .usage-graph-table-wrap .usage-table th:first-child { width: 30%; }
+body.imperfect .usage-graph-breakdowns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+body.imperfect .usage-graph-bars { display: flex; flex-direction: column; gap: 14px; }
+body.imperfect .usage-graph-bar-row > div:first-child { display: flex; justify-content: space-between; gap: 16px; font-size: var(--text-s); }
+body.imperfect .usage-graph-bar-row span { overflow-wrap: anywhere; min-width: 0; }
+body.imperfect .usage-graph-bar-row > div:first-child span:last-child { flex: none; }
+body.imperfect .usage-graph-bar-track { height: 6px; margin-top: 6px; border-radius: var(--radius-xs); background: var(--fill-2); overflow: hidden; }
+body.imperfect .usage-graph-bar-track > span { display: block; height: 100%; border-radius: var(--radius-xs); background: var(--tint); }
+body.imperfect .usage-graph-detail { display: flex; flex-direction: column; gap: 20px; padding: 14px 16px; border-radius: var(--radius-l); background: var(--surface-card); box-shadow: inset 0 0 0 0.5px var(--sep); }
+body.imperfect .usage-graph-detail > button { align-self: flex-end; }
+
+/* ---- smaller windows ---------------------------------------------------- */
+@media (max-width: 900px) {
+  body.imperfect .usage-graph-breakdowns { grid-template-columns: minmax(0, 1fr); }
+  body.imperfect .usage-overview { grid-template-columns: minmax(0, 1fr); }
+  body.imperfect .usage-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  body.imperfect .usage-box { padding: 14px 14px 0; }
+  body.imperfect .usage-window { grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; margin-bottom: 8px; }
+  body.imperfect .usage-window-label { grid-column: 1 / -1; }
+  body.imperfect .usage-graph-estimate .usage-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.imperfect .usage-stacked-chart, body.imperfect .usage-graph-plot .usage-chart-axis { height: 190px; }
+  body.imperfect .usage-graph-controls { gap: 8px; }
+  body.imperfect .usage-share-column { display: none; }
+  body.imperfect .usage-toolbar { gap: 6px; }
+  body.imperfect .usage-table :is(th, td) { padding: 8px 2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.imperfect .usage-graphs * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* Panel width, not viewport width: the same readable rows on desktop and phone. */
+@container (max-width: 480px) {
+  body.imperfect .usage-window { grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; margin-bottom: 8px; }
+  body.imperfect .usage-window-label { grid-column: 1 / -1; }
+  body.imperfect .usage-overview, body.imperfect .usage-graph-breakdowns { grid-template-columns: minmax(0, 1fr); }
+  body.imperfect .usage-totals, body.imperfect .usage-graph-estimate .usage-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.imperfect .usage-toolbar { gap: 6px; }
+  body.imperfect .usage-share-column { display: none; }
+  body.imperfect .usage-table :is(th, td) { padding: 8px 2px; }
+  body.imperfect .usage-graph-controls { gap: 8px; }
+}

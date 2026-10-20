@@ -1,0 +1,28 @@
+/* Native 390×844 product viewport; the entire device scales with the Mac stage. Its glass is iOS's Dark, matching
+   the product it shows (Mac · Dark). */
+.mac-phone { --glass: #121214; --glass-ink: #fff; --glass-quiet: #98989d; }
+.mac-phone {
+  position: absolute; z-index: 260; left: 1220px; top: 62px; width: 414px; height: 868px;
+  box-sizing: border-box; padding: 12px; border-radius: 62px;
+  background: linear-gradient(112deg, #737477, #292a2d 24%, #080809 53%, #66686a 100%);
+  box-shadow: 0 0 0 1.5px #bfc0c2, inset 0 0 0 3px #313236, 0 30px 75px #0007;
+  transform-origin: top left; transform: scale(.78); opacity: 0; pointer-events: none;
+}
+.mac-phone[hidden] { display: none; }
+.mac-phone.phone-moving { opacity: 1; transition: transform 600ms cubic-bezier(.22,.7,.22,1); }
+.mac-phone[data-shown="enter"], .mac-phone[data-shown="exit"] { transform: translateX(480px) scale(.78); }
+.mac-phone[data-shown="true"] { transform: scale(.78); }
+.mac-window.phone-travel { transition: transform 600ms cubic-bezier(.22,.7,.22,1); }
+.phone-glass { position: relative; width: 390px; height: 844px; overflow: hidden; border-radius: 50px; background: var(--glass); color: var(--glass-ink); }
+#phoneComputer { position: absolute; inset: 0; display: block; width: 390px; height: 844px; border: 0; background: var(--glass); pointer-events: none; }
+.mac-phone:not([data-ready="true"]) #phoneComputer { opacity: 0; }
+.phone-status { position: absolute; z-index: 3; top: 0; left: 0; width: 390px; height: 54px; background: var(--glass); color: var(--glass-ink); }
+.phone-clock { position: absolute; left: 29px; top: 17px; font: 600 16px/20px -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: -.4px; }
+.phone-island { position: absolute; top: 10px; left: 136px; width: 118px; height: 33px; border-radius: 22px; background: #080809; }
+.phone-indicators { position: absolute; right: 28px; top: 20px; width: 67px; height: 16px; }
+.phone-home { position: absolute; bottom: 8px; left: 128px; width: 134px; height: 5px; z-index: 3; border-radius: 5px; background: var(--glass-ink); }
+.phone-unavailable { position: absolute; inset: 54px 20px 26px; display: grid; align-content: center; text-align: center; font: 17px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; color: var(--glass-quiet); }
+.phone-unavailable[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .mac-phone, .mac-window.phone-travel { transition: none; }
+}

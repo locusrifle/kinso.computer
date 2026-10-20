@@ -1,0 +1,53 @@
+@import url('./boot/sequence.css?v=plain-1');
+/* The text font, in one place: its files (the two @font-face lines, regular 400 and medium 500) and its name (--font).
+   Everything on this page takes its font from --font; a new font is these three lines. Now Outfit (OFL-1.1,
+   fonts/Outfit-OFL.txt), static 400 and 500 instances of the google/fonts variable font, subset to Basic Latin
+   and ’ “ ” … – — · •; every visible word on this page keeps to those characters. */
+@font-face { font-family: 'Outfit'; src: url('fonts/outfit-regular.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Outfit'; src: url('fonts/outfit-medium.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+:root { --font: 'Outfit', system-ui, sans-serif; }
+:root { color-scheme: dark; --sky-bg: #000000; --sky-ink: #ffffff; --ink: rgb(212, 212, 212); --fade: 650ms; --handoff: 1200ms; --unlock: 600ms;
+  --safe: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+*, *::before, *::after { box-sizing: border-box; border-radius: 0; }
+[hidden] { display: none !important; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #000; color: #d4d4d4; font: 400 14px/1.45 var(--font); -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+button, a, input { color: inherit; font: inherit; }
+button { border: 0; background: transparent; cursor: pointer; }
+a { text-underline-offset: .3em; }
+button:disabled { opacity: .4; cursor: wait; }
+button:focus-visible, a:focus-visible { outline: 1px solid #d4d4d4; outline-offset: -3px; }
+h1 { font-weight: 400; } /* the page's one heading is for screen readers only: no bold face to download for it */
+.sr-only, .keyboard-skip:not(:focus) { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.keyboard-skip:focus { position: fixed; z-index: 40; top: max(8px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); padding: 12px; min-height: 44px; background: #000; color: #fff; font-weight: 500; }
+.screen { position: fixed; inset: 0; overflow: hidden; }
+/* Behind the lock, the existing wallpaper at rest; unlocked, it fades away from the painting (intro.mjs lockSky). */
+.app-sky[data-lock] { visibility: visible; transition: opacity var(--unlock) linear; }
+.app-sky[data-lock="off"] { opacity: 0; }
+.film { z-index: 8; background: transparent; }
+/* The packed film (picture | matte), laid out and playing but invisible; film.mjs composites it over the sky. */
+.film-area { position: absolute; inset: var(--safe); pointer-events: none; }
+.film-box { position: absolute; left: var(--film-x, 0); top: var(--film-y, 0); width: var(--film-w, 100%); height: var(--film-h, 100%); overflow: hidden; opacity: 0; pointer-events: none; }
+.film-box video { display: block; width: 200%; max-width: none; height: 100%; object-fit: fill; }
+.film canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+/* Without WebGL: the picture half alone, on black: the normal film. */
+.film[data-mode="plain"] { background: #000; }
+.film[data-mode="plain"] canvas { visibility: hidden; }
+.film[data-mode="plain"] .film-box { opacity: 1; }
+.demo { z-index: 10; inset: var(--safe); background: #000; }
+.demo iframe { width: 100%; height: 100%; display: block; border: 0; background: #000; }
+.film, .demo { opacity: 1; transition: opacity var(--fade) linear; }
+.screen[data-visible="false"] { opacity: 0; pointer-events: none; }
+/* Verified handoff: the film dissolves out while the real computer dissolves in. */
+body[data-handoff] .film, body[data-handoff] .demo { transition-duration: var(--handoff); }
+/* An up chevron over one word, only if nothing has moved a while after the unlock: start at the bottom, go up. */
+.hint { position: fixed; z-index: 22; left: 0; right: 0; bottom: calc(28px + env(safe-area-inset-bottom)); margin: 0; text-align: center; font-size: 13px; font-weight: 400; letter-spacing: .02em; color: rgba(212, 212, 212, .5); opacity: 0; transition: opacity 900ms linear; pointer-events: none; }
+.hint svg { display: block; width: 12px; height: 7px; margin: 0 auto 6px; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.hint[data-on="true"] { opacity: 1; }
+/* Failures only: the film unavailable, sound refused, the computer not ready. */
+.prompt { position: fixed; z-index: 20; bottom: calc(24px + env(safe-area-inset-bottom)); left: 16px; right: 16px; text-align: center; pointer-events: none; }
+.prompt p { margin: 0 0 8px; text-shadow: 0 1px 4px #000; }
+.prompt button, .prompt a { display: inline-flex; min-height: 44px; align-items: center; padding: 8px 18px; background: rgba(0, 0, 0, .85); font-weight: 500; pointer-events: auto; }
+#action { border: 1px solid #d4d4d4; }
+.no-script { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; gap: 12px; padding: 24px; background: #000; }
+@media (prefers-reduced-motion: reduce) { :root { --fade: 0ms; --handoff: 0ms; --unlock: 0ms; } .hint { transition: none; }
+ }

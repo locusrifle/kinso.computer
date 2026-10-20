@@ -1,0 +1,297 @@
+/* Layout glue. Colours come from /theme.css, loaded last. */
+:root {
+  --ic-grid-major: 24px;
+}
+* { box-sizing: border-box; }
+/* No scroll bars anywhere: everything still scrolls, by wheel, touch and keys. */
+* { scrollbar-width: none; }
+::-webkit-scrollbar { display: none; }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  font-family: var(--ui);
+}
+[hidden] { display: none !important; }
+button, textarea { font: inherit; }
+body.guey-tui #entry-terminal,
+body.guey-tui .entry-screen {
+  background: var(--surface);
+  color: var(--label);
+}
+
+body.guey-tui {
+  --stock-think-border: var(--tui-thinkingMedium, var(--tint));
+  font-variant-emoji: text;
+}
+body.guey-tui[data-thinking="off"] { --stock-think-border: var(--tui-thinkingOff, var(--tui-rule-strong, var(--sep))); }
+body.guey-tui[data-thinking="minimal"] { --stock-think-border: var(--tui-thinkingMinimal, var(--tui-rule-strong, var(--sep))); }
+body.guey-tui[data-thinking="low"] { --stock-think-border: var(--tui-thinkingLow, var(--tint)); }
+body.guey-tui[data-thinking="high"] { --stock-think-border: var(--tui-thinkingHigh, var(--tint)); }
+body.guey-tui[data-thinking="xhigh"],
+body.guey-tui[data-thinking="max"] { --stock-think-border: var(--tui-thinkingXhigh, var(--tint)); }
+body.guey-tui #entry-input-zone {
+  border-top-color: var(--stock-think-border);
+}
+body.guey-tui .entry-status {
+  border-top-color: var(--stock-think-border);
+  color: var(--label-3);
+}
+body.guey-tui .entry-status-line {
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+body.guey-tui .entry-flash {
+  flex: 0 0 auto;
+  padding: 0.35em var(--ic-grid-major, 24px) 0.15em;
+  color: var(--label-2);
+}
+body.guey-tui .entry-flash[hidden] { display: none; }
+body.guey-tui .entry-queue {
+  flex: 0 0 auto;
+  padding: 0.35em var(--entry-gutter, 24px) 0.2em;
+  color: var(--label-3);
+}
+body.guey-tui .entry-queue[hidden] { display: none; }
+body.guey-tui .entry-pending {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px var(--entry-gutter, 24px) 4px;
+}
+body.guey-tui .entry-pending[hidden] { display: none; }
+body.guey-tui .entry-pending-chip {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--tint);
+  background: transparent;
+  color: var(--label);
+  font: inherit;
+  cursor: pointer;
+}
+body.guey-tui .entry-pending-chip .entry-image {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+}
+body.guey-tui .entry-queue-line,
+body.guey-tui .entry-queue-hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.guey-tui .entry-queue-line {
+  appearance: none;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+body.guey-tui .entry-queue-line:hover { color: var(--tint); }
+body.guey-tui .entry-queue-hint { opacity: 0.85; }
+body.guey-tui #entry-input-zone {
+  position: relative;
+  min-height: 0;
+  margin: 0;
+  padding: 0.2em var(--ic-grid-major, 24px);
+  justify-content: center;
+  border: 0;
+}
+body.guey-tui #entry-input-zone::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  border-top: 1px solid var(--stock-think-border);
+}
+body.guey-tui #entry-input {
+  height: auto;
+  min-height: 1.35em;
+  line-height: 1.35em;
+  padding: 0.15em 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+body.guey-tui .entry-input-stack {
+  min-height: 1.65em;
+  height: auto;
+  align-items: center;
+}
+body.guey-tui .entry-status {
+  border-top: 0;
+}
+body.guey-tui #entry-pi-label {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0 0 0 auto;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+body.guey-tui #entry-thinking {
+  margin-left: 0.4em;
+}
+/* The agents panel is a column of the terminal. */
+#session-rail {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  overflow: auto;
+  background: var(--surface);
+  color: var(--label);
+}
+.session-rail-heading {
+  margin: 0;
+  color: var(--tint);
+  font-weight: 700;
+}
+.session-rail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35em;
+  width: 100%;
+}
+.session-rail-open {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0.55em 0.4em;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* ---- signing in: a Mac sheet, in look.css's colours and shapes. A list
+   of providers as grouped rows, a field, and the ways out at the foot. */
+.guey-auth {
+  box-sizing: border-box;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  /* Over the conversation, clear of the panel on the right where the
+     provider's sign-in page opens. */
+  position: fixed;
+  inset: 64px auto auto max(16px, calc(var(--sheet-left, 50vw) - 220px));
+  z-index: 120;
+  margin: 0;
+  padding: 22px 22px 18px;
+  overflow-y: auto;
+  border: 0;
+  border-radius: var(--radius-l);
+  background: var(--surface-pop);
+  color: var(--label);
+  box-shadow: var(--shadow-sheet);
+  font: var(--text)/1.45 var(--ui);
+  -webkit-font-smoothing: antialiased;
+}
+/* showModal() focuses the dialog itself; the ring belongs on the row or
+   field under the hand, not round the whole sheet. */
+.guey-auth:focus, .guey-auth:focus-visible { outline: none; }
+.guey-auth::backdrop { background: var(--scrim); }
+.guey-auth h1 { margin: 0 0 6px; color: var(--label); font: 600 17px/1.25 var(--ui); letter-spacing: -0.01em; }
+.guey-auth .auth-subtitle { margin: 0 0 16px; color: var(--label-2); font-size: 12px; }
+.guey-auth p { margin: 0 0 10px; }
+.guey-auth .auth-feedback:empty { display: none; }
+.guey-auth .auth-feedback { margin: 12px 0 0; color: var(--label-2); font-size: 12px; }
+
+/* The choices: rows of one grouped list, the way System Settings draws them. */
+.guey-auth .auth-body { display: flex; flex-direction: column; }
+.guey-auth .auth-body > button,
+.guey-auth .auth-provider {
+  appearance: none;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 0;
+  background: var(--fill);
+  color: var(--label);
+  font: inherit;
+  text-align: left;
+  cursor: default;
+}
+.guey-auth .auth-body > button + button,
+.guey-auth .auth-provider + .auth-provider { box-shadow: inset 0 0.5px 0 var(--sep); }
+.guey-auth .auth-body > button:first-of-type,
+.guey-auth .auth-provider:first-child { border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
+.guey-auth .auth-body > button:last-of-type,
+.guey-auth .auth-provider:last-child { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
+.guey-auth .auth-body > button:is(:hover, :focus-visible),
+.guey-auth .auth-provider:is(:hover, :focus-visible) { outline: none; background: var(--fill-2); }
+.guey-auth .auth-provider small { display: block; margin-top: 1px; color: var(--label-2); font-size: var(--text-s); }
+.guey-auth .auth-provider-list { display: flex; flex-direction: column; margin-top: 10px; max-height: 50dvh; overflow: auto; }
+
+.guey-auth input, .guey-auth select {
+  box-sizing: border-box;
+  width: 100%;
+  height: 28px;
+  margin: 0 0 10px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--fill);
+  box-shadow: inset 0 0 0 0.5px var(--sep-strong);
+  color: var(--label);
+  font: inherit;
+}
+.guey-auth input:focus, .guey-auth select:focus { outline: none; box-shadow: inset 0 0 0 0.5px var(--sep-strong), 0 0 0 3px var(--fill-tint); }
+.guey-auth label { display: block; margin-bottom: 5px; color: var(--label-2); font-size: 12px; }
+.guey-auth a { color: var(--tint); text-decoration: none; }
+.guey-auth a:hover { text-decoration: underline; }
+.guey-auth .auth-device-code {
+  display: inline-block;
+  margin: 4px 0 8px;
+  padding: 4px 10px;
+  border-radius: var(--radius-s);
+  background: var(--fill-tint);
+  color: var(--label);
+  font: 600 17px/1.2 var(--mono);
+  letter-spacing: 0.08em;
+}
+.guey-auth .auth-event { margin-bottom: 10px; }
+
+/* The ways out, at the foot on the right: the one to press is the tint. */
+.guey-auth .auth-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.guey-auth .auth-actions:empty { display: none; }
+.guey-auth .auth-actions button,
+.guey-auth .auth-prompt button[type="submit"] {
+  appearance: none;
+  height: 28px;
+  margin: 0;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--fill-2);
+  color: var(--label);
+  font: 500 var(--text)/1 var(--ui);
+  cursor: default;
+}
+.guey-auth .auth-prompt button[type="submit"] { background: var(--tint); color: var(--on-tint); }
+.guey-auth .auth-actions button:disabled,
+.guey-auth .auth-prompt button[type="submit"]:disabled { opacity: 0.45; }
+@media (pointer: coarse) {
+  :where(html:not(.launch-framed)) .guey-auth .auth-body > button, :where(html:not(.launch-framed)) .guey-auth .auth-provider { padding-top: 12px; padding-bottom: 12px; }
+  :where(html:not(.launch-framed)) .guey-auth .auth-actions button { height: 36px; }
+}

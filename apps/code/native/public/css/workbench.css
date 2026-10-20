@@ -1,0 +1,261 @@
+/* Workbench (workbench-view.js): one header row and a list, in the theme. */
+.workbench {
+  position: absolute; inset: 0;
+  display: grid; grid-template-rows: auto 1fr;
+  background: var(--surface); color: var(--label);
+  font: var(--text)/1.4 var(--ui); outline: none;
+  --workbench-line: var(--sep);
+  --workbench-accent: var(--tint);
+  --workbench-hover: var(--fill-2);
+  --workbench-pick: var(--fill-tint);
+}
+.workbench[hidden] { display: none; }
+.workbench * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+.workbench button, .workbench select {
+  font: inherit; color: inherit; background: transparent; border: 0; border-radius: 0;
+  padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+}
+.workbench button:hover, .workbench select:hover { background: var(--workbench-hover); }
+.workbench button:disabled { opacity: .35; cursor: default; background: none; }
+.workbench button:focus-visible, .workbench select:focus-visible { outline: 2px solid var(--workbench-accent); outline-offset: -2px; }
+
+/* Views live in a compact picker, never a second header row. */
+.workbench-view-picker { top: 0; right: 0; max-width: min(320px, 100%); max-height: 100%; overflow: auto; }
+.workbench-tab { display: flex; min-width: 0; }
+.workbench-tab > button:first-child { flex: 1; min-width: 0; }
+.workbench-tab-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workbench-tab [aria-current] { font-weight: 600; }
+.workbench-tab-owner { color: var(--label-2); white-space: nowrap; margin-left: auto; }
+.workbench-list .workbench-item.workbench-device { grid-template-columns: 24px minmax(0, 1fr) auto; text-align: left; }
+.workbench-device .workbench-size { white-space: nowrap; }
+.workbench .workbench-tab-close { flex-shrink: 0; width: 44px; justify-content: center; padding: 0; }
+
+/* held: what can be done with it besides the copy (an item in a tab of its own) */
+.workbench-menu { position: absolute; z-index: 3; display: flex; flex-direction: column; min-width: 11em; background: var(--surface); box-shadow: 0 0 0 1px var(--workbench-line), 0 10px 28px rgb(0 0 0 / .5); }
+.workbench .workbench-menu button { justify-content: flex-start; padding: 10px 14px; white-space: nowrap; }
+.workbench .workbench-menu .workbench-menu-danger { border-top: 1px solid var(--workbench-line); }
+
+/* the bar: one row. In imperfect's 72px band it rests on the divider, level
+   with the session tabs, at their height. */
+.workbench-bar { display: flex; align-items: center; gap: 0; height: var(--bar-height, 34px); padding: 0; box-sizing: border-box; border-bottom: 1px solid var(--workbench-accent); background: var(--surface); min-width: 0; }
+.workbench-bar > button { height: 100%; flex-shrink: 0; width: var(--bar-height, 34px); justify-content: center; padding: 0; }
+.workbench-bar > button[aria-pressed="true"] { color: var(--workbench-accent); }
+.workbench-bar > button[hidden] { display: none; }
+.workbench-address { flex: 1; min-width: 0; height: 100%; display: flex; cursor: text; }
+body.imperfect .workbench-bar { --workbench-row: 38px; align-items: flex-end; gap: 12px; padding: 0 var(--frame-inset, 14px); font-size: 13px; line-height: 1.4; }
+body.imperfect .workbench-bar > button { width: 34px; height: var(--workbench-row); }
+body.imperfect .workbench-address { height: var(--workbench-row); }
+body.imperfect .workbench-status { align-self: flex-end; line-height: var(--workbench-row); }
+/* Keep a blank edit target outside the scroller, even when the path overflows.
+   It is as wide as a bar control; the typed input still fills the address. */
+.workbench-path { flex: 1; min-width: 0; display: flex; overflow-x: auto; scrollbar-width: none; margin-right: var(--workbench-row, var(--bar-height, 34px)); }
+body.imperfect .workbench-path { color: var(--label-2); }
+body.imperfect .workbench-crumb[aria-current="page"] { color: var(--label); font-weight: 400; }
+.workbench-path::-webkit-scrollbar { display: none; }
+.workbench-path[hidden] { display: none; }
+.workbench-crumb { flex-shrink: 0; padding: 0 8px !important; white-space: nowrap; }
+.workbench-crumb + .workbench-crumb::before { content: '/'; margin-right: 8px; opacity: .4; }
+.workbench-crumb[aria-current="page"] { font-weight: 600; }
+.workbench-type { flex: 1; min-width: 0; font: inherit; color: inherit; background: transparent; border: 1px solid var(--workbench-accent); border-radius: 0; padding: 0 10px; outline: none; }
+.workbench-type[hidden] { display: none; }
+/* what a change did, for a few seconds */
+.workbench-status { flex: 0 1 auto; max-width: 45%; margin: 0; padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; color: var(--label); border-left: 2px solid var(--workbench-accent); }
+.workbench-status[hidden] { display: none; }
+
+/* the folder */
+.workbench-main { grid-row: 2; position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.workbench-items { position: relative; overflow-anchor: none; flex: 1; min-height: 0; overflow-y: auto; padding: 12px; align-content: start; outline: none; }
+.workbench-items[hidden] { display: none; }
+.workbench-list { display: flex; flex-direction: column; }
+.workbench-list .workbench-item { display: grid; grid-template-columns: 24px minmax(0, 1fr) 90px 110px; align-items: center; gap: 12px; padding: 5px 10px; cursor: default; user-select: none; }
+.workbench-list .workbench-item:nth-child(even) { background: color-mix(in srgb, var(--label) 3%, transparent); }
+.workbench-list .workbench-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.workbench-list .workbench-icon { width: 24px; height: 24px; }
+.workbench-list .workbench-ext { display: none; }
+.workbench-size, .workbench-date { color: var(--label-2); font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.workbench-item { -webkit-touch-callout: none; }
+.workbench-item img { -webkit-user-drag: none; }
+.workbench-gap { flex-shrink: 0; pointer-events: none; }
+.workbench-row-added { animation: workbench-arrive 140ms ease-out; }
+.workbench-row-leaving { position: absolute; z-index: 1; display: grid; align-items: center; gap: 12px; padding: 5px 10px; pointer-events: none; animation: workbench-leave 140ms ease-out forwards; }
+.workbench-row-leaving .workbench-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.workbench-row-leaving .workbench-icon { width: 24px; height: 24px; }
+@keyframes workbench-arrive { from { opacity: 0; } to { opacity: 1; } }
+@keyframes workbench-leave { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .workbench-row-added, .workbench-row-leaving { animation: none; }
+}
+.workbench-item:hover { background: var(--workbench-hover) !important; }
+.workbench-item[aria-selected="true"] { background: var(--workbench-pick) !important; box-shadow: inset 0 0 0 1px var(--workbench-accent); }
+.workbench-item[aria-selected="true"] .workbench-name { color: var(--label); }
+.workbench:focus-within .workbench-cursor { outline: 1px dashed var(--workbench-accent); outline-offset: -3px; }
+.workbench-note { position: absolute; inset: 0; margin: 0; padding: 16px; display: grid; place-items: center; text-align: center; color: var(--label-2); pointer-events: none; }
+.workbench-note[hidden] { display: none; }
+
+/* the drives, above / */
+
+/* pictures, small, in place of their icons */
+.workbench-picture img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
+.workbench-list .workbench-picture img { object-fit: cover; }
+
+/* a file, open in place of the folder (workbench-open.js) */
+.workbench-view { position: absolute; inset: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; background: var(--surface); }
+.workbench-view[hidden] { display: none; }
+.workbench-view-body { min-height: 0; overflow: auto; }
+.workbench-view-line { margin: 0; padding: 3px 12px; font-size: 12px; color: var(--label-2); border-top: 1px solid var(--workbench-line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.workbench-view-line[hidden] { display: none; }
+.workbench-view-image, .workbench-view-video, .workbench-view-audio { display: grid; place-items: center; overflow: hidden; touch-action: pan-y; }
+.workbench-view-image img, .workbench-view-video video { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.workbench-view-image { position: relative; }
+.workbench-view-image img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; user-select: none; -webkit-user-drag: none; }
+.workbench-view-audio audio { width: min(560px, 90%); }
+.workbench-view-page { overflow: hidden; }
+.workbench-view-page iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+.workbench-view-pdf { overflow: hidden; }
+.workbench-view-pdf iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--surface); }
+.workbench-view-text pre { margin: 0; padding: 14px 16px; font: 12.5px/1.55 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; user-select: text; }
+/* a text file being edited in place (workbench-edit.js): its words in the
+   page's column, soft wrapped, in the theme; Edit and Done a quiet word in
+   the bar; the line says saved or not, and what went wrong, with the choice */
+.workbench-view-edit { overflow: hidden; }
+.workbench-editor {
+  display: block; width: 100%; height: 100%; margin: 0; border: 0; border-radius: 0; outline: none; resize: none;
+  padding: 20px max(24px, calc((100% - 46rem) / 2 + 24px)) 48px; overflow-y: auto;
+  background: transparent; color: var(--label); caret-color: var(--workbench-accent);
+  font: 14px/1.65 var(--mono); tab-size: 4; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.workbench-editor::selection { background: var(--workbench-pick); }
+/* Download, beside it: the same quiet word, for any file open */
+.workbench-bar > button:is([data-edit], [data-download]) { width: auto; padding: 0 12px; color: var(--label-2); }
+body.imperfect .workbench-bar > button:is([data-edit], [data-download]) { width: auto; }
+.workbench-bar > button:is([data-edit], [data-download]):hover, .workbench-bar > button[data-edit][aria-pressed="true"] { color: var(--label); }
+/* a download imperfect's window saved: where it went, and Show */
+.workbench-status:has(> button) { display: flex; align-items: baseline; gap: 4px; }
+.workbench-status > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.workbench .workbench-status > button { flex-shrink: 0; padding: 0 6px; font-size: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.workbench-view-line[data-edit="unsaved"] .workbench-edit-state { color: var(--label); }
+.workbench-view-line:is([data-edit="conflict"], [data-edit="failed"]) {
+  display: flex; flex-wrap: wrap; align-items: center; column-gap: 4px; white-space: normal;
+  color: var(--label); background: var(--workbench-pick); box-shadow: inset 2px 0 0 var(--workbench-accent);
+}
+.workbench .workbench-view-line button { padding: 0 8px; font-size: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.workbench-view-message { height: 100%; margin: 0; display: grid; place-content: center; text-align: center; gap: 6px; color: var(--label-2); }
+.workbench-view-message p { margin: 0; }
+.workbench-view-message p:first-child { color: var(--label); font-size: 15px; }
+/* On a Mac: Open with its app, Show in Finder (workbench-mac.js). */
+.workbench-view-message .workbench-view-actions { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+.workbench .workbench-view-actions button { box-shadow: inset 0 0 0 1px var(--workbench-line); padding: 6px 14px; }
+
+/* Markdown, as a page to read */
+.workbench-page { max-width: 46rem; margin: 0 auto; padding: 20px 24px 48px; font-size: 15px; line-height: 1.65; user-select: text; overflow-wrap: break-word; }
+.workbench-page > :first-child { margin-top: 0; }
+.workbench-page h1, .workbench-page h2, .workbench-page h3, .workbench-page h4, .workbench-page h5, .workbench-page h6 { line-height: 1.25; margin: 1.6em 0 .5em; font-weight: 650; }
+.workbench-page h1 { font-size: 1.9em; padding-bottom: .25em; border-bottom: 1px solid var(--workbench-line); }
+.workbench-page h2 { font-size: 1.45em; padding-bottom: .2em; border-bottom: 1px solid var(--workbench-line); }
+.workbench-page h3 { font-size: 1.2em; }
+.workbench-page h4, .workbench-page h5, .workbench-page h6 { font-size: 1em; }
+.workbench-page p, .workbench-page ul, .workbench-page ol, .workbench-page blockquote, .workbench-page pre, .workbench-page table { margin: 0 0 1em; }
+.workbench-page ul, .workbench-page ol { padding-left: 1.6em; }
+.workbench-page li > ul, .workbench-page li > ol { margin: .2em 0; }
+.workbench-page li.task { list-style: none; margin-left: -1.3em; }
+.workbench-page li.task input { margin: 0 .4em 0 0; accent-color: var(--workbench-accent); }
+.workbench-page a { color: var(--workbench-accent); text-decoration: underline; text-underline-offset: 2px; }
+.workbench-page code { font: .88em var(--mono); padding: .1em .35em; background: color-mix(in srgb, var(--label) 9%, transparent); }
+.workbench-page pre { padding: 12px 14px; overflow-x: auto; background: color-mix(in srgb, var(--label) 6%, transparent); box-shadow: inset 2px 0 0 var(--workbench-accent); }
+.workbench-page pre code { padding: 0; background: none; font-size: 13px; line-height: 1.5; }
+.workbench-page blockquote { padding: .1em 1em; color: var(--label-2); border-left: 3px solid var(--workbench-accent); }
+.workbench-page hr { border: 0; border-top: 1px solid var(--workbench-line); margin: 2em 0; }
+.workbench-page img { max-width: 100%; }
+.workbench-page table { border-collapse: collapse; display: block; overflow-x: auto; color: inherit; font: inherit; }
+.workbench-page th, .workbench-page td { padding: 5px 12px; border: 1px solid var(--workbench-line); }
+.workbench-page th { background: color-mix(in srgb, var(--label) 6%, transparent); }
+
+/* icons: folders in the accent, pages in the ink */
+.workbench-icon { position: relative; display: grid; place-items: center; flex-shrink: 0; }
+.workbench-icon svg { width: 100%; height: 100%; }
+.workbench-icon .fold-back { fill: color-mix(in srgb, var(--workbench-accent) 70%, var(--surface)); }
+.workbench-icon .fold-front { fill: var(--workbench-accent); }
+.workbench-icon .page { fill: var(--doc-paper); stroke: var(--sep-strong); stroke-width: 1; }
+.workbench-icon .corner { fill: var(--doc-fold); }
+.workbench-ext { position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%); max-width: 80%; padding: 1px 4px; font-size: 10px; font-weight: 700; letter-spacing: .02em; color: var(--surface); background: var(--workbench-accent); overflow: hidden; }
+
+/* Permanent launch markers sit above both live previews and placeholders. */
+.workbench-launch { position: absolute; z-index: 1; bottom: 0; left: 0; display: flex; align-items: center; gap: 3px; padding: 3px 5px; background: var(--workbench-accent); color: var(--surface); font-size: 11px; font-weight: 700; line-height: 1; pointer-events: none; }
+.workbench-launch svg { width: 14px; height: 14px; fill: currentColor; }
+.workbench-launchable .workbench-ext { display: none; }
+.workbench-list .workbench-launch { inset: 0; padding: 3px; justify-content: center; }
+.workbench-list .workbench-launch svg { width: 18px; height: 18px; }
+.workbench-list .workbench-launch > span { display: none; }
+.workbench-list .workbench-launchable .workbench-name::after { content: 'Launch'; margin-left: 8px; color: var(--workbench-accent); font-size: 11px; font-weight: 700; }
+.workbench-icon .media-symbol { fill: var(--workbench-accent); stroke: var(--workbench-accent); stroke-width: 3; fill-rule: evenodd; }
+.workbench-icon-pdf .media-symbol { fill: none; }
+
+/* a project in ~/projects (projects.js): a preview of its page in place of
+   its icon, which clicked opens it */
+.workbench .workbench-preview { position: relative; padding: 0; width: 112px; height: 70px; justify-content: center; overflow: hidden; box-shadow: inset 0 0 0 1px var(--workbench-line); background: color-mix(in srgb, var(--label) 6%, transparent); }
+.workbench .workbench-preview:hover { box-shadow: inset 0 0 0 2px var(--workbench-accent); }
+.workbench-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.workbench-preview-none { font-size: 11px; color: var(--label-2); }
+.workbench-list .workbench-preview { width: 24px; height: 24px; }
+.workbench-list .workbench-preview-none { display: none; }
+
+/* symbolic glyphs, drawn from the text colour */
+.workbench-glyph { display: inline-block; width: 16px; height: 16px; flex-shrink: 0; background: currentColor; -webkit-mask: var(--g) center / contain no-repeat; mask: var(--g) center / contain no-repeat; opacity: .85; }
+.workbench-glyph-space { --g: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 1h8v9H1zm9 0h5v5h-5zm0 6h5v8h-5zM1 11h8v4H1z'/%3E%3C/svg%3E"); }
+.workbench-glyph-full { --g: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1.8 6V1.8H6M10 1.8h4.2V6M14.2 10v4.2H10M6 14.2H1.8V10' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E"); }
+
+/* where the space went (files-space.js), Noah's Mac design: a section under
+   the folder's list, "Space in noah" and what the disk has left over a map
+   of rounded blocks, each of the biggest in its own colour (the Mac's
+   system colours, lit from the top), the rest one grey block. */
+.files-space { flex: 1 1 60%; min-height: 220px; display: flex; flex-direction: column; padding: 12px; border-top: 0.5px solid var(--sep); }
+.files-space[hidden] { display: none; }
+.workbench-main:has(> .files-space:not([hidden])) > .workbench-items { flex: 0 1 auto; max-height: 40%; }
+.space-top { display: flex; align-items: center; gap: 6px; min-width: 0; margin-bottom: 9px; font: 600 12px/1.2 var(--ui); color: var(--label); }
+.space-title { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.space-title svg { flex: none; color: var(--label-2); }
+.space-where { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.space-free { margin-left: auto; color: var(--label-2); font-weight: 400; font-size: 11.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.files-space .space-top button { appearance: none; display: grid; place-items: center; height: 20px; min-width: 20px; padding: 0 !important; border: 0 !important; border-radius: var(--radius-s); background: none; color: var(--label-2); font: 400 17px/1 var(--ui); cursor: default; }
+.files-space .space-top button:hover { background: var(--fill); color: var(--label); }
+.files-space .space-top button[hidden] { display: none; }
+.space-map { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.space-wait { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 0 12px; color: var(--label-2); font-size: 12px; text-align: center; }
+.space-block {
+  position: absolute; box-sizing: border-box; display: flex; flex-direction: column; gap: 1px; min-width: 0; overflow: hidden;
+  padding: 7px 9px; border-radius: var(--radius-s); color: #fff; cursor: default;
+  background: linear-gradient(160deg, var(--from), var(--to));
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+.space-block:not(.space-still):hover { filter: brightness(1.07); }
+.space-block b { font-size: 12px; font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.space-block span { font-size: 11px; line-height: 1.25; opacity: 0.85; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.space-blue { --from: #3d9bff; --to: #0a6fe6; }
+.space-indigo { --from: #7f7cf0; --to: #5856d6; }
+.space-orange { --from: #ffb340; --to: #ff9500; }
+.space-pink { --from: #ff6f8f; --to: #ff2d55; }
+.space-teal { --from: #6fd2e3; --to: #30b0c7; }
+.space-green { --from: #5fdc7d; --to: #28cd41; }
+.space-purple { --from: #c58af0; --to: #af52de; }
+.space-cyan { --from: #6ccff6; --to: #32ade6; }
+.space-yellow { --from: #ffd84d; --to: #f5b800; }
+.space-other { --from: color-mix(in srgb, var(--label) 22%, var(--surface)); --to: color-mix(in srgb, var(--label) 26%, var(--surface)); color: var(--label); box-shadow: none; }
+
+/* a phone: the list without its dates */
+@media (max-width: 700px) {
+  .workbench-list .workbench-item { grid-template-columns: 24px minmax(0, 1fr) 70px; }
+  .workbench-list .workbench-date { display: none; }
+  .space-legend { display: none; }
+}
+/* a finger: tabs, their close and + at a thumb's width */
+@media (pointer: coarse) {
+  :where(html:not(.launch-framed)) .workbench-bar { --bar-height: var(--frame-bar-height, 45px); }
+  :where(html:not(.launch-framed)) body.imperfect .workbench-bar { --workbench-row: 44px; gap: 6px; }
+  :where(html:not(.launch-framed)) body.imperfect .workbench-bar > button { width: 44px; }
+  :where(html:not(.launch-framed)) .workbench .workbench-device { min-height: 44px; }
+  :where(html:not(.launch-framed)) .workbench .workbench-tab-close { width: 44px; }
+  :where(html:not(.launch-framed)) .workbench .workbench-menu button { min-height: 44px; }
+  /* 16px: a phone keeps its scale as the keyboard comes up */
+  :where(html:not(.launch-framed)) .workbench-editor { padding: 14px 16px 48px; font-size: 16px; line-height: 1.55; }
+  :where(html:not(.launch-framed)) .workbench .workbench-view-line button { min-height: 36px; }
+}

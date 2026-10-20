@@ -1,0 +1,10 @@
+ :home:74:WPA2
+ :Neighbour0895C8:59:WPA2
+*:home:53:WPA2
+ ::42:WPA2 WPA3
+ :Cafe\: free wifi:41:
+ :Aussie Broadband 4222:39:WPA2
+ ::27:WPA2
+ :BV Home backup:22:WPA2 WPA3
+ :Office:21:WPA2 802.1X
+ :orbit:17:WPA1 WPA2

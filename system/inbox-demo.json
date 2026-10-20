@@ -1,0 +1,133 @@
+{
+  "about": "The demo inbox (system/inbox-demo.mjs): invented people and companies, for showing Messages on a computer that is not the person's own. Every name and address here is made up; .example addresses can never be real. 'ago' is counted back from whenever Messages is opened: 45m, 3h, 2d 4h. 'unread' marks a conversation as not yet read; 'files' names attachments (they have no contents).",
+  "me": { "name": "You" },
+  "accounts": [
+    { "id": "demo-gmail", "source": "gmail", "name": "hello@fernlight.example", "handle": "hello@fernlight.example" },
+    { "id": "demo-linkedin", "source": "linkedin", "name": "LinkedIn" },
+    { "id": "demo-instagram", "source": "instagram", "name": "Instagram" }
+  ],
+  "conversations": [
+    {
+      "id": "seed-round", "account": "demo-gmail", "name": "Ingrid Vasquez-Holm", "address": "ingrid@larchmont-capital.example",
+      "subject": "Re: Fernlight seed round: next steps", "unread": 1,
+      "messages": [
+        { "ago": "2d 5h", "text": "Hi,\n\nThanks for walking us through the demo on Thursday. The partners liked how fast the agents got from a bug report to a fix.\n\nCould you share the data room, and your retention numbers for the last two cohorts? If those look like what you described, we'd like to move to a term sheet next week.\n\nBest,\nIngrid" },
+        { "ago": "1d 22h", "me": true, "text": "Hi Ingrid,\n\nThank you, that's great to hear. I've added you to the data room; the cohort numbers are on the second tab. Happy to talk through anything that looks odd.\n\nThanks again" },
+        { "ago": "38m", "text": "Thanks, the numbers look strong. One question before Thursday: how much of the October growth came from the two design partners, and how much was organic? A rough split is fine.\n\nIngrid" }
+      ]
+    },
+    {
+      "id": "pilot-kickoff", "account": "demo-gmail", "name": "Tobias Ferreira-Lund", "address": "tobias@quayside-freight.example",
+      "subject": "Pilot kickoff: Quayside Freight", "unread": 1,
+      "messages": [
+        { "ago": "1d 3h", "text": "Hello,\n\nWe're all set on our side for the pilot. Our dispatch team would like a kickoff call with you next week, ideally Tuesday or Wednesday morning. Three of us will join.\n\nAlso, can your agents work against our staging API rather than production for the first two weeks?\n\nCheers,\nTobias" },
+        { "ago": "2h", "text": "Just following up on the times above. Wednesday 10am would suit everyone if that works for you.\n\nTobias" }
+      ]
+    },
+    {
+      "id": "invoice-0142", "account": "demo-gmail", "name": "Odalys Brennan", "address": "odalys@brennan.studio.example",
+      "subject": "Invoice 0142: October design sprint",
+      "messages": [
+        { "ago": "3d 2h", "text": "Hi!\n\nAttached is the invoice for the October sprint: onboarding screens, the new settings page and the icon set. Figma files are in the shared folder.\n\nLovely working on this one.\n\nOdalys", "files": ["Invoice-0142.pdf"] },
+        { "ago": "3d 1h", "me": true, "text": "Thanks Odalys, the icons look fantastic. Paying it today." },
+        { "ago": "2d 20h", "text": "Received, thank you! Let me know when you're ready for the marketing site." }
+      ]
+    },
+    {
+      "id": "lowtide-talk", "account": "demo-gmail", "name": "Hollis Mbeki-Strand", "address": "programme@lowtide-devconf.example",
+      "subject": "Speaker confirmation: Lowtide DevConf",
+      "messages": [
+        { "ago": "1d 6h", "text": "Hi,\n\nWe're delighted to confirm your talk, \"Agents that ship: a year of letting software write software\", on the main stage, 2:40pm on day two. It's a 25 minute slot with 5 minutes for questions.\n\nCould you send a short bio and a headshot by Friday?\n\nWarm regards,\nHollis Mbeki-Strand\nProgramme chair" }
+      ]
+    },
+    {
+      "id": "safe-docs", "account": "demo-gmail", "name": "Delphine Arkwright", "address": "delphine@arkwright-pell.example",
+      "subject": "SAFE documents ready for signature",
+      "messages": [
+        { "ago": "5h", "text": "Hi,\n\nThe SAFE for the two angels is ready. I've made the changes we discussed (the pro rata side letter is now separate). You should have a signing link from the e-signature service.\n\nOnce both investors sign, I'll circulate the executed copies.\n\nKind regards,\nDelphine", "files": ["SAFE-side-letter.pdf"] },
+        { "ago": "4h", "me": true, "text": "Thanks Delphine, signed just now." }
+      ]
+    },
+    {
+      "id": "wren-feedback", "account": "demo-gmail", "name": "Wren Castellanos", "address": "wren@tallgrass-labs.example",
+      "subject": "Feedback after our first week",
+      "messages": [
+        { "ago": "20h", "text": "Hey,\n\nOne week in with the team plan. Honest feedback: the agents writing the migration was the moment it clicked for everyone. Two asks:\n\n1. Let us pin an agent to a branch so it doesn't wander.\n2. A way to see what each agent touched today, in one place.\n\nHappy to jump on a call if useful.\n\nWren" }
+      ]
+    },
+    {
+      "id": "q3-numbers", "account": "demo-gmail", "name": "Marisol Tenwick", "address": "marisol@tenwick-accounting.example",
+      "subject": "Q3 numbers and the R&D claim",
+      "messages": [
+        { "ago": "2d 1h", "text": "Hi,\n\nQ3 is reconciled. Revenue came in a little ahead of plan; payroll is the only line over. I've started the R&D tax claim: could you send me a list of the experiments you ran this year, a sentence each?\n\nMarisol" },
+        { "ago": "1d 23h", "me": true, "text": "Great news, thank you. I'll pull the list together from the repo this week." }
+      ]
+    },
+    {
+      "id": "kwabena-engineer", "account": "demo-linkedin", "name": "Kwabena Ashworth", "unread": 2,
+      "messages": [
+        { "ago": "4h", "text": "Hi! Mateo Lindqvist suggested I reach out. I've spent the last four years on developer tooling at a payments company, mostly build systems and CI." },
+        { "ago": "3h", "text": "I saw you're hiring a founding engineer. I'd love to hear more about it, if you're open to a chat this week." }
+      ]
+    },
+    {
+      "id": "gridline-partners", "account": "demo-linkedin", "name": "Saoirse Delacroix-Ng",
+      "messages": [
+        { "ago": "1d 1h", "text": "Hi, I lead partnerships at Gridline. A few of our customers have asked whether your agents can open pull requests from our incident timeline. Would you be up for exploring an integration?" },
+        { "ago": "23h", "me": true, "text": "Hi Saoirse, yes, that's exactly the kind of thing we want to support. Do you have API docs for the timeline events?" },
+        { "ago": "21h", "text": "Sending them over now. Free for a call Thursday afternoon?" }
+      ]
+    },
+    {
+      "id": "mateo-congrats", "account": "demo-linkedin", "name": "Mateo Lindqvist",
+      "messages": [
+        { "ago": "2d 8h", "text": "Congrats on the launch! Watched the video three times. The bit where it fixes its own failing test is wild." },
+        { "ago": "2d 7h", "me": true, "text": "Thanks Mateo! That means a lot coming from you. Coffee soon?" },
+        { "ago": "2d 6h", "text": "Always. Next week?" }
+      ]
+    },
+    {
+      "id": "ottilie-hiring", "account": "demo-linkedin", "name": "Ottilie Ramanathan",
+      "messages": [
+        { "ago": "1d 9h", "text": "Hey, fellow founder here (we're building scheduling for clinics). We're both hiring our first engineers right now. Want to swap notes on what's worked? I have a take-home that candidates actually like." }
+      ]
+    },
+    {
+      "id": "benedikt-intro", "account": "demo-linkedin", "name": "Benedikt Okonjo",
+      "messages": [
+        { "ago": "3d 4h", "text": "Ingrid mentioned you're raising. I write small cheques into developer tools and I'd love to hear the story when you have twenty minutes." },
+        { "ago": "3d 2h", "me": true, "text": "Hi Benedikt, thanks for reaching out. Happy to. Does Monday work?" }
+      ]
+    },
+    {
+      "id": "jun-video", "account": "demo-instagram", "name": "Jun Takeda-Price", "unread": 1,
+      "messages": [
+        { "ago": "1h", "text": "ok the launch video is SO good" },
+        { "ago": "58m", "text": "who did the music?? my friend wants to know" }
+      ]
+    },
+    {
+      "id": "studio-palomar", "account": "demo-instagram", "name": "Studio Palomar",
+      "messages": [
+        { "ago": "9h", "text": "Saw your story about the new logo. We'd love to show you what we did for two other dev tools companies if you're still looking for a studio." },
+        { "ago": "8h", "me": true, "text": "Thanks! We just finished it with a freelancer, but I'll keep you in mind for the website." }
+      ]
+    },
+    {
+      "id": "harlow-bug", "account": "demo-instagram", "name": "Harlow Pemberton-Yi",
+      "messages": [
+        { "ago": "6h", "text": "hey! love fernlight. small bug: when an agent renames a file the old tab stays open with the old name" },
+        { "ago": "5h", "me": true, "text": "Thank you for telling me! Fixed, it'll be in tomorrow's update." },
+        { "ago": "5h", "text": "that was fast 😄" }
+      ]
+    },
+    {
+      "id": "ines-photos", "account": "demo-instagram", "name": "Ines Morrow",
+      "messages": [
+        { "ago": "1d 4h", "text": "Hi! Following up about the team photos. I have Saturday morning free, the light in your office is great before 10." },
+        { "ago": "1d 2h", "me": true, "text": "Saturday 9am would be perfect. How long should we plan for?" },
+        { "ago": "1d 1h", "text": "About an hour for four people. I'll bring a backdrop just in case." }
+      ]
+    }
+  ]
+}

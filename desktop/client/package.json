@@ -1,0 +1,16 @@
+{
+  "name": "imperfect-client",
+  "productName": "Imperfect",
+  "desktopName": "imperfect-client.desktop",
+  "version": "0.4.0",
+  "description": "Your imperfect computer, on this desktop.",
+  "author": "Imperfect",
+  "homepage": "https://imperfect.computer",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "main.mjs",
+  "dependencies": {
+    "ws": "8.21.3"
+  }
+}

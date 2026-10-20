@@ -1,0 +1,57 @@
+PipeWire 'pipewire-0' [1.6.8, noah@laptop, cookie:4169001050]
+ └─ Clients:
+        32. quickshell                          [1.6.8, noah@laptop, pid:1256]
+        33. WirePlumber                         [1.6.8, noah@laptop, pid:1669]
+        38. xdg-desktop-portal                  [1.6.8, noah@laptop, pid:1518]
+        43. xdg-desktop-portal-hyprland         [1.6.8, noah@laptop, pid:1729]
+        44. WirePlumber [client]                [1.6.8, noah@laptop, pid:1669]
+        45. pipewire                            [1.6.8, noah@laptop, pid:1737]
+        79. WirePlumber [client]                [1.6.8, noah@laptop, pid:1669]
+        85. imperfect-code                      [1.6.8, noah@laptop, pid:55840]
+        91. imperfect-code                      [1.6.8, noah@laptop, pid:55840]
+        92. wpctl                               [1.6.8, noah@laptop, pid:61847]
+
+Audio
+ ├─ Devices:
+ │      48. Radeon High Definition Audio Controller [alsa]
+ │      49. Ryzen HD Audio Controller           [alsa]
+ │      73. OpenComm2 by Shokz_II               [bluez5]
+ │
+ ├─ Sinks:
+ │  *   63. Ryzen HD Audio Controller Speaker   [vol: 1.00]
+ │      77. OpenComm2 by Shokz_II               [vol: 1.00]
+ │
+ ├─ Sources:
+ │      64. Ryzen HD Audio Controller Stereo Microphone [vol: 1.00]
+ │      65. Ryzen HD Audio Controller Digital Microphone [vol: 1.00]
+ │
+ ├─ Filters:
+ │    - loopback-1669-23
+ │  *   80. bluez_input.A0:0C:E2:00:00:AA                                [Audio/Source]
+ │      81. bluez_capture_internal.A0:0C:E2:00:00:AA                     [Stream/Input/Audio/Internal]
+ │
+ └─ Streams:
+        87. imperfect-code
+             93. output_FL       > ALC287 Analog:playback_FL	[active]
+             97. output_FR       > ALC287 Analog:playback_FR	[active]
+
+Video
+ ├─ Devices:
+ │      56. Integrated Camera                   [v4l2]
+ │      57. Integrated Camera                   [v4l2]
+ │      61. Integrated Camera                   [v4l2]
+ │      62. Integrated Camera                   [v4l2]
+ │
+ ├─ Sinks:
+ │
+ ├─ Sources:
+ │  *   69. Integrated Camera (V4L2)
+ │      71. Integrated Camera (V4L2)
+ │
+ ├─ Filters:
+ │
+ └─ Streams:
+
+Settings
+ └─ Default Configured Devices:
+         0. Audio/Sink    alsa_output.pci-0000_c1_00.6.HiFi__Speaker__sink

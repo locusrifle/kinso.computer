@@ -1,0 +1,1 @@
+amdgpu_bl1,backlight,148800,30%,496000

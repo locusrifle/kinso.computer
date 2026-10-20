@@ -1,0 +1,58 @@
+/* The store's thanks page.
+   One column on the shelf's stylesheet, the key front and centre. */
+
+body { padding-top: 0; gap: 0; align-items: center; }
+body > * { width: 100%; max-width: 76rem; }
+
+.single { max-width: 72ch; }
+.step { display: flex; flex-direction: column; gap: 0.75rem; }
+.step h2 .n { color: var(--accent); }
+body.plain { padding-top: clamp(2.5rem, 10vh, 6rem); align-items: stretch; }
+body.plain > main { margin: 0 auto; }
+kbd { font: inherit; color: var(--bright); border: 1px solid var(--line-strong); padding: 0 0.35em; white-space: nowrap; }
+
+/* thanks: the sentence is pasted into a chat, not a shell, so no $. */
+.copyable { position: relative; }
+pre.say { border-color: var(--accent); border-left-width: 3px; color: var(--bright); font-size: 1.02rem; line-height: 1.6; word-break: normal; overflow-wrap: anywhere; padding-right: 6.5rem; }
+.copyable pre.prompt { padding-right: 6.5rem; }
+.copyable .copy { position: absolute; top: 0.6rem; right: 0.6rem; padding: 0.3rem 0.7rem; font-size: 0.85rem; }
+@media (max-width: 520px) {
+  pre.say, .copyable pre.prompt { padding-right: 1.1rem; }
+  .copyable { display: flex; flex-direction: column; gap: 0.5rem; }
+  .copyable .copy { position: static; align-self: flex-start; }
+}
+
+/* thanks: the member's drive. It arrives, the platter spins up and keeps
+   spinning, the arm swings out of park onto the disk and seeks, the light
+   blinks while it reads, and the label settles last. */
+.drive { margin: 0 auto 1.5rem; width: min(320px, 76vw); }
+.drive svg { display: block; width: 100%; height: auto; overflow: visible; }
+.drive-spin, .drive-arm { transform-box: view-box; }
+.drive-spin { transform-origin: 150px 158px; }
+.drive-arm { transform-origin: 262px 340px; }
+.drive-maker { font: 700 8.5px var(--mono); letter-spacing: 0.1em; fill: #6a5c7a; }
+.drive-number { font: 700 25px var(--mono); fill: #1a1b26; }
+.drive-serial { font: 400 6px var(--mono); letter-spacing: 0.08em; fill: #6a5c7a; }
+.thanks h1 { text-align: center; }
+.step h2 .n { margin-right: 0.6ch; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .drive { animation: drive-arrive 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  /* Spin-up ends at 540deg, where the endless turn starts (540 = 180). */
+  .drive-spin { animation: drive-spinup 1.6s cubic-bezier(0.55, 0, 1, 1) 0.5s both, drive-spin 0.5s linear 2.1s infinite; }
+  .drive-arm { animation: drive-unpark 0.7s cubic-bezier(0.3, 0, 0.2, 1) 1.9s both, drive-seek 3.2s ease-in-out 2.6s infinite; }
+  .drive-led { animation: drive-led 0.9s steps(2, jump-none) 2.6s infinite; }
+  .drive-label { animation: drive-label 0.6s ease-out 2.4s both; }
+  .drive.writing .drive-led { animation-duration: 0.18s; }
+}
+@keyframes drive-arrive { from { opacity: 0; transform: translateY(48px) scale(0.94); } to { opacity: 1; transform: none; } }
+@keyframes drive-spinup { from { rotate: 0deg; } to { rotate: 540deg; } }
+@keyframes drive-spin { from { rotate: 180deg; } to { rotate: 540deg; } }
+@keyframes drive-unpark { from { rotate: 22deg; } to { rotate: 0deg; } }
+@keyframes drive-seek { 0%, 100% { rotate: 0deg; } 18% { rotate: 7deg; } 34% { rotate: 7deg; } 52% { rotate: 2deg; } 70% { rotate: 10deg; } 84% { rotate: 10deg; } }
+@keyframes drive-led { from { opacity: 1; } to { opacity: 0.2; } }
+@keyframes drive-label { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* The drive's marks take the page's accent: the light, the flex, the label's band. */
+.drive-accent { fill: var(--accent); }
+.drive-flex { stroke: var(--accent); }

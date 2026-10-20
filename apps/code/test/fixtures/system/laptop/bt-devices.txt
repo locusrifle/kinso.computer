@@ -1,0 +1,4 @@
+Device A0:0C:E2:00:00:AA OpenComm2 by Shokz_II
+Device 10:32:2C:00:00:90 ZV-E10
+Device 5C:44:3E:00:00:12 5C-44-3E-00-00-12
+Device F4:4E:FD:00:00:31 WH-1000XM4

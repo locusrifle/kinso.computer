@@ -1,0 +1,6 @@
+/* The keeper owns the whole surface and consumes every key. */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; cursor: none; user-select: none; -webkit-user-select: none; }
+:root { --sky-bg: #000000; --sky-ink: #ffffff; }
+body { touch-action: none; overscroll-behavior: none; }
+.stage, .app-sky { position: fixed; }
+.macos-lock { pointer-events: none; }

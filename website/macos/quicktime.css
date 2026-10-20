@@ -1,0 +1,34 @@
+@import url('./genie.css?v=sequoia-4');
+.mac[data-lock-desktop="true"] { height: var(--desktop-height, 900px); background: transparent; }
+.mac[data-lock-desktop="true"] > .mac-wall { display: none; }
+.mac[data-player="true"] > .mac-window, .mac[data-player="true"] > .mac-cursor { visibility: hidden; }
+.mac .quicktime { background: #000; color: white; border-radius: var(--macos-windowRadius); }
+.quicktime .shell-titlebar { position: absolute; inset: 0 0 auto; z-index: 2; height: 28px; min-height: 0; padding: 6px 80px; border: 0; background: linear-gradient(#252525cc,#16161680); color: #fff; font-size: 13px; font-weight: 500; }
+.mac .quicktime .shell-lights { top: 8px; left: 12px; gap: 8px; }
+.quicktime .shell-body { position: absolute; inset: 0; overflow: hidden; background: black; }
+.quicktime-content { position: absolute; inset: 0; }
+.quicktime-video { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; }
+.quicktime-hud { position: absolute; z-index: 3; bottom: var(--macos-hudBottom); left: 50%; transform: translateX(-50%); width: min(var(--macos-hudWidth), calc(100% - 36px)); padding: 9px 12px 8px; border-radius: 9px; background: #48474ed9; color: #fff; box-shadow: 0 1px 2px #ffffff15 inset, 0 6px 24px #0002; -webkit-backdrop-filter: blur(24px) saturate(1.3); backdrop-filter: blur(24px) saturate(1.3); }
+.quicktime[data-hud="false"] :is(.quicktime-hud,.shell-titlebar,.shell-lights) { opacity: 0; pointer-events: none; }
+.quicktime :is(.quicktime-hud,.shell-titlebar,.shell-lights) { transition: opacity var(--macos-hudFadeMs) linear; }
+.quicktime-hud-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 30px; }
+.mac .quicktime-hud button { display: grid; place-items: center; width: 26px; height: 28px; padding: 0; color: #fff; background: none; border: 0; border-radius: 3px; }
+.quicktime-hud button svg { width: 20px; height: 20px; fill: currentColor; }
+.mac .quicktime-hud .quicktime-play { width: 34px; }
+.quicktime-hud .quicktime-play svg { width: 29px; height: 29px; }
+.quicktime-hud button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.quicktime-volume { display: flex; align-items: center; gap: 5px; margin-right: 26px; }
+.quicktime-hud input[type="range"] { appearance: none; -webkit-appearance: none; height: 3px; border-radius: 3px; background: #ffffff40; accent-color: #d5d5db; min-width: 0; padding: 0; margin: 0; }
+.quicktime-hud input[type="range"]::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 9px; height: 9px; background: #d5d5db; border-radius: 50%; box-shadow: 0 .5px 1px #0004; }
+.quicktime-hud input[type="range"]::-moz-range-thumb { width: 9px; height: 9px; border: 0; background: #d5d5db; border-radius: 50%; }
+.quicktime-volume input { width: 68px; }
+.quicktime-timeline { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 11px; font-variant-numeric: tabular-nums; line-height: 14px; }
+.quicktime-timeline input { flex: 1; }
+.quicktime-timeline input::-webkit-slider-thumb { width: 3px !important; height: 11px !important; border-radius: 1px !important; }
+.quicktime-timeline output { min-width: 31px; }
+.quicktime-error { position: absolute; z-index: 4; inset: 0; display: grid; place-content: center; gap: 16px; padding: 30px; text-align: center; background: #17171ce8; color: #fff; }
+.mac .quicktime-error button { padding: 6px 14px; border-radius: 5px; background: #ffffff26; color: white; }
+.shell-miniature-custom .shell-miniature-header { display: none; }
+.shell-miniature-custom .shell-miniature-content { position: absolute; inset: 0; display: block; padding: 0; }
+.shell-miniature-custom canvas { width: 100%; height: 100%; display: block; object-fit: contain; background: #000; }
+@media (prefers-reduced-motion: reduce) { .quicktime :is(.quicktime-hud,.shell-titlebar,.shell-lights) { transition: none; } }

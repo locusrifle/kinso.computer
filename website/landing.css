@@ -1,0 +1,56 @@
+@font-face { font-family: 'Outfit'; src: url('fonts/outfit-regular.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Outfit'; src: url('fonts/outfit-medium.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+/* The new brand, as the launch film and the launch page: black, the film's cream, brushed silver, hard 90-degree edges. */
+:root { color-scheme: dark; --cream: rgb(245, 238, 224); --body: rgba(245, 238, 224, .74); --silver: #c7c7c7; --chrome: #d4d4d4; }
+*, *::before, *::after { box-sizing: border-box; border-radius: 0; }
+html { scroll-padding-top: 24px; background: #000; }
+body { margin: 0; background: transparent; color: var(--body); font: 400 15px/1.7 'Outfit', system-ui, sans-serif; }
+a { color: inherit; text-underline-offset: .3em; }
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 1px solid var(--silver); outline-offset: 3px; }
+h1, h2, p { margin: 0; }
+h1, h2 { font-weight: 400; color: var(--cream); }
+h1 { font-size: clamp(34px, 4.6vw, 60px); line-height: 1.1; letter-spacing: -.02em; }
+h2 { font-size: clamp(24px, 2.6vw, 34px); line-height: 1.2; letter-spacing: -.01em; }
+p + p { margin-top: 20px; }
+strong { font-weight: 500; color: var(--cream); }
+code { font: inherit; color: var(--cream); overflow-wrap: anywhere; }
+.header, main, .footer { width: min(1440px, 100%); margin-inline: auto; }
+.header { padding: 24px 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--silver); }
+/* The logo: Noah's lettering (assets/wordmark/imperfect-spiky.png) in the wordmark's brushed silver, as the film shows it. */
+.brand { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+.brand img { display: block; width: auto; height: 56px; }
+nav { display: flex; align-items: center; gap: 24px; }
+nav a:not(.button) { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+.skip { position: absolute; z-index: 10; top: 8px; left: 8px; padding: 12px; border: 1px solid var(--chrome); background: #000; color: var(--cream); transform: translateY(-150%); }
+.skip:focus { transform: none; }
+.eyebrow { font-size: 11px; line-height: 1.6; letter-spacing: .16em; text-transform: uppercase; color: var(--silver); }
+/* Buttons and links that act are the launch page's buy button (sequence.css .buy): square, 1px chrome border, black fill. */
+.button, button { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; padding: 8px 18px; border: 1px solid var(--chrome); background: rgba(0, 0, 0, .85); color: var(--chrome); font: 500 15px/1.2 'Outfit', system-ui, sans-serif; text-decoration: none; cursor: pointer; }
+.button:hover, button:hover { background: var(--chrome); color: #000; }
+/* Inputs: black, a silver hairline, cream text. 16px so a phone does not zoom in on them. */
+input { min-height: 44px; padding: 10px 14px; border: 1px solid var(--silver); background: #000; color: var(--cream); font: 400 16px/1.4 'Outfit', system-ui, sans-serif; }
+.footer { padding: 28px 48px; display: flex; justify-content: space-between; align-items: center; gap: 24px; font-size: 12px; color: var(--silver); }
+.footer a { display: inline-flex; align-items: center; min-height: 44px; color: var(--silver); }
+/* The handoff pages (Shop thanks, host, the account, the OS install guide) share one quiet column. */
+.handoff { max-width: 800px; padding: 68px 48px 100px; min-height: 70vh; }
+.handoff h1 { margin-bottom: 28px; }
+.handoff ul, .handoff ol { padding-left: 24px; margin-block: 28px; }
+.handoff li { margin-block: 16px; }
+.handoff .button { margin-block: 28px 18px; }
+.price { margin-top: 20px; margin-bottom: 28px; font-size: 36px; line-height: 1.2; letter-spacing: -.02em; color: var(--cream); }
+.price span { font-size: 15px; letter-spacing: 0; white-space: nowrap; color: var(--silver); }
+.notice { margin-top: 28px; padding: 20px; border: 1px solid var(--silver); }
+.handoff code { font-family: ui-monospace, monospace; }
+@media (max-width: 700px) {
+  body { font-size: 14px; }
+  .header { padding: 16px 20px; gap: 12px; }
+  .brand img { height: 44px; }
+  nav { gap: 16px; }
+  nav a:not(.button) { font-size: 14px; }
+  h1 { font-size: clamp(32px, 9vw, 52px); }
+  .handoff { padding: 40px 24px 64px; }
+  .price { font-size: 32px; }
+  .footer { padding: 24px; flex-wrap: wrap; gap: 18px; }
+}
+@media (max-width: 359px) { .header { padding-inline: 12px; } nav { gap: 12px; } }

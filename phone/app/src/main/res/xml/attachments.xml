@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only the scratch folder a camera writes into on its way to the machine,
+     and the new version of this app handed to Android's installer. Nothing
+     else on this device is shared out. -->
+<paths>
+  <cache-path name="attachments" path="attachments/" />
+  <cache-path name="updates" path="updates/" />
+</paths>

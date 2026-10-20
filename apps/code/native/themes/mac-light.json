@@ -1,0 +1,21 @@
+{
+  "name": "Mac · Light",
+  "mode": "light",
+  "background": "#ffffff",
+  "panel": "#ffffff",
+  "bar": "#ffffff",
+  "band": "#efeff1",
+  "foreground": "#1d1d1f",
+  "bright": "#000000",
+  "muted": "#6e6e73",
+  "dim": "#8e8e93",
+  "rule": "#e5e5ea",
+  "accent": "#007aff",
+  "red": "#d70015",
+  "yellow": "#a05a00",
+  "green": "#248a3d",
+  "orange": "#c93400",
+  "blue": "#0040dd",
+  "cyan": "#0071a4",
+  "magenta": "#ad1a72"
+}

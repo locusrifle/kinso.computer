@@ -1,0 +1,5 @@
+wlp6s0:wifi:connected:home
+tailscale0:tun:connected (externally):tailscale0
+lo:loopback:connected (externally):lo
+p2p-dev-wlp6s0:wifi-p2p:disconnected:
+enp5s0:ethernet:unavailable:

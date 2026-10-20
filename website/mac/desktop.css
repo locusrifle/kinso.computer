@@ -1,0 +1,21 @@
+/* A single desktop in native points, uniformly contained at every viewport size.
+   The cross-origin product keeps its desktop viewport even on a portrait phone.
+   It is always macOS's Dark appearance (the wallpaper's own night). Its iframes see it too, so the product inside is
+   Mac · Dark whatever the visitor's own setting. */
+.mac.screen { --scale: 1; --us: 1; --pt: 1px; position: fixed; inset: auto; left: 50%; top: 50%; width: 1600px; height: 900px; transform: translate(-50%, -50%) scale(var(--scale)); transform-origin: center; background: var(--mac-ground); font-family: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif; color: #fff; -webkit-font-smoothing: antialiased; user-select: none;
+  color-scheme: dark; --mac-ground: #160c2e; --mac-window: #121214; --mac-window-rim: #ffffff2e; --mac-note-ink: #c7c7cc; --mac-note-bg: #2c2c2e; }
+.mac[data-visible="false"] { opacity: 0; pointer-events: none; }
+.mac-wall { position: absolute; inset: 0; background: url('wallpaper.webp') center / cover no-repeat; }
+.mac-window { position: absolute; left: 160px; top: 25px; width: 1280px; height: 796px; border-radius: 10px; overflow: hidden; background: var(--mac-window); box-shadow: 0 0 0 .5px #0008, 0 22px 70px #0007, 0 6px 18px #0005; }
+.mac-window::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 .5px var(--mac-window-rim); pointer-events: none; z-index: 1; }
+.mac-window .demo { position: absolute; inset: 0; background: var(--mac-window); transition: none; }
+.mac-window .demo iframe { position: absolute; inset: 0; border: 0; width: 100%; height: 100%; transform: none; pointer-events: auto; background: var(--mac-window); }
+.mac-offline { position: absolute; z-index: 11; bottom: 16px; left: 16px; right: 16px; margin: 0; padding: 8px 12px; color: var(--mac-note-ink); background: var(--mac-note-bg); font-size: 13px; }
+.mac-offline button { text-decoration: underline; padding: 6px; }
+.mac-cursor { position: absolute; left: 0; top: 0; width: 17px; height: 23px; z-index: 1202; pointer-events: none; will-change: translate; }
+.mac-ghost { position: absolute; z-index: 1201; display: block; pointer-events: none; will-change: translate; object-fit: contain; }
+.mac-consumed, .dock-slot.consumed { display: none !important; }
+.mac-build-shield { position: absolute; inset: 25px 0 0; z-index: 950; cursor: none; }
+.curtain { position: fixed; inset: 0; background: #000; box-shadow: 0 30px 90px 30px #000b; pointer-events: none; }
+body[data-curtain] :is(#introScreen, #filmScreen, #curtain) { transition: transform var(--rise-ms, 1500ms) cubic-bezier(.65, 0, .25, 1); will-change: transform; }
+body[data-curtain="up"] :is(#introScreen, #filmScreen, #curtain) { transform: translateY(calc(-100% - 140px)); }

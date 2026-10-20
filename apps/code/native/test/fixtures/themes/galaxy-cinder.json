@@ -1,0 +1,11 @@
+{
+  "id": "galaxy-cinder",
+  "name": "Galaxy · Cinder",
+  "mode": "dark",
+  "background": "#100c0b",
+  "foreground": "#ffe7da",
+  "accent": "#dba17e",
+  "magenta": "#c7b6ab",
+  "blue": "#c7b6ab",
+  "cyan": "#dba17e"
+}

@@ -1,0 +1,66 @@
+[
+  {
+    "id": "week-2026-10-11-pc-freeze",
+    "title": "PC froze without a usable trace on 11 October",
+    "when": "2026-10-11T20:30:00+11:00",
+    "invariant": "unclean-boots",
+    "cause": "Suspected resource pressure while about 110 Chromium/Electron launches and several workers ran together; the precise cause is not proven.",
+    "guards": [],
+    "pendingGuards": ["Ship pulse-os persistent black box, watchdog and worker caps; verify on the installed PC."],
+    "close": false
+  },
+  {
+    "id": "week-2026-10-11-laptop-follower",
+    "title": "A laptop local commit paused the follower 86 commits behind",
+    "invariant": "follower-drift",
+    "cause": "The fast-forward follower could not advance a checkout with a local commit and did not make the pause visible.",
+    "guards": [{"type": "invariant", "id": "follower-drift"}, {"type": "test", "path": "apps/code/native/test/pulse-browser.test.mjs"}],
+    "pendingGuards": [],
+    "close": true
+  },
+  {
+    "id": "week-2026-10-11-stale-files",
+    "title": "Files reflected deleted disk entries",
+    "invariant": "reflections",
+    "cause": "The Files reflection did not refresh with disk changes; files-live work is not merged and its regression guards are not yet available here.",
+    "guards": [],
+    "pendingGuards": ["Merge files-live and reference its actual passing disk-change regression test."],
+    "close": false
+  },
+  {
+    "id": "week-2026-10-11-usage-authority",
+    "title": "Usage did not read the PC memory bank",
+    "invariant": "memory-bank",
+    "cause": "Usage read local rather than authoritative PC history; usage-pc work and its regression guards are not merged.",
+    "guards": [],
+    "pendingGuards": ["Merge usage-pc and reference its actual PC authority regression test."],
+    "close": false
+  },
+  {
+    "id": "week-2026-10-11-unseen-workers",
+    "title": "Workers finished without anyone noticing",
+    "invariant": "workers",
+    "cause": "Hand-written launchers left an exit file but no independently raised completion item.",
+    "guards": [{"type": "hook", "path": "tools/worker-complete.mjs"}],
+    "pendingGuards": [],
+    "close": true
+  },
+  {
+    "id": "week-2026-10-11-disk-pressure",
+    "title": "PC disk reached 92 percent without a warning",
+    "invariant": "disk-pressure",
+    "cause": "Build/cache accumulation filled disk with no continuous declared pressure invariant.",
+    "guards": [{"type": "invariant", "id": "disk-pressure"}],
+    "pendingGuards": [],
+    "close": true
+  },
+  {
+    "id": "week-2026-10-11-browser-storm",
+    "title": "Concurrent Chromium test launches formed a resource storm",
+    "invariant": "memory-pressure",
+    "cause": "Several workers and browser-heavy suites ran concurrently without a shared resource boundary or browser admission limit.",
+    "guards": [{"type": "hook", "path": "tools/test-browser.mjs"}, {"type": "test", "path": "apps/code/native/test/pulse-limits.test.mjs"}],
+    "pendingGuards": ["Ship and verify pulse-os worker caps; app test admission now allows at most two Chromium browsers and the full suite runs serially."],
+    "close": false
+  }
+]

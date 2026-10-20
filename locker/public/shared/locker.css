@@ -1,0 +1,187 @@
+/* The shelf, in Bloom Dark's colours (Bloom Light on a light system), with
+   hard 90-degree edges. Nothing rounded, nothing that glows. Body copy is a
+   readable monospace; the block font is kept for marks. */
+
+@font-face {
+  font-family: 'Omarchy Font';
+  src: url('/assets/fonts/omarchy-font.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  --bg: #2c2525;          /* Bloom Dark, the note's ground */
+  --bright: #f5ecee;
+  --raised: #3d2f2a;
+  --ink: #e6d9db;
+  --text: #d6c8ca;
+  --muted: #a8999b;       /* 5.1:1 on Bloom Dark */
+  --line: #403e41;
+  --line-strong: #72696a;
+  --panel: #211b1b;
+  --accent: #ff77c8;      /* the pink */
+  --accent-2: #fd6883;    /* and its second pink */
+  --ok: #9ece6a;
+  --bad: #f7768e;
+  --mono: ui-monospace, 'JetBrains Mono', 'CommitMono', 'Cascadia Mono', 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  --mark: 'Omarchy Font', var(--mono);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f2edf2;          /* Locus: the song's cream */
+    --bright: #1a1b26;
+    --raised: #e9e1ea;
+    --ink: #1a1b26;
+    --text: #33364a;
+    --muted: #4a4f68;       /* 7.4:1 on the cream */
+    --line: #e2d6e4;
+    --line-strong: #b9a3bd;
+    --panel: #e9e1ea;
+    --accent: #c2187f;      /* the same pink, a little deeper on the cream */
+    --accent-2: #ff4fa3;    /* and its pink */
+    --ok: #4f7a4a;
+    --bad: #b0456a;
+    color-scheme: light;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0; }
+/* Nothing shows a scrollbar; what scrolls still scrolls. */
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; }
+
+html { background: var(--bg); color: var(--ink); -webkit-text-size-adjust: 100%; text-transform: lowercase; } /* no capitals anywhere on the site */
+input, textarea, button, select { text-transform: inherit; }
+body {
+  min-height: 100dvh;
+  padding: clamp(1.5rem, 6vh, 4rem) clamp(1.25rem, 6vw, 4rem);
+  font: 15px/1.65 var(--mono);
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+main { width: 100%; max-width: 68ch; display: flex; flex-direction: column; gap: 2.25rem; }
+
+h1 { font: 400 clamp(1.6rem, 5vw, 2.4rem)/1.15 var(--mark); color: var(--bright); letter-spacing: 0.02em; }
+h2 { font-size: 1rem; font-weight: 400; color: var(--bright); }
+/* A heading reads like a comment in a shell script. */
+h2.rule::before { content: '# '; color: var(--accent); }
+p, li { color: var(--text); }
+strong { color: var(--bright); font-weight: 700; }
+a { color: var(--bright); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 0.25em; }
+a:hover { background: var(--bright); color: var(--bg); text-decoration: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+::selection { background: var(--accent); color: var(--bg); }
+
+ul { list-style: none; display: flex; flex-direction: column; gap: 0.45rem; }
+ul.bullets li { padding-left: 2ch; text-indent: -2ch; }
+ul.bullets li::before { content: '▪ '; color: var(--accent); }
+section { display: flex; flex-direction: column; gap: 0.9rem; }
+
+.mark { color: var(--bright); display: flex; align-items: center; gap: 0.45em; }
+.lede { font-size: 1.05rem; color: var(--ink); }
+.muted { color: var(--muted); }
+.price { color: var(--bright); font-weight: 700; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 30ch), 1fr)); gap: 1.25rem; }
+.card { border: 1px solid var(--line-strong); background: var(--panel); padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+/* A card is a terminal window: a title bar with the name on the left. */
+.card > h2 {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+  margin: -1.5rem -1.5rem 0; padding: 0.55rem 1.5rem;
+  border-bottom: 1px solid var(--line-strong); background: var(--raised);
+}
+.card .button:last-child { margin-top: auto; }
+
+form { display: flex; flex-direction: column; gap: 0.75rem; }
+label { color: var(--muted); font-size: 0.9rem; }
+.row { display: flex; gap: 0; flex-wrap: wrap; }
+.row input { flex: 1 1 22ch; }
+.row button { flex: 0 0 auto; }
+input[type="email"], input[type="text"] {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.65rem 0.8rem;
+  background: var(--bg);
+  color: var(--bright);
+  border: 1px solid var(--line-strong);
+  font: inherit;
+  outline: none;
+}
+input::placeholder { color: var(--muted); }
+input:focus { border-color: var(--accent); }
+button, .button {
+  display: inline-block;
+  min-height: 2.9rem;
+  padding: 0.7rem 1.2rem;
+  background: var(--bright);
+  color: var(--bg);
+  border: 1px solid var(--bright);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+button:hover, .button:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+button.quiet, .button.quiet { background: var(--bg); color: var(--bright); border-color: var(--line-strong); font-weight: 400; }
+button.quiet:hover, .button.quiet:hover { border-color: var(--bright); background: var(--bg); color: var(--bright); }
+button[disabled] { opacity: 0.4; cursor: default; }
+.big { font-size: 1.05rem; padding: 0.95rem 1.4rem; }
+
+pre, code { font: inherit; color: var(--bright); }
+pre {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: all;
+}
+pre.prompt::before { content: '$ '; color: var(--accent); user-select: none; }
+.key { color: var(--accent); font-weight: 700; }
+
+footer { margin-top: auto; color: var(--muted); font-size: 0.85rem; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+footer a { color: var(--muted); }
+
+/* A block-art title drawn on a canvas; the text under it stays for anyone
+   who cannot see the canvas, and for when it could not be drawn. */
+.blockmark { position: relative; display: grid; place-items: center; }
+.blockmark canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; visibility: hidden; }
+.blockmark.drawn canvas { visibility: visible; }
+.blockmark.drawn h1 {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* the shelf */
+body.shelf, body.oops { align-items: center; }
+body.shelf > main, body.oops > main { max-width: 64rem; gap: 2.5rem; }
+body.shelf > footer { width: 100%; max-width: 64rem; border-top: 1px solid var(--line); padding-top: 1.25rem; }
+.shelf-head { display: flex; flex-direction: column; gap: 1.5rem; border-bottom: 1px solid var(--line); padding-bottom: 2rem; }
+.shelf-mark { height: clamp(5rem, 14vw, 7.5rem); place-items: center start; }
+.shelf-mark canvas { max-width: 100%; }
+
+/* the error page: the status in block type, the reason in plain words */
+body.oops { justify-content: center; }
+body.oops > main { max-width: 52ch; }
+.oops .code { font: 400 clamp(4rem, 18vw, 8rem)/1 var(--mark); color: var(--accent); }
+.oops h1 { font-size: 1.6rem; }
+/* here the word is the mark on its own, in the brand's orange */
+.oops .mark { color: var(--accent); }
+.oops .mark::before { content: none; }
+/* The mark in pinks into purple, dark or light. */
+.mark, .oops .mark { width: fit-content; background: linear-gradient(90deg, #ff4fa3, #e040fb 50%, #b04dff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@media (prefers-color-scheme: light) {
+  ul.bullets li::before, h2.rule::before { color: var(--accent-2); }
+}
+.notify { gap: 0.5rem; }
+.notify label { color: var(--ink); font-size: 1rem; }

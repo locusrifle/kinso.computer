@@ -1,0 +1,10 @@
+/* Account forms: the controls (inputs, buttons, focus) are landing.css's; these only lay a form out on the black column. */
+label { display: block; margin: 24px 0; color: var(--cream); }
+input, button { width: 100%; margin: 8px 0; }
+input[type="checkbox"] { width: auto; margin-right: 8px; }
+form { margin: 24px 0; }
+p, code { overflow-wrap: anywhere; }
+.recovery-codes { padding-left: 24px; }
+.recovery-codes li { margin: 12px 0; }
+/* Each part of the account page (the code, security, devices) starts with room above its heading. */
+.handoff h2 { margin: 48px 0 12px; }

@@ -1,0 +1,21 @@
+{
+  "name": "Mac · Dark",
+  "mode": "dark",
+  "background": "#121214",
+  "panel": "#121214",
+  "bar": "#121214",
+  "band": "#222225",
+  "foreground": "#f2f2f7",
+  "bright": "#ffffff",
+  "muted": "#98989d",
+  "dim": "#7c7c82",
+  "rule": "#2c2c2f",
+  "accent": "#0a84ff",
+  "red": "#ff6961",
+  "yellow": "#ffd426",
+  "green": "#30d158",
+  "orange": "#ffb340",
+  "blue": "#5ac8fa",
+  "cyan": "#70d7ff",
+  "magenta": "#ff7ab2"
+}

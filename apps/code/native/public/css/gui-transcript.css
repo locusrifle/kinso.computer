@@ -1,0 +1,197 @@
+/* Original T3-inspired reading layout; all surface colours come from the theme. */
+.gui-transcript { --turn-gap:14px; box-sizing:border-box; padding:1.5rem max(1rem,calc((100% - 850px)/2)) 2.5rem !important; overflow-x:hidden; overflow-wrap:anywhere; }
+.gui-message { display:flow-root; margin:0 0 var(--turn-gap); line-height:1.65; font-family:system-ui,sans-serif; font-size:15px; }
+/* Off screen, a message is not laid out: a long conversation entered is only its last screenful of work. */
+.gui-message { content-visibility:auto; contain-intrinsic-size:auto 12rem; }
+/* The turn under way is laid out whole, so a message arriving is never measured at a stand-in height. */
+.gui-message.gui-live { content-visibility:visible; }
+/* One rhythm outside every rendered turn, independent of its content.
+   Windows are turns too; hidden tool calls never introduce extra rules. */
+.gui-transcript > .gui-window { margin-bottom:var(--turn-gap); }
+.gui-transcript > :is(.gui-message,.gui-window) + :is(.gui-message,.gui-window) { padding-top:var(--turn-gap); border-top:1px solid color-mix(in srgb,var(--label) 12%,transparent); }
+.gui-transcript > :is(.gui-message,.gui-window):last-child { margin-bottom:0; }
+.gui-user { display:block; }
+.gui-prompt { white-space:pre-wrap; line-height:24px; padding:var(--frame-inset,14px); border-radius:0; border:0; background:color-mix(in srgb,var(--label) 8%,transparent); }
+.gui-message p { margin:.65em 0; }
+.gui-message h1,.gui-message h2,.gui-message h3 { line-height:1.3; margin:1.2em 0 .5em; }
+.gui-message h1 {font-size:1.6em;} .gui-message h2 {font-size:1.35em;} .gui-message h3 {font-size:1.15em;}
+.gui-message a {color:var(--tint);text-decoration:underline;}
+.gui-message pre { max-width:100%; box-sizing:border-box; padding:1rem; white-space:pre-wrap; overflow-wrap:anywhere; background:color-mix(in srgb,var(--label) 5%,transparent); font: .85rem/1.55 var(--mono); }
+/* A code block: long lines wrap inside the window; the copy button sits in its corner and the first lines wrap around it. */
+.gui-code { margin:1em 0; padding:1rem; box-sizing:border-box; max-width:100%; background:color-mix(in srgb,var(--label) 5%,transparent); }
+.gui-code > pre { margin:0; padding:0; background:none; }
+.gui-copy { float:right; margin:-.5rem -.5rem .25rem .75rem; padding:.35rem .6rem; min-height:2rem; border:1px solid color-mix(in srgb,var(--label) 20%,transparent); border-radius:0; background:transparent; color:var(--label); opacity:.7; font:12px/1 var(--ui); cursor:pointer; user-select:none; }
+.gui-copy:hover,.gui-copy:focus-visible { opacity:1; }
+.gui-message code {font-family:var(--mono);} .gui-message img {max-width:100%;}
+.gui-message ul {list-style:square;} .gui-message ul ul {list-style:square;}
+/* Trim only the content edges, not paragraph/list/code spacing inside a turn. */
+.gui-transcript .gui-message > :first-child, .gui-prompt > :first-child { margin-top:0; }
+.gui-transcript .gui-message > :last-child, .gui-prompt > :last-child { margin-bottom:0; }
+.gui-error { color:var(--theme-red,#e66); white-space:pre-wrap; }
+.gui-table {overflow:auto;} .gui-table table {border-collapse:collapse;min-width:50%;} .gui-table th,.gui-table td {overflow-wrap:break-word;padding:.4rem .7rem;text-align:left;border-bottom:1px solid color-mix(in srgb,currentColor 20%,transparent);}
+@media (max-width:700px) {.gui-table th,.gui-table td {padding:.4rem .5rem;}}
+/* What an agent showed, playing in the conversation (pages.js windowNode):
+   the shape it chose, as wide as the column allows and never taller than
+   most of the screen; full screen at the button. */
+.gui-window { position:relative; margin:0 0 1.5rem; width:100%; max-width:min(100%, calc(72vh * 16 / 9)); aspect-ratio:16 / 9; display:flex; flex-direction:column; background:var(--surface); box-shadow:0 0 0 1px color-mix(in srgb, var(--tint) 35%, transparent); animation:gui-window-arrive 360ms ease-out both; }
+.gui-window[data-shape="portrait"] { aspect-ratio:9 / 16; max-width:min(100%, calc(72vh * 9 / 16)); }
+.gui-window[data-shape="square"] { aspect-ratio:1; max-width:min(100%, 72vh); }
+.gui-window-body { position:relative; flex:1; min-height:0; overflow:hidden; }
+.gui-window-body > iframe, .gui-window-body > video, .gui-window-body > img, .gui-window-body > canvas { position:absolute; inset:0; width:100%; height:100%; border:0; display:block; }
+.gui-window-body > iframe { background:#fff; }
+.gui-window-body > video, .gui-window-body > img { object-fit:contain; background:#000; }
+.gui-window-body > audio { position:absolute; left:1rem; right:1rem; top:50%; transform:translateY(-50%); width:calc(100% - 2rem); }
+.gui-window-bar { position:absolute; right:0.4rem; bottom:0.4rem; display:flex; align-items:center; gap:0.4rem; opacity:0.5; transition:opacity 160ms; }
+.gui-window:hover .gui-window-bar, .gui-window:focus-within .gui-window-bar, .gui-window.full .gui-window-bar { opacity:1; }
+.gui-window-name { display:none; }
+.gui-window:hover .gui-window-name { display:block; font-size:0.8em; color:var(--label-2); background:var(--surface); padding:0.15em 0.5em; }
+.gui-window-full { width:2rem; height:2rem; border:0; border-radius:0; cursor:pointer; background:var(--surface); color:var(--label); font:inherit; font-size:1.1em; line-height:1; }
+.gui-window-full:hover { color:var(--tint); }
+.gui-window-error { margin:0; padding:1rem; color:var(--label-2); }
+.gui-window.full, .gui-window:fullscreen { position:fixed; inset:0; z-index:2000; width:100vw; height:100vh; max-width:none; aspect-ratio:auto; margin:0; box-shadow:none; animation:none; }
+.gui-transcript > .gui-window:is(.full,:fullscreen) { padding:0; border:0; }
+@keyframes gui-window-arrive { from { opacity:0; transform:scale(.98); } }
+@media (prefers-reduced-motion: reduce) { .gui-window { animation:none; } }
+@media(max-width:700px) { .gui-transcript {padding:1rem !important;} .gui-message {font-size:14px;} }
+/* The overview an empty conversation opens on (gui-transcript.js overview):
+   one calm line per part, the label dim, the names in the text colour. */
+.gui-overview { margin:.25rem 0 1.5rem; font:12.5px/1.7 var(--mono); color:var(--label); }
+.gui-overview-head { display:flex; flex-wrap:wrap; column-gap:.6em; }
+.gui-overview-head span + span::before { content:'·'; margin-right:.6em; color:var(--label-2); }
+.gui-overview-harness { color:var(--tint); font-weight:600; }
+.gui-overview-cwd { margin-bottom:.6rem; color:var(--label-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gui-overview-part summary { display:flex; gap:.6em; list-style:none; cursor:pointer; }
+.gui-overview-part summary::-webkit-details-marker { display:none; }
+.gui-overview-label { flex:none; color:var(--label-2); }
+.gui-overview-list { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gui-overview-part summary:hover .gui-overview-label, .gui-overview-part[open] .gui-overview-label { color:var(--tint); }
+.gui-overview-part[open] .gui-overview-list { visibility:hidden; }
+.gui-overview-part ul { display:flex; flex-wrap:wrap; gap:0 1.4em; margin:0 0 .5rem; padding:0 0 0 1.2em; list-style:none; color:var(--label); overflow-wrap:anywhere; }
+/* The browser in a window of its own (pages.js): it fills the window, and its bar runs along the top at the agents' strip's height,
+   in its colours, so the bars of windows side by side line up. */
+.gui-window.filling:not(.full):not(:fullscreen) { position:absolute; inset:0; width:auto; max-width:none; aspect-ratio:auto; margin:0; box-shadow:none; animation:none; }
+.gui-window.filling .gui-window-name { display:block; margin-right:auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.85em; color:var(--label-2); background:none; padding:0 0.8em; }
+/* Every guest stays drawn behind the selected tab. The tabs stack among
+   themselves; nothing outside the stack competes with their order. */
+.browser-stack { isolation:isolate; }
+.browser-stack > .browser-page { position:absolute; inset:0; z-index:0; background:var(--surface); }
+.browser-stack > .browser-page.front { z-index:1; }
+.browser-page > iframe, .browser-page > webview, .browser-page > video, .browser-page > img { position:absolute; inset:0; width:100%; height:100%; border:0; display:block; }
+.browser-page > iframe, .browser-page > webview { background:#fff; }
+.browser-page > webview { display:flex; }
+.browser-page > video, .browser-page > img { object-fit:contain; background:#000; }
+.browser-page > audio { position:absolute; left:1rem; right:1rem; top:50%; transform:translateY(-50%); width:calc(100% - 2rem); }
+/* The browser's bar: back, forward, reload and the address of the tab in front. */
+.gui-window.browser .gui-window-bar { position:relative; z-index:3; inset:auto; order:-1; opacity:1; display:flex; flex-direction:column; align-items:stretch; flex-shrink:0; gap:0; box-sizing:border-box; height:var(--bar-height, 72px); padding:0; background:var(--surface); border-bottom:1px solid var(--tint); }
+.gui-window.browser .gui-window-bar.browser-remote-chrome { height:100%; width:100%; border:0; }
+.browser-controls { display:flex; align-items:center; flex:1; min-height:0; width:100%; gap:0; }
+.browser-tab-strip { display:flex; align-items:stretch; flex:0 0 50%; min-width:0; width:100%; overflow:hidden; position:relative; }
+.browser-tab-strip[hidden] { display:none; }
+/* A quiet escape to locally held pages when a remote owner's strip is shown. */
+.browser-panels { flex:none; height:100%; padding:0 8px; border:0; border-radius:0; background:none; color:var(--label-2); font:inherit; font-size:12px; cursor:pointer; }
+.browser-panels[hidden], .browser-panel-list[hidden] { display:none; }
+.browser-panels:hover, .browser-panels[aria-expanded="true"] { color:var(--label); }
+.browser-panel-list { position:absolute; top:100%; right:0; z-index:20; min-width:min(16rem, 100%); max-width:100%; max-height:50vh; overflow:auto; box-sizing:border-box; border:1px solid var(--sep); background:var(--surface); color:var(--label); font-size:12px; }
+.browser-panel-entry { display:flex; min-height:44px; }
+.browser-panel-entry button, .browser-panel-list > button { min-width:0; padding:8px; border:0; border-radius:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.browser-panel-entry button:first-child { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.browser-panel-entry button:last-child { flex:none; width:36px; text-align:center; }
+.browser-panel-list > button { width:100%; min-height:44px; border-top:1px solid var(--sep); }
+.browser-panel-list button:hover { background:var(--theme-raised-2); }
+.browser-panels:focus-visible, .browser-panel-list button:focus-visible { outline:1px solid var(--tint); outline-offset:-2px; }
+.gui-window-go { position:relative; width:2rem; height:100%; flex-shrink:0; display:grid; place-items:center; padding:0; border:0; border-radius:0; cursor:pointer; background:none; color:var(--label); line-height:0; }
+.wm-phone .gui-window-go { width:44px; }
+/* A page shown again since it was loaded: a square of the accent on reload. */
+.gui-window-go.stale::after { content:''; position:absolute; top:calc(50% - 0.75em); left:calc(50% + 0.3em); width:0.45em; height:0.45em; background:var(--tint); }
+/* A single non-wrapping row, independent of the address row below it. */
+.browser-tabs { position:relative; display:flex; flex:1 1 auto; min-width:0; height:100%; overflow-x:auto; overflow-y:hidden; flex-wrap:nowrap; scrollbar-width:none; touch-action:pan-x; }
+.browser-tabs::-webkit-scrollbar { display:none; }
+.browser-tab-item { display:flex; flex:1 0 110px; min-width:0; max-width:200px; height:100%; border-right:1px solid var(--sep); }
+.browser-tab, .browser-tab-close, .browser-new, .browser-pin { height:100%; padding:0; border:0; border-radius:0; background:none; color:var(--label-2); font:inherit; cursor:pointer; }
+.browser-tab { display:flex; align-items:center; gap:6px; flex:1; min-width:0; padding-left:8px; font-size:0.85em; }
+.browser-tab-title { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left; }
+.browser-tab-icon { flex:none; width:16px; height:16px; display:grid; place-items:center; font-size:12px; }
+.browser-tab-icon img { width:16px; height:16px; object-fit:contain; }
+.browser-tab-close { flex:none; width:28px; font-size:17px; }
+.browser-new, .browser-pin { flex:none; width:32px; }
+.browser-new { font-size:20px; }
+.browser-pin-icon { display:grid; place-items:center; font-size:12px; }
+.browser-tab-item.front { color:var(--label); background:var(--theme-raised-2, color-mix(in srgb, var(--label) 8%, transparent)); box-shadow:inset 0 -1px var(--tint); }
+.browser-tab.front, .browser-tab-item.front .browser-tab-close { color:var(--label); }
+.browser-tab-close:hover, .browser-new:hover, .browser-pin:hover { color:var(--label); background:var(--theme-raised-2); }
+.browser-tab:focus-visible, .browser-tab-close:focus-visible, .browser-new:focus-visible, .browser-pin:focus-visible, .browser-start-pin:focus-visible { outline:1px solid var(--tint); outline-offset:-2px; }
+.browser-tab-state { flex:none; width:5px; height:5px; margin-right:2px; }
+.browser-tab.unread .browser-tab-state { background:var(--label-2); }
+.browser-tab.loading .browser-tab-state { border:1px solid var(--label-2); animation:browser-driven 900ms ease-in-out infinite alternate; }
+.browser-tab.driven .browser-tab-state { background:var(--tint); animation:browser-driven 900ms ease-in-out infinite alternate; }
+@keyframes browser-driven { to { opacity:0.3; } }
+@media (prefers-reduced-motion: reduce) { .browser-tab-state { animation:none !important; } }
+.browser-start { position:absolute; inset:0; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; background:var(--surface); color:var(--label); overflow:auto; }
+.browser-start[hidden] { display:none; }
+.browser-start h2 { margin:0 0 24px; color:var(--label-2); font:inherit; }
+.browser-start-pins { display:grid; grid-template-columns:repeat(2, minmax(0, 220px)); gap:12px; width:100%; max-width:452px; }
+.browser-start-pin { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-height:110px; min-width:0; padding:12px 4px; border:1px solid var(--sep); border-radius:0; background:none; color:var(--label); font:inherit; font-size:12px; cursor:pointer; }
+.browser-start-pin:hover { background:var(--theme-raised-2); }
+.browser-start-pin .browser-pin-icon { width:32px; height:32px; font-size:20px; }
+/* On a phone, the agents' browser on a computer, live (live.js), in a panel
+   of its own: the tab in front as a picture, fitted whole, a sideways swipe
+   still the strip's, and a box at the foot to type into the page. */
+.browser-live { display:flex; flex-direction:column; }
+.browser-page > .browser-live { height:100%; }
+.browser-live-view { position:relative; flex:1; min-height:0; overflow:hidden; background:#000; touch-action:pan-x; user-select:none; -webkit-user-select:none; }
+.browser-live-frame { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; display:block; pointer-events:none; }
+.browser-live-frame:not([src]) { visibility:hidden; }
+.browser-live-note { position:absolute; left:1rem; right:1rem; top:50%; transform:translateY(-50%); margin:0; text-align:center; color:var(--label-2); font-size:0.9em; }
+.browser-live-note[hidden] { display:none; }
+.browser-live-keyboard { position:absolute; left:0; top:0; width:1px; height:1px; padding:0; border:0; border-radius:0; opacity:0; font-size:16px; resize:none; pointer-events:none; }
+.gui-window-go:hover:not(:disabled) { color:var(--tint); }
+.gui-window-go:disabled { color:var(--label-3); cursor:default; }
+.gui-window-address { flex:1; min-width:0; height:1.5rem; margin:0 0.4rem; padding:0 0.5rem; border:1px solid var(--sep); border-radius:0; outline:0; background:var(--surface); color:var(--label); font:inherit; font-size:0.85em; }
+.gui-window-address:focus { border-color:var(--tint); }
+/* Two rows fit in the existing shared band; nothing changes pane height. */
+body.imperfect .wm:not(.wm-phone) .gui-window.browser .gui-window-bar { gap:0; padding:0; font-size:13px; }
+/* Leave the top 24px quiet for the existing window-centred clock/glance. */
+body.imperfect .wm:not(.wm-phone) .browser-tab-strip { margin-top:24px; flex-basis:24px; }
+body.imperfect .wm:not(.wm-phone) .browser-controls { gap:8px; padding:0 var(--frame-inset, 14px); box-sizing:border-box; }
+body.imperfect .wm:not(.wm-phone) .gui-window-go { width:30px; height:100%; }
+body.imperfect .wm:not(.wm-phone) .gui-window-address { height:100%; margin:0; border-bottom:0; box-sizing:border-box; font-size:inherit; }
+.wm-phone .browser-tab-close { width:32px; }
+.wm-phone .browser-new, .wm-phone .browser-pin { width:36px; }
+/* How a turn went, as T3 Code shows it (gui-transcript.js): under each
+   answer, how long it took and when it finished, quiet and small; while it
+   works, how long so far. */
+.gui-turn-time { margin:calc(-1 * var(--turn-gap) + 6px) 0 var(--turn-gap); font:12px/1.4 var(--ui, system-ui, sans-serif); color:var(--label-2); font-variant-numeric:tabular-nums; }
+.gui-turn-time:first-child { margin-top:0; }
+/* Under what was just asked (no answer yet) the line keeps its distance, so the
+   prompt sits centred between the turn before and the one starting. */
+.gui-user + .gui-turn-time { margin-top:0; }
+/* While the agent answers: "Locus is typing…" (or the brand's agent), the
+   words breathing slowly, and how long so far after them, quieter. */
+.gui-typing .gui-typing-who { color:var(--label); animation:typing-breathe 2.4s ease-in-out infinite; }
+.gui-typing .gui-typing-time { color:var(--label-3, var(--label-2)); }
+@keyframes typing-breathe { 50% { opacity:0.5; } }
+@media (prefers-reduced-motion: reduce) { .gui-typing .gui-typing-who { animation:none; } }
+.gui-transcript > .gui-turn-time + :is(.gui-message,.gui-window) { padding-top:var(--turn-gap); border-top:1px solid color-mix(in srgb,var(--label) 12%,transparent); }
+/* Where the context was compacted: a rule across the column, the label in
+   its middle; while it is being compacted, a light runs across the words. */
+/* A background task's end: one quiet line, a dot for how it ended. */
+.gui-task-note { display:flex; align-items:baseline; flex-wrap:wrap; gap:0 6px; margin:0 0 var(--turn-gap); font:12px/1.5 var(--ui, system-ui, sans-serif); color:var(--label-3); }
+.gui-task-dot { flex:none; align-self:center; width:6px; height:6px; border-radius:50%; background:var(--ok, #30d158); }
+.gui-task-note[data-status="failed"] .gui-task-dot { background:var(--danger, #ff6961); }
+.gui-task-note[data-status="stopped"] .gui-task-dot { background:var(--label-3); }
+.gui-task-said { color:var(--label-2); }
+.gui-task-name { min-width:0; overflow-wrap:anywhere; }
+.gui-task-name::before, .gui-task-exit::before { content:'· '; }
+.gui-task-exit { font-variant-numeric:tabular-nums; }
+.gui-compaction { display:flex; align-items:center; gap:12px; margin:0 0 var(--turn-gap); font:12px/1.4 var(--ui, system-ui, sans-serif); color:var(--label-2); }
+.gui-compaction::before, .gui-compaction::after { content:''; flex:1; height:1px; background:color-mix(in srgb,var(--label) 12%,transparent); }
+.gui-compaction-label { flex:none; display:inline-flex; align-items:center; gap:6px; }
+.gui-compaction-label > svg { flex:none; }
+.gui-compaction.active .gui-compaction-label {
+  background:linear-gradient(90deg, var(--label-2) 0%, var(--label-2) 35%, var(--label) 50%, var(--label-2) 65%, var(--label-2) 100%) 0 0 / 300% 100%;
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  animation:gui-shimmer 2.2s linear infinite;
+}
+.gui-compaction.active .gui-compaction-label > svg { color:var(--label-2); }
+@keyframes gui-shimmer { from { background-position:100% 0; } to { background-position:0 0; } }
+@media (prefers-reduced-motion: reduce) { .gui-compaction.active .gui-compaction-label { animation:none; color:var(--label-2); background:none; } }

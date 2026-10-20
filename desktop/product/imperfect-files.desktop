@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Workbench
+Comment=Folders open in imperfect's files panel
+Exec=__BIN__/imperfect-open files %u
+Icon=system-file-manager
+Terminal=false
+NoDisplay=true
+Categories=System;FileTools;FileManager;
+MimeType=inode/directory;

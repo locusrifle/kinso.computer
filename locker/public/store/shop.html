@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shop · imperfect</title>
+  <link rel="stylesheet" href="/shop.css">
+  <script type="module" src="/shop.js"></script>
+</head>
+<body class="shop-body">
+  <main class="shop-page">
+    <header class="shop-heading"><a class="shop-eyebrow" href="/">imperfect</a><h1>A computer of your own.</h1></header>
+    <div class="shop-options">
+      <section class="shop-option" aria-labelledby="shop-rent-title">
+        <p class="shop-eyebrow">Your own computer, hosted</p><h2 id="shop-rent-title">Rent a computer</h2>
+        <p class="shop-price">US$40 <span>a month</span></p>
+        <p>Your own imperfect computer in the cloud.</p><p>Bring your own Claude or ChatGPT subscription.</p>
+        <div class="shop-rent-state"><p data-rent-note>Checking availability…</p><a data-rent-link href="/account" hidden>Rent a computer</a><a data-invite href="mailto:noah@imperfect.computer" hidden>Ask for an invitation ↗</a></div>
+      </section>
+      <section class="shop-option" aria-labelledby="shop-code-title">
+        <p class="shop-eyebrow">Run it yourself</p><h2 id="shop-code-title">Buy the source code</h2>
+        <p class="shop-price">Your price <span>from US$1</span></p>
+        <p>The source is yours. Install imperfect on your own computer.</p>
+        <form id="shop-code-form" class="shop-code-form" novalidate>
+          <label for="shop-amount">Your amount (USD)</label>
+          <div class="shop-buy-row"><input id="shop-amount" name="amount" type="number" inputmode="decimal" min="1" max="10000" step="0.01" placeholder="1 or more" autocomplete="off" required><button type="submit" disabled>Buy</button></div>
+        </form>
+        <p class="shop-code-note" data-code-note>Checking availability…</p>
+        <button type="button" class="shop-code-bypass" data-code-bypass>just give me the code</button>
+        <section id="install-panel" class="shop-install" aria-labelledby="install-label" hidden>
+          <h3 id="install-label">Install on Linux</h3>
+          <div class="shop-platforms" role="group" aria-label="Install operating system"><button type="button" data-platform="linux" aria-pressed="true">Linux</button><button type="button" data-platform="mac" aria-pressed="false">macOS</button></div>
+          <p id="install-hint" class="shop-small">Paste this in a terminal.</p>
+          <pre tabindex="0" aria-label="Install command"><code id="install-command">curl -fsSL https://imperfect.computer/install | sh</code></pre>
+          <button type="button" id="copy-command">Copy command</button><p id="copy-status" role="status"></p>
+        </section>
+      </section>
+    </div>
+    <div class="shop-status" role="status" aria-live="polite"><p data-error></p><button type="button" data-retry hidden>Retry</button></div>
+    <noscript><p>The code is free. Install on Linux or macOS with <code>curl -fsSL https://imperfect.computer/install | sh</code>. Enable JavaScript to open checkout.</p></noscript>
+  </main>
+</body>
+</html>

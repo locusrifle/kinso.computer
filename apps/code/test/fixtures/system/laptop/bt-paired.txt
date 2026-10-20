@@ -1,0 +1,2 @@
+Device A0:0C:E2:00:00:AA OpenComm2 by Shokz_II
+Device 10:32:2C:00:00:90 ZV-E10

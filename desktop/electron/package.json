@@ -1,0 +1,6 @@
+{
+  "name": "imperfect-code",
+  "private": true,
+  "desktopName": "imperfect-code.desktop",
+  "main": "main.mjs"
+}

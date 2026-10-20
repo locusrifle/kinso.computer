@@ -1,0 +1,20 @@
+{
+  "name": "Black",
+  "mode": "dark",
+  "background": "#000000",
+  "panel": "#000000",
+  "band": "#161616",
+  "foreground": "#e6e6e6",
+  "bright": "#ffffff",
+  "muted": "#8e8e8e",
+  "dim": "#626262",
+  "rule": "#2a2a2a",
+  "accent": "#d4d4d4",
+  "red": "#f2878a",
+  "yellow": "#ead08c",
+  "green": "#a9d6a0",
+  "orange": "#efbb8c",
+  "blue": "#a6b6f2",
+  "cyan": "#9fd3db",
+  "magenta": "#dcaedc"
+}

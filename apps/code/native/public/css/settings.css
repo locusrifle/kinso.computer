@@ -1,0 +1,66 @@
+/* Settings (settings.js): a sheet of grouped rows, the way System Settings
+   draws them, in look.css's tokens. */
+.settings-sheet {
+  box-sizing: border-box;
+  width: 100%; height: 100%; min-height: 0;
+  padding: 0; overflow: hidden;
+  display: flex; flex-direction: column;
+  background: var(--surface); color: var(--label);
+  font: var(--text)/1.45 var(--ui);
+}
+.settings-sheet:focus { outline: none; }
+.settings-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px 12px; border-bottom: 0.5px solid var(--sep); }
+.settings-title { margin: 0; font: 600 var(--text-l)/1.2 var(--ui); color: var(--label); }
+.settings-body { min-height: 0; overflow: auto; padding: 4px 20px 20px; }
+.settings-group { margin-top: 18px; }
+.settings-group-title { margin: 0 0 6px 4px; font: 600 var(--text-s)/1.2 var(--ui); color: var(--label-2); }
+
+/* The rows: grouped with hairlines between. */
+.settings-rows { border-radius: var(--radius); background: var(--fill); overflow: hidden; }
+.settings-row {
+  appearance: none; display: flex; align-items: center; gap: 10px; width: 100%;
+  min-height: 34px; padding: 0 12px; border: 0; border-radius: 0; background: none;
+  color: var(--label); font: var(--text)/1.3 var(--ui); text-align: left; cursor: default;
+}
+.settings-row + .settings-row { box-shadow: inset 0 0.5px 0 var(--sep); }
+.settings-row:hover { background: var(--fill-2); }
+.settings-row:focus-visible { outline: none; background: var(--fill-tint); }
+.settings-row-label { flex: 1; min-width: 0; }
+.settings-row-note { color: var(--label-2); font-size: var(--text-s); text-align: right; max-width: 48%; }
+.settings-row-chevron { width: 6px; height: 6px; border: solid var(--label-2); border-width: 1.5px 1.5px 0 0; transform: rotate(45deg); margin-right: 2px; }
+
+/* The themes: swatches, each its ground with a line of its text and a dot
+   of its accent; the chosen one ringed in the tint. */
+.settings-themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 14px 10px; }
+.settings-theme {
+  appearance: none; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 0; border: 0; background: none; color: var(--label); font: var(--text-s)/1.25 var(--ui); cursor: default;
+}
+.settings-theme-face {
+  position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--radius);
+  box-shadow: inset 0 0 0 0.5px var(--sep-strong), 0 1px 3px rgb(0 0 0 / 0.12);
+}
+.settings-theme-ink { position: absolute; left: 12%; top: 34%; width: 46%; height: 4px; border-radius: var(--radius-xs); opacity: 0.85; }
+.settings-theme-dot { position: absolute; right: 12%; bottom: 16%; width: 12px; height: 12px; border-radius: 50%; }
+.settings-theme[aria-pressed="true"] .settings-theme-face { box-shadow: 0 0 0 2px var(--surface-pop), 0 0 0 4px var(--tint); }
+.settings-theme[aria-pressed="true"] .settings-theme-name { font-weight: 600; }
+.settings-theme:hover .settings-theme-face { filter: brightness(1.04); }
+.settings-theme:focus-visible { outline: none; }
+.settings-theme:focus-visible .settings-theme-face { box-shadow: 0 0 0 3px var(--fill-tint); }
+.settings-theme-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+
+/* The keys: what it does on the left, the keys as keycaps on the right. */
+.settings-keys { border-radius: var(--radius); background: var(--fill); }
+.settings-key { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 32px; padding: 4px 12px; }
+.settings-key + .settings-key { box-shadow: inset 0 0.5px 0 var(--sep); }
+.settings-key-act { color: var(--label); font: var(--text)/1.3 var(--ui); }
+.settings-key-act::first-letter { text-transform: uppercase; }
+.settings-key-caps { display: inline-flex; gap: 3px; flex: none; }
+.settings-key-caps kbd {
+  min-width: 20px; padding: 2px 6px; border-radius: var(--radius-s);
+  background: var(--surface-pop); box-shadow: inset 0 0 0 0.5px var(--sep-strong), 0 1px 0 var(--sep-strong);
+  color: var(--label); font: 500 11px/16px var(--ui); text-align: center;
+}
+.settings-empty { margin: 0; padding: 10px 12px; color: var(--label-2); }
+
+.settings-sheet :is(button, kbd, .settings-rows, .settings-keys, .settings-theme-face, .settings-theme-ink, .settings-theme-dot) { border-radius: 0; }

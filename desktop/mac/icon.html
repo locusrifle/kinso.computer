@@ -1,0 +1,15 @@
+<!doctype html>
+<!-- imperfect.app's icon (desktop/mac/install.mjs makes the .icns from icon-1024.png).
+     Apple's grid: a 824-point rounded square on a 1024 canvas, its shadow below;
+     plain brushed silver and no mark: imperfect is a starting position each
+     person reshapes, not a thing with a logo. To make the PNG again:
+     chromium --headless=new --default-background-color=00000000 --window-size=1024,1024 --screenshot=icon-1024.png icon.html -->
+<html><head><meta charset="utf-8"><style>
+html,body{margin:0;width:1024px;height:1024px;background:transparent;overflow:hidden}
+.tile{position:absolute;left:100px;top:92px;width:824px;height:824px;border-radius:185px;
+  background:radial-gradient(130% 85% at 50% 0%,#fbfbfc 0%,#e4e5e8 38%,#c6c7cc 72%,#a8a9af 100%);
+  box-shadow:0 24px 40px rgba(0,0,0,.30),0 4px 10px rgba(0,0,0,.24),inset 0 2px 0 rgba(255,255,255,.9),inset 0 -3px 0 rgba(0,0,0,.10),inset 0 0 0 1px rgba(0,0,0,.10);overflow:hidden}
+.stars{position:absolute;inset:0;background:
+  linear-gradient(180deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 42%),
+  repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 1px,rgba(0,0,0,.035) 1px 3px)}
+</style></head><body><div class="tile"><div class="stars"></div></div></body></html>

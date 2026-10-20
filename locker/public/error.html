@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{status}} · imperfect</title>
+<meta name="theme-color" content="#1a110c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eeecf0" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="/shared/locker.css?v={{v}}">
+</head>
+<body class="oops">
+<main>
+  <p class="code" aria-hidden="true">{{status}}</p>
+  <h1 class="mark">imperfect</h1>
+  <p class="lede"><span class="visually-hidden">error {{status}}: </span>{{message}}</p>
+{{{after}}}
+  <p><a class="button quiet" href="/">{{back}}</a></p>
+</main>
+</body>
+</html>

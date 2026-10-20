@@ -1,0 +1,3 @@
+#!/bin/sh
+# See pre-receive.mjs. IMPERFECT_NODE is the store's own node (git.mjs).
+exec "${IMPERFECT_NODE:-node}" "$(dirname "$0")/pre-receive.mjs"

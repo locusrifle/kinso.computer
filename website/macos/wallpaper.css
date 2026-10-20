@@ -1,0 +1,3 @@
+/* The bubble, lock and desktop share this exact cover crop: the wallpaper's night, always. */
+.macos-wallpaper { position: absolute; inset: 0; background: url('../mac/wallpaper.webp') center / cover no-repeat; pointer-events: none; }
+.launch-wallpaper { position: fixed; z-index: 0; }

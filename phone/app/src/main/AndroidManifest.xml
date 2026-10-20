@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <!-- The mic in imperfect's dock: a spoken prompt is recorded in the page and
+       transcribed on the computer. Asked for the first time it is pressed. -->
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
+  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+  <!-- The app updates itself from the computer (Update.kt); Android still
+       asks the person before every install. -->
+  <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+  <!-- A control tapped in the page ticks the vibration motor (navigator.vibrate). -->
+  <uses-permission android:name="android.permission.VIBRATE" />
+  <!-- Asking whether this phone has a camera app or a recorder is a question
+       about other packages, and since Android 11 a question like that has to
+       be declared. Without this the + would quietly offer files only. No
+       CAMERA permission is declared on purpose: handing the job to the
+       phone's own camera app needs none, and asking for one would put a
+       permission prompt in front of a photo. -->
+  <queries>
+    <intent>
+      <action android:name="android.media.action.IMAGE_CAPTURE" />
+    </intent>
+    <intent>
+      <action android:name="android.provider.MediaStore.RECORD_SOUND" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.OPEN_DOCUMENT" />
+      <data android:mimeType="*/*" />
+    </intent>
+  </queries>
+
+  <application
+      android:allowBackup="false"
+      android:icon="@mipmap/ic_launcher"
+      android:roundIcon="@mipmap/ic_launcher_round"
+      android:label="@string/app_name"
+      android:supportsRtl="true"
+      android:usesCleartextTraffic="false"
+      android:theme="@style/Theme.Imperfect">
+    <activity
+        android:name=".MainActivity"
+        android:exported="true"
+        android:launchMode="singleTask"
+        android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|density"
+        android:windowSoftInputMode="adjustResize">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+      <!-- Pairing: the page the QR code from `./install.sh phone` opens links
+           to imperfect://<the computer's Tailscale name>. -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="imperfect" />
+      </intent-filter>
+    </activity>
+
+    <!-- The QR scanner on the first screen is Google Play services' own
+         (no camera permission here); this asks it to fetch the scanner when
+         the app is installed rather than at the first scan. -->
+    <meta-data
+        android:name="com.google.mlkit.vision.DEPENDENCIES"
+        android:value="barcode_ui" />
+
+    <!-- Where the camera puts a picture so this app can read it back. -->
+    <provider
+        android:name="androidx.core.content.FileProvider"
+        android:authorities="${applicationId}.attachments"
+        android:exported="false"
+        android:grantUriPermissions="true">
+      <meta-data
+          android:name="android.support.FILE_PROVIDER_PATHS"
+          android:resource="@xml/attachments" />
+    </provider>
+  </application>
+</manifest>

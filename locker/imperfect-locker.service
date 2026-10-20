@@ -1,0 +1,18 @@
+[Unit]
+Description=imperfect store (loopback :4322, public via Cloudflare tunnel)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/vaita/imperfect
+Environment=HOME=/home/vaita
+Environment=PATH=/home/vaita/.local/share/mise/installs/node/26.8.2/bin:/usr/local/bin:/usr/bin
+Environment=IMPERFECT_PREFIX=/home/vaita/.imperfect
+ExecStart=/home/vaita/.local/share/mise/installs/node/26.8.2/bin/node /home/vaita/imperfect/locker/start.mjs
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+UMask=0077
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,60 @@
+/* kinso.computer only (site.mjs adds it): the lock's sharks, the film window, the build's subtitles, Code. Mac points,
+   inside the scaled stage, in macOS's own fonts like the rest of the Mac, but for Kinso's name. */
+
+/* Kinso's name is set in their own type, Inter Tight, from the rebuild of their page (git-ignored, served at /kinso/a/:
+   never in this source); where that is missing, in the system's. */
+@font-face { font-family: 'Kinso Inter Tight'; src: url('/kinso/a/db1cd1e8d78c4905.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Kinso Inter Tight'; src: url('/kinso/a/938081690ba37404.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Kinso Inter Tight'; src: url('/kinso/a/2d29d853f4dcef7e.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+.macos-lock .macos-name, .mac .shell-app-menu.is-main-app, .mac [data-app="kinso"] .shell-dock-label, .kinso-about h1 {
+  font-family: 'Kinso Inter Tight', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing: 0; }
+.macos-lock .macos-name, .mac .shell-app-menu.is-main-app { font-weight: 600; }
+/* Only the opener/lock changes ground. The unlocked Mac keeps its own wallpaper. */
+body[data-company="kinso"] #sky { background: #fcfcfb !important; }
+body[data-company="kinso"] #sky .macos-wallpaper { display: none; }
+.kinso-sharks { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+/* The boot renderer owns the mask/shine; the lock owns only this crossfade envelope. */
+body[data-company="kinso"] #wordmark.kinso-lock-word { opacity: var(--kinso-word-opacity, 1) !important; }
+/* Dark ink on the light grid: clock, caret, placeholder, submit and checking all remain legible. */
+body[data-company="kinso"] .macos-lock { color: #30302e; color-scheme: light; }
+body[data-company="kinso"] .macos-lock-clock, body[data-company="kinso"] .macos-name {
+  text-shadow: 0 0 3px #fcfcfb, 0 0 6px #fcfcfb, 0 0 12px #fcfcfb;
+}
+body[data-company="kinso"] .macos-field { color: #30302e; background: #ffffffb8; box-shadow: inset 0 0 0 1px #30302e40; }
+body[data-company="kinso"] .macos-field input { caret-color: #30302e; }
+body[data-company="kinso"] .macos-submit { color: #30302e; }
+body[data-company="kinso"] .macos-submit:focus-visible { outline-color: #30302e; }
+body[data-company="kinso"] .macos-check { border-color: #30302e40; border-top-color: #30302e; }
+
+.mac .kinso-film { position: absolute; z-index: 870; overflow: hidden; border-radius: 10px; background: #000; color: #f2f2f7;
+  box-shadow: 0 0 0 .6px #0009, 0 0 0 1px #fff2 inset, 0 22px 70px #0007, 0 6px 18px #0005; transform-origin: 50% 50%;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif; }
+.mac .kinso-film[data-place="behind"] { z-index: 15; pointer-events: none; }
+.kinso-film-video { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: contain; background: #000; }
+/* Part 1 until it is recorded: its words, alone on black. */
+.kinso-film-caption { position: absolute; left: 9%; right: 9%; top: 50%; margin: 0; transform: translateY(-50%); text-align: center;
+  font-size: 34px; line-height: 1.34; font-weight: 500; letter-spacing: -.2px; text-wrap: balance; }
+/* The launch video's slot, until there is one. */
+.kinso-film-slot { position: absolute; inset: 0; display: grid; place-content: center; }
+.kinso-film-slot::before { content: ''; position: absolute; inset: 28px; border: 1px dashed #48484a; border-radius: 4px; }
+.kinso-film-slot p { margin: 0; font-size: 15px; font-weight: 500; letter-spacing: .22em; text-transform: uppercase; color: #8e8e93; }
+.kinso-film-slot i { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: #636366; transform-origin: 0 50%; transform: scaleX(0); }
+.mac .kinso-film-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 10px 22px; border-radius: 8px;
+  background: #ffffff26; color: #fff; font-size: 15px; font-weight: 500; }
+
+/* The voice-over's words while Kinso is built, over the window's foot, above the Dock. */
+.mac .kinso-caption { position: absolute; z-index: 960; left: 50%; top: 736px; width: max-content; max-width: 980px; margin: 0; padding: 7px 16px 8px;
+  transform: translateX(-50%); border-radius: 8px; background: #000000c2; color: #fff; text-align: center; pointer-events: none;
+  font: 500 22px/1.36 -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif; letter-spacing: -.1px; text-wrap: balance;
+  box-shadow: 0 6px 24px #0005; }
+
+/* Code in the menu bar, lit while it is named, and its window: one command to copy. */
+.mac .shell-menu-trigger.is-glowing { background: #ffffff2e; box-shadow: 0 0 0 .5px #ffffff80, 0 0 16px 3px #ffffffa0; animation: kinso-glow 1.4s ease-in-out infinite; }
+@keyframes kinso-glow { 50% { box-shadow: 0 0 0 .5px #ffffff50, 0 0 7px 1px #ffffff60; } }
+.shell-code-window .shell-body { padding: 18px 20px; }
+.shell-code p { margin: 0 0 14px; color: var(--win-ink); }
+.shell-code-line { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; border-radius: 7px; background: #00000059; box-shadow: inset 0 0 0 .5px #ffffff1f; }
+.shell-code-line code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 13px/1.5 ui-monospace, Menlo, monospace; color: #f2f2f7; user-select: all; }
+.mac .shell-code-copy { flex: none; padding: 4px 12px; border-radius: 5px; background: var(--button-bg); color: var(--button-ink); box-shadow: inset 0 0 0 .5px var(--button-edge); font-size: 13px; cursor: default; }
+
+@media (prefers-reduced-motion: reduce) { .mac .shell-menu-trigger.is-glowing { animation: none; } }

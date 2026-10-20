@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
+<title>imperfect</title>
+<meta name="description" content="A computer that changes when you do.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="imperfect">
+<meta property="og:title" content="imperfect">
+<meta property="og:description" content="A computer that changes when you do.">
+<meta property="og:image" content="https://imperfect.computer/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="sequence.css?v=plain-1">
+<link rel="stylesheet" href="mac/desktop.css?v=portal-1">
+<link rel="stylesheet" href="mac/shell.css?v=portal-1">
+<link rel="stylesheet" href="macos/lock.css?v=sequoia-4">
+<link rel="stylesheet" href="macos/quicktime.css?v=sequoia-4">
+<link rel="stylesheet" href="mac/phone.css?v=portal-1">
+<script type="module" src="launch.mjs?v=kinso-install-1"></script>
+</head>
+<body data-phase="loading">
+<nav aria-label="Skip"><a class="keyboard-skip" id="skip" href="#computer">Skip to the computer</a></nav>
+<main aria-labelledby="launchHeading">
+  <h1 id="launchHeading" class="sr-only">imperfect: launch film and live computer</h1>
+  <section id="macScreen" class="screen mac" data-visible="false" aria-label="A Mac, with imperfect being built on it" aria-hidden="true" inert hidden>
+    <div class="mac-wall"></div>
+    <header class="mac-bar"></header>
+    <div class="mac-window">
+      <section id="demoScreen" class="screen demo" data-visible="false" aria-label="The real imperfect computer" aria-hidden="true" inert>
+        <iframe id="computer" title="imperfect · live computer" referrerpolicy="strict-origin-when-cross-origin" allow="clipboard-read; clipboard-write; microphone; fullscreen"></iframe>
+      </section>
+      <p class="mac-offline" role="status" hidden>Your computer is not available yet. <button id="macRetry" type="button">Try again</button></p>
+    </div>
+    <section class="mac-phone" data-shown="false" data-ready="false" role="img" aria-label="The same imperfect computer, on a phone" aria-hidden="true" inert hidden>
+      <div class="phone-glass">
+        <iframe id="phoneComputer" title="imperfect · the same computer on a phone" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1" aria-hidden="true" inert></iframe>
+        <p class="phone-unavailable">This view of your computer isn't available yet.</p>
+        <div class="phone-status" aria-hidden="true"><span class="phone-clock"></span><span class="phone-island"></span><svg class="phone-indicators" viewBox="0 0 67 16"><g fill="currentColor"><rect x="0" y="10" width="3" height="4" rx=".5"/><rect x="5" y="7" width="3" height="7" rx=".5"/><rect x="10" y="4" width="3" height="10" rx=".5"/><rect x="15" y="1" width="3" height="13" rx=".5"/></g><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M24 5q7-6 14 0m-11 3q4-4 8 0"/></g><circle cx="31" cy="12" r="1.6" fill="currentColor"/><rect x="44" y="2" width="20" height="12" rx="3" fill="none" stroke="currentColor" stroke-opacity=".45"/><rect x="46" y="4" width="16" height="8" rx="1" fill="currentColor"/><path d="M65 5v6q2-1 2-3t-2-3" fill="currentColor"/></svg></div>
+        <div class="phone-home" aria-hidden="true"></div>
+      </div>
+    </section>
+    <div class="mac-dock" aria-label="Dock"></div>
+    <img class="mac-cursor" src="mac/cursor.png" alt="" aria-hidden="true">
+  </section>
+  <div class="curtain" id="curtain" hidden></div>
+  <section id="introScreen" class="screen" aria-label="Noah and Locus, the Creation of Adam">
+    <div class="stage" id="stage">
+      <canvas id="scene" aria-hidden="true"></canvas>
+      <div class="still" id="still" hidden></div>
+      <div class="layer"><div class="glow" id="glow"></div></div>
+    </div>
+    <div class="app-sky" id="sky">
+      <canvas class="wordmark" id="wordmark" aria-hidden="true"></canvas>
+      <img class="goat" id="goat" alt="" aria-hidden="true" decoding="async" hidden>
+    </div>
+    <svg class="rim" id="rim" aria-hidden="true" hidden><path id="rimPath"/></svg>
+  </section>
+  <section id="filmScreen" class="screen film" data-visible="false" aria-label="imperfect launch film" aria-hidden="true" inert>
+    <div class="film-area" id="filmArea"></div>
+    <div class="film-box"><video id="film" preload="auto" playsinline aria-label="imperfect launch film"></video></div>
+    <canvas id="filmCanvas" aria-hidden="true"></canvas>
+  </section>
+</main>
+<div id="lockScreen" hidden></div>
+<p class="hint" id="hint" aria-hidden="true"><svg viewBox="0 0 12 7" aria-hidden="true" focusable="false"><path d="M1 6L6 1L11 6"/></svg>scroll</p>
+<p class="sr-only" id="announce" aria-live="polite"></p>
+<div class="prompt" id="prompt" hidden>
+  <p id="status" role="status" aria-live="polite"></p>
+  <button id="action" type="button" hidden></button>
+  <button id="retry" type="button" hidden>Retry</button>
+  <a id="fallback" href="#computer" target="_blank" rel="noopener" hidden>Open computer<span class="sr-only"> (opens in a new tab)</span></a>
+</div>
+<noscript><div class="no-script">JavaScript is needed for the launch sequence.</div></noscript>
+</body>
+</html>

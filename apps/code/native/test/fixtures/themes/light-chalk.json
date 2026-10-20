@@ -1,0 +1,21 @@
+{
+  "name": "Light · Chalk",
+  "mode": "light",
+  "background": "#fafafa",
+  "panel": "#fafafa",
+  "bar": "#f0f0f0",
+  "band": "#ececec",
+  "foreground": "#303030",
+  "bright": "#151515",
+  "muted": "#666666",
+  "dim": "#727272",
+  "rule": "#cccccc",
+  "accent": "#555555",
+  "red": "#954c50",
+  "yellow": "#796238",
+  "green": "#4b6c51",
+  "orange": "#845b42",
+  "blue": "#51657c",
+  "cyan": "#496d70",
+  "magenta": "#745a70"
+}

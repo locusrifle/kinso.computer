@@ -1,0 +1,42 @@
+PipeWire 'pipewire-0' [1.6.8, vaita@desktop, cookie:1499678694]
+ └─ Clients:
+        32. WirePlumber                         [1.6.8, vaita@desktop, pid:1110]
+        33. pipewire                            [1.6.8, vaita@desktop, pid:1111]
+        43. WirePlumber [client]                [1.6.8, vaita@desktop, pid:1110]
+        67. xdg-desktop-portal                  [1.6.8, vaita@desktop, pid:1571]
+        68. xdg-desktop-portal-hyprland         [1.6.8, vaita@desktop, pid:1630]
+        69. quickshell                          [1.6.8, vaita@desktop, pid:1692]
+        80. imperfect-code                      [1.6.8, vaita@desktop, pid:2330074]
+       138. wpctl                               [1.6.8, vaita@desktop, pid:2499084]
+
+Audio
+ ├─ Devices:
+ │      51. Navi 31 HDMI/DP Audio               [alsa]
+ │      52. Stealth 500P                        [alsa]
+ │      53. Built-in Audio                      [alsa]
+ │
+ ├─ Sinks:
+ │      34. Built-in Audio Digital Stereo (IEC958) [vol: 0.40]
+ │  *   57. Stealth 500P Analog Stereo          [vol: 0.40]
+ │
+ ├─ Sources:
+ │      47. Built-in Audio Analog Stereo        [vol: 1.00]
+ │  *   58. Stealth 500P Mono                   [vol: 1.00]
+ │
+ ├─ Filters:
+ │
+ └─ Streams:
+
+Video
+ ├─ Devices:
+ │
+ ├─ Sinks:
+ │
+ ├─ Sources:
+ │
+ ├─ Filters:
+ │
+ └─ Streams:
+
+Settings
+ └─ Default Configured Devices:

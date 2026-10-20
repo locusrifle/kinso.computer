@@ -1,0 +1,31 @@
+node_modules/
+.env
+.env.*
+*.bak*
+*.log
+.test-artifacts/
+# What Finder leaves in each folder it opens, on a Mac.
+.DS_Store
+
+# Native and generated build outputs.
+phone/.gradle/
+phone/.kotlin/
+phone/build/
+phone/app/build/
+phone/local.properties
+*.apk
+
+# Written and removed by the static website check.
+website/.art-check.html
+
+# GPL-v2 game source and a non-redistributable shareware WAD may exist on a
+# machine, but this AGPL repository must never distribute either.
+apps/code/native/public/doom/
+# kinso.ai's page, rebuilt for Noah's Kinso concept: theirs, so never in this source (locker/shop.mjs)
+locker/public/store/kinso
+# Kinso's own logo, for Kinso's window (?for=kinso, js/brand.js): theirs, so
+# never in this source; a computer that has it keeps it here.
+apps/code/native/public/kinso
+
+# Local Kinso reference type (including symlinks) stays out of Git.
+apps/code/native/public/fonts/inter-tight.woff2

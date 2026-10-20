@@ -1,0 +1,5 @@
+{"type":"session_meta","timestamp":"2026-10-01T00:00:00Z","payload":{"id":"fixture-codex-session"}}
+{"type":"turn_context","timestamp":"2026-10-01T00:00:00Z","payload":{"model":"gpt-fixture"}}
+{"type":"event_msg","timestamp":"2026-10-01T00:00:01Z","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":100,"cached_input_tokens":80,"output_tokens":10,"reasoning_output_tokens":8},"last_token_usage":{"input_tokens":100,"cached_input_tokens":80,"output_tokens":10,"reasoning_output_tokens":8}}}}
+{"type":"event_msg","timestamp":"2026-10-01T00:00:02Z","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":100,"cached_input_tokens":80,"output_tokens":10,"reasoning_output_tokens":8},"last_token_usage":{"input_tokens":100,"cached_input_tokens":80,"output_tokens":10,"reasoning_output_tokens":8}}}}
+{"type":"event_msg","timestamp":"2026-10-01T00:00:03Z","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":150,"cached_input_tokens":100,"output_tokens":15,"reasoning_output_tokens":10}}}}

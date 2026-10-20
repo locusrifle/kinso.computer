@@ -1,0 +1,35 @@
+@font-face { font-family: 'Space Mono'; src: url('fonts/SpaceMono-Regular.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+html, body { margin: 0; padding: 0; background: #07060c; font-family: 'Space Mono', monospace; scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; width: 0; height: 0; }
+html { overscroll-behavior: none; }
+.world-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; pointer-events: none; color: #fff; font-size: 11px; }
+.world-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; background: rgba(4, 3, 8, .85); pointer-events: auto; color: inherit; text-underline-offset: .3em; }
+.world-nav a:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.world-hint, .world-fallback { position: fixed; bottom: 24px; left: 20px; right: 20px; z-index: 10; color: #fff; background: rgba(4, 3, 8, .85); padding: 12px 20px; font: 12px/1.6 'Space Mono', monospace; text-align: center; }
+.world-fallback a { color: inherit; }
+@media (max-width: 480px) { .world-nav { padding-inline: 12px; font-size: 10px; } }
+/* the opener scrolls; from its touch on (and with ?at=) nothing does. Only the root: a hidden body would become a
+   scroller of its own, and the opener's sticky stage would stick to it, off screen */
+html.locked { overflow: hidden; overscroll-behavior: none; }
+*, *::before, *::after { box-sizing: border-box; border-radius: 0; }
+[hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* the caret, as the lock's field draws it */
+.caret { display: inline-block; width: 0; height: 1em; position: relative; vertical-align: baseline; }
+.caret::after { content: ''; position: absolute; left: 0.05em; bottom: -0.16em; width: 0.07em; min-width: 2px; height: 1.12em; background: #fff; }
+
+.wordmark { position: absolute; display: block; visibility: hidden; transform-origin: 50% 50%; }
+
+/* The legacy field layout. */
+.box { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 16px; background: rgba(4, 3, 8, 0.62); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); opacity: 0; transform: scale(0.94); pointer-events: auto; overflow: hidden; }
+.box.on { opacity: 1; transform: none; }
+.login-title { margin: 0; color: rgba(255, 255, 255, 0.62); font: 13px/1 'Space Mono', monospace; letter-spacing: 0.16em; }
+.guest { text-decoration: none; text-align: center; position: relative; overflow: hidden; min-width: 168px; padding: 15px 28px; border: 1px solid #f4f3ef; background: #f4f3ef; color: #07060c; font: 400 16px/1 'Space Mono', monospace; letter-spacing: 0.08em; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 150ms linear, color 150ms linear; }
+.guest:hover { background: #fff; border-color: #fff; }
+.guest:focus-visible { outline: 2px solid #d4d4d4; outline-offset: 3px; }
+.login-note { margin: 0; min-height: 1.4em; max-width: 30em; color: rgba(255, 255, 255, 0.62); font: 12px/1.4 'Space Mono', monospace; text-align: center; }
+.login-note:empty { visibility: hidden; }
+
+/* the edge of the opener's bubble, above the wallpaper it reveals */
+.rim { position: fixed; inset: 0; z-index: 6; width: 100%; height: 100%; pointer-events: none; }

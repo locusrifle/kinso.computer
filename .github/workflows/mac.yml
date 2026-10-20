@@ -1,0 +1,302 @@
+# imperfect on a Mac, installed the way a person installs it, on GitHub's
+# Apple Silicon Macs: the public install command's steps against this commit
+# (~/imperfect, then ./install.sh </dev/null), imperfect.app signed and open,
+# its machine answering, a picture of its window, the Mac's unit tests, a
+# second install that changes nothing, and undo. Once with the node the
+# person's shell has, once on a Mac with no node at all. Needs no secrets.
+name: mac
+
+on:
+  push:
+    branches: ['ci/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    name: install (${{ matrix.os }}, node ${{ matrix.node }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-15, node: from-shell }
+          - { os: macos-14, node: from-shell }
+          - { os: macos-15, node: none }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      OUT: ${{ github.workspace }}/out
+      CHECKOUT: /Users/runner/imperfect
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: An Apple Silicon Mac
+        run: |
+          mkdir -p "$OUT"
+          { uname -m; sw_vers; } | tee "$OUT/runner.txt"
+          test "$(uname -m)" = arm64
+
+      - uses: actions/setup-node@v7
+        if: matrix.node == 'from-shell'
+        with:
+          node-version-file: package.json
+          package-manager-cache: false
+
+      - name: A Mac with no node
+        if: matrix.node == 'none'
+        run: |
+          for formula in $(brew list --formula | grep -E '^node(@[0-9]+)?$' || true); do brew unlink "$formula"; done
+          if command -v node; then echo "node is still on PATH"; exit 1; fi
+          for dir in /opt/homebrew/bin /usr/local/bin "$HOME/.local/bin"; do if [ -e "$dir/node" ] || [ -e "$dir/mise" ]; then echo "still there: $dir/node or mise"; exit 1; fi; done
+
+      - name: The windows on screen (a helper)
+        run: |
+          cat > "$RUNNER_TEMP/windows.swift" <<'EOF'
+          // Every window on screen: owner, pid, layer, size, position, number.
+          import CoreGraphics
+          import Foundation
+          let all = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
+          for w in all {
+            let b = w[kCGWindowBounds as String] as? [String: Any] ?? [:]
+            let parts: [Any] = [w[kCGWindowOwnerName as String] ?? "?", w[kCGWindowOwnerPID as String] ?? 0, w[kCGWindowLayer as String] ?? 0,
+                                "\(b["Width"] ?? 0)x\(b["Height"] ?? 0)", "\(b["X"] ?? 0),\(b["Y"] ?? 0)", w[kCGWindowNumber as String] ?? 0]
+            print(parts.map { "\($0)" }.joined(separator: "\t"))
+          }
+          EOF
+          swiftc -O -o "$RUNNER_TEMP/windows" "$RUNNER_TEMP/windows.swift"
+          "$RUNNER_TEMP/windows" | tee "$OUT/windows-before.txt"
+
+      # What `curl -fsSL https://imperfect.computer/install | sh` does on a Mac
+      # (the store's install script), with this commit standing in for
+      # GitHub's main: the public repository in ~/imperfect, on main, clean,
+      # fast-forwarded, then ./install.sh with nothing on stdin.
+      - name: Install as a person would (timed)
+        if: ${{ !cancelled() }}
+        run: |
+          xcode-select -p
+          command -v git bash curl
+          echo "node on PATH: $(command -v node || echo none) $(node --version 2>/dev/null || true)"; which -a node || true
+          repo="https://github.com/$GITHUB_REPOSITORY"
+          git clone --quiet -- "$repo" "$CHECKOUT"
+          git -C "$CHECKOUT" checkout --quiet -B main "$GITHUB_SHA"
+          test "$(git -C "$CHECKOUT" remote get-url origin)" = "$repo"
+          test -z "$(git -C "$CHECKOUT" status --porcelain)"
+          test "$(git -C "$CHECKOUT" symbolic-ref --quiet --short HEAD)" = main
+          git -C "$CHECKOUT" fetch --quiet origin refs/heads/main
+          git -C "$CHECKOUT" merge --ff-only FETCH_HEAD
+          # As GitHub's main would be: the commit under test is origin's main
+          # too, so imperfect does not see local commits waiting to be pushed.
+          git -C "$CHECKOUT" update-ref refs/remotes/origin/main "$GITHUB_SHA"
+          cd "$CHECKOUT"
+          start=$SECONDS
+          ./install.sh </dev/null 2>&1 | tee "$OUT/install-1.log"
+          echo "first install took $((SECONDS - start))s" | tee "$OUT/install-1.time"
+          # The node imperfect.app runs the machine with: the shell's own, or,
+          # on a Mac with none, the one installed for it.
+          used="$(plutil -extract node raw -o - "$HOME/.imperfect/mac.json")"
+          echo "imperfect.app runs node $used ($("$used" --version))"
+          if [ "${{ matrix.node }}" = none ]; then
+            case "$used" in "$HOME/.local/share/mise/installs/node/"*) ;; *) echo "expected node from mise"; exit 1 ;; esac
+          else
+            test "$used" = "$(realpath "$(command -v node)")" || { echo "not the node the shell names: $(command -v node)"; exit 1; }
+          fi
+          dirname "$used" >> "$GITHUB_PATH"
+
+      - name: imperfect.app is there and signed
+        if: ${{ !cancelled() }}
+        run: |
+          app=/Applications/imperfect.app; [ -d "$app" ] || app="$HOME/Applications/imperfect.app"
+          echo "app: $app"; test -d "$app"
+          codesign --verify --deep --strict --verbose=2 "$app" 2>&1 | tee "$OUT/codesign.txt"
+          codesign -dv "$app" 2>&1 | tee -a "$OUT/codesign.txt"
+          spctl --assess --type execute -vv "$app" 2>&1 | tee -a "$OUT/codesign.txt" || echo "(Gatekeeper's verdict on an ad-hoc signature, for the record)"
+          /usr/bin/plutil -p "$app/Contents/Info.plist" > "$OUT/Info.plist.txt"
+          cat "$HOME/.imperfect/mac.json"
+          echo "Dock tiles for imperfect.app: $(defaults read com.apple.dock persistent-apps 2>/dev/null | grep -c 'imperfect.app' || true)"
+
+      - name: The machine answers and the window is open
+        if: ${{ !cancelled() }}
+        run: |
+          for i in $(seq 1 180); do curl -fsS --max-time 2 http://127.0.0.1:5067/health > "$OUT/health.json" 2>/dev/null && break; sleep 1; done
+          cat "$OUT/health.json"; echo
+          curl -fsS --max-time 2 http://127.0.0.1:5067/health >/dev/null
+          node "$CHECKOUT/desktop/mac/keeper.mjs" status | tee "$OUT/keeper-status.txt"
+          for i in $(seq 1 120); do
+            "$RUNNER_TEMP/windows" > "$OUT/windows.txt"
+            awk -F'\t' '$1 == "imperfect" && $3 == 0 && $4 + 0 >= 600' "$OUT/windows.txt" | grep -q . && break
+            sleep 1
+          done
+          cat "$OUT/windows.txt"
+          pgrep -fl 'imperfect.app/Contents/MacOS/imperfect' | tee "$OUT/window-process.txt"
+          ps -axo pid,ppid,etime,command | grep -E 'imperfect|keeper.mjs|start.mjs' | grep -v grep > "$OUT/processes.txt" || true
+          awk -F'\t' '$1 == "imperfect" && $3 == 0 && $4 + 0 >= 600' "$OUT/windows.txt" | grep -q .
+
+      - name: Pictures of the screen
+        if: ${{ !cancelled() }}
+        run: |
+          # Time for the page to load and settle after the window appears.
+          sleep 20
+          for n in 1 2 3; do
+            screencapture -x "$OUT/screen-$n.png" || true
+            id="$("$RUNNER_TEMP/windows" | awk -F'\t' '$1 == "imperfect" && $3 == 0 && $4 + 0 >= 600 { print $6; exit }')"
+            [ -n "$id" ] && screencapture -x -o -l "$id" "$OUT/window-$n.png" || true
+            sleep 8
+          done
+          ls -la "$OUT"/*.png
+
+      - name: The Mac's unit tests
+        if: ${{ !cancelled() }}
+        working-directory: /Users/runner/imperfect
+        run: |
+          node --test --test-concurrency=1 \
+            apps/code/test/mac-install.test.mjs apps/code/test/mac-packages.test.mjs apps/code/test/mac-files.test.mjs \
+            apps/code/native/test/mac-keys.test.mjs apps/code/native/test/desktop-gpu.test.mjs \
+            apps/code/native/test/workbench-mac-browser.test.mjs 2>&1 | tee "$OUT/unit-tests.log"
+          # The kernel locks a Mac takes: lockf(1), or perl's flock before macOS 15.
+          node --test --test-concurrency=1 --test-name-pattern='ledger lock|perl holds|third test browser' \
+            apps/code/native/test/pulse-ledger.test.mjs apps/code/native/test/pulse-limits.test.mjs 2>&1 | tee "$OUT/lock-tests.log"
+
+      - name: A second install changes nothing (timed)
+        if: ${{ !cancelled() }}
+        working-directory: /Users/runner/imperfect
+        run: |
+          app=/Applications/imperfect.app; [ -d "$app" ] || app="$HOME/Applications/imperfect.app"
+          before_app="$(stat -f '%i %m' "$app/Contents/Info.plist")"
+          before_keeper="$(cat "$HOME/.imperfect/keeper.json")"
+          start=$SECONDS
+          node desktop/mac/install.mjs 2>&1 | tee "$OUT/install-2.log"
+          took=$((SECONDS - start)); echo "second install took ${took}s" | tee "$OUT/install-2.time"
+          sleep 3
+          test "$before_app" = "$(stat -f '%i %m' "$app/Contents/Info.plist")" || { echo "imperfect.app was made again"; exit 1; }
+          test "$before_keeper" = "$(cat "$HOME/.imperfect/keeper.json")" || { echo "the machine was restarted"; exit 1; }
+          if grep -E 'installing dependencies|making .*imperfect.app|fetching Electron' "$OUT/install-2.log"; then echo "the second install redid that"; exit 1; fi
+          curl -fsS --max-time 2 http://127.0.0.1:5067/health >/dev/null
+          test "$took" -lt 30
+          # A later `curl … | sh` refuses a checkout with changes: installing
+          # left none, nor does Finder, which leaves .DS_Store in folders it opens.
+          touch .DS_Store desktop/.DS_Store
+          git status --porcelain | tee "$OUT/git-status.txt"
+          test ! -s "$OUT/git-status.txt"
+          # Pulse could record what it found (its ledger's lock works here).
+          curl -fsS --max-time 5 http://127.0.0.1:5067/pulse.json > "$OUT/pulse.json" || true
+          if grep -E 'could not record|Ledger lock failed' "$HOME/.imperfect/logs/imperfect.log"; then echo "Pulse's ledger could not be locked"; exit 1; fi
+
+      - name: Undo takes it away
+        if: ${{ !cancelled() }}
+        working-directory: /Users/runner/imperfect
+        run: |
+          ./install.sh undo 2>&1 | tee "$OUT/undo.log"
+          sleep 5
+          "$RUNNER_TEMP/windows" > "$OUT/windows-after-undo.txt" || true
+          left() {
+            pgrep -fl 'imperfect.app/Contents/MacOS/imperfect' || true
+            pgrep -fl 'desktop/mac/keeper.mjs|system/start.mjs' || true
+          }
+          left | tee "$OUT/after-undo-processes.txt"
+          tiles="$(defaults read com.apple.dock persistent-apps 2>/dev/null | grep -c 'imperfect.app' || true)"
+          echo "Dock tiles for imperfect.app after undo: $tiles"
+          fail=0
+          for app in /Applications/imperfect.app "$HOME/Applications/imperfect.app"; do [ ! -e "$app" ] || { echo "still there: $app"; fail=1; }; done
+          [ ! -e "$HOME/.imperfect/mac.json" ] || { echo "mac.json is still there"; fail=1; }
+          [ ! -e "$HOME/.imperfect/keeper.json" ] || { echo "keeper.json is still there"; fail=1; }
+          ! curl -fsS --max-time 2 http://127.0.0.1:5067/health >/dev/null 2>&1 || { echo "the machine still answers"; fail=1; }
+          [ ! -s "$OUT/after-undo-processes.txt" ] || { echo "imperfect is still running"; fail=1; }
+          [ "$tiles" = 0 ] || { echo "imperfect.app is still in the Dock"; fail=1; }
+          test -d "$HOME/.imperfect" || { echo "undo took ~/.imperfect too"; fail=1; }
+          # Undone twice: nothing to do, and nothing opened to quit it.
+          ./install.sh undo 2>&1 | tee "$OUT/undo-2.log"
+          sleep 5
+          left | tee "$OUT/after-undo-2-processes.txt"
+          [ ! -s "$OUT/after-undo-2-processes.txt" ] || { echo "a second undo started imperfect"; fail=1; }
+          exit $fail
+
+      - name: What the Mac said
+        if: always()
+        run: |
+          mkdir -p "$OUT/imperfect" "$OUT/crashes"
+          cp -R "$HOME/.imperfect/logs" "$OUT/imperfect/" 2>/dev/null || true
+          for f in machine.json mac.json keeper.json; do cp "$HOME/.imperfect/$f" "$OUT/imperfect/" 2>/dev/null || true; done
+          cp "$HOME"/.imperfect/data/state/*.jsonl "$OUT/imperfect/" 2>/dev/null || true
+          find "$HOME/Library/Logs/DiagnosticReports" /Library/Logs/DiagnosticReports -maxdepth 1 -newer "$OUT/runner.txt" \( -iname '*imperfect*' -o -iname '*electron*' -o -iname 'node*' \) -exec cp {} "$OUT/crashes/" \; 2>/dev/null || true
+          log show --last 30m --style compact --predicate 'process BEGINSWITH "imperfect"' 2>/dev/null | tail -n 4000 > "$OUT/log-show-imperfect.txt" || true
+          log show --last 30m --style compact --predicate 'eventMessage CONTAINS[c] "imperfect"' 2>/dev/null | tail -n 2000 > "$OUT/log-show-mentions.txt" || true
+          ls -laR "$OUT" | head -100
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mac-${{ matrix.os }}-node-${{ matrix.node }}
+          path: out
+          if-no-files-found: warn
+
+  # The public command itself, from the internet, on a Mac that has never
+  # seen imperfect: the store's installer clones GitHub's main into
+  # ~/imperfect and runs ./install.sh. Whatever node the runner has is left as
+  # it is (install.sh decides; without node 22 it fetches mise, then node).
+  curl:
+    name: the public install command (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      OUT: ${{ github.workspace }}/out
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: An Apple Silicon Mac without imperfect
+        run: |
+          mkdir -p "$OUT"
+          { uname -m; sw_vers; command -v node && node --version || echo "no node"; } | tee "$OUT/runner.txt"
+          test "$(uname -m)" = arm64
+          test ! -e "$HOME/imperfect"
+
+      - name: curl -fsSL https://imperfect.computer/install | sh
+        run: |
+          set -o pipefail
+          start=$(date +%s)
+          curl -fsSL https://imperfect.computer/install | sh 2>&1 | tee "$OUT/install.log"
+          echo "installed in $(( $(date +%s) - start ))s" | tee -a "$OUT/install.log"
+          git -C "$HOME/imperfect" log --oneline -1 | tee "$OUT/commit.txt"
+          test -z "$(git -C "$HOME/imperfect" status --porcelain)"
+
+      - name: imperfect.app is signed, its machine answers, its window is open
+        run: |
+          app=/Applications/imperfect.app; [ -d "$app" ] || app="$HOME/Applications/imperfect.app"
+          codesign --verify --deep --strict "$app"
+          for i in $(seq 1 180); do curl -fsS --max-time 2 http://127.0.0.1:5067/health > "$OUT/health.json" 2>/dev/null && break; sleep 1; done
+          curl -fsS --max-time 2 http://127.0.0.1:5067/health
+          sleep 20
+          screencapture -x "$OUT/screen-1.png" || true
+          sleep 10
+          screencapture -x "$OUT/screen-2.png" || true
+
+      - name: The same command again only brings it up to date
+        run: |
+          set -o pipefail
+          start=$(date +%s)
+          curl -fsSL https://imperfect.computer/install | sh 2>&1 | tee "$OUT/install-2.log"
+          echo "second run in $(( $(date +%s) - start ))s" | tee -a "$OUT/install-2.log"
+          curl -fsS --max-time 5 http://127.0.0.1:5067/health
+
+      - name: What the Mac said
+        if: always()
+        run: |
+          mkdir -p "$OUT/imperfect"
+          cp -R "$HOME/.imperfect/logs" "$OUT/imperfect/" 2>/dev/null || true
+          for f in machine.json mac.json keeper.json; do cp "$HOME/.imperfect/$f" "$OUT/imperfect/" 2>/dev/null || true; done
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: curl-${{ matrix.os }}
+          path: out
+          if-no-files-found: warn

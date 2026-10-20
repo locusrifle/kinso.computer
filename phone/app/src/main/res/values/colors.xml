@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Black (apps/code/native/themes/black.json): what the app wears
+       itself, before the computer's page and when it asks which computer. -->
+  <color name="ground">#000000</color>
+  <color name="band">#161616</color>
+  <color name="ink">#e6e6e6</color>
+  <color name="bright">#ffffff</color>
+  <color name="muted">#8e8e8e</color>
+  <color name="rule">#2a2a2a</color>
+  <color name="accent">#d4d4d4</color>
+</resources>

@@ -1,0 +1,5 @@
+home:9e892039-6a6e-40f0-a71d-8c79c7a4c2dd:802-11-wireless:wlp192s0
+tailscale0:912de1ce-1196-48ed-b5e3-7addf0689a9b:tun:tailscale0
+lo:c770f207-7c59-4736-b77c-c967e2bddb32:loopback:lo
+Galaxy S22 C2C3:36f49cba-751f-4d7f-9e9d-de10e15a04e1:802-11-wireless:
+orbit:6b0daf31-1821-4fde-8780-8deef890d7bc:802-11-wireless:
