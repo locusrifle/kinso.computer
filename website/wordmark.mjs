@@ -8,14 +8,15 @@
 //   hold      it stays, whole and alone, HOLD seconds from the moment it is whole (WORD.out),
 //   fade      then fades over WORDMARK.fade. Only once it has gone (WORD.gone) do the lock's field and the website's
 //             box come in at the same middle, over FIELD_IN.
+// Client draw-on artwork instead starts at the aperture's opening (BURST), with runtime paths and calibration.
+// It never receives the silver light sweep, loading fade or loading loop; its final pose stays for the lock.
 import { BURST } from './bootup.mjs';
-import { variant } from './variant.mjs?v=kinso-install-1';
+import { variant } from './variant.mjs?v=kinso-lift-2';
+import { loadDrawOn } from './draw-on.mjs?v=kinso-logo-lock-1';
 
-// The lettering, one setting: any white-on-transparent mask (its alpha is the letters, cropped to them) and its pixel
-// size. Noah's choice: the Anomaly-style "spiky" brush (~/workbench/bootup/lettering/imperfect-anomaly-2-spiky-clean.png,
-// cropped, its black made transparent). kinso.computer's is Kinso's own wordmark, with a stand-in drawn by the page
-// should it be missing (variant.mjs).
-export const LETTERING = Object.freeze({ src: variant.lettering.src, size: variant.lettering.size, standIn: variant.lettering.standIn ?? null, stays: Boolean(variant.lettering.stays) });
+// A transparent mask, tinted silver by default; colour artwork keeps its original pixels. Kinso's logo has its
+// own scale and a stand-in should its untracked image be missing (variant.mjs).
+export const LETTERING = Object.freeze({ ...variant.lettering, standIn: variant.lettering.standIn ?? null, stays: Boolean(variant.lettering.stays) });
 // Seconds it stays whole and alone before it fades.
 export const HOLD = 2;
 // The shine, in seconds after contact: when the band's centre is on the first letter, and on the last. Noah's marks,
@@ -41,8 +42,10 @@ const clamp = x => Math.max(0, Math.min(1, x));
 const smooth = x => { x = clamp(x); return x * x * (3 - 2 * x); };
 
 // Where it stands, the same on both: centred on a vw x vh screen. [left, top, width, height], css px.
-export function placeWordmark(vw, vh) {
-  const [lw, lh] = LETTERING.size, w = vw < vh ? vw * 0.84 : Math.min(vw * 0.44, vh * 0.8 * lw / lh, 980), h = w * lh / lw;
+export function placeWordmark(vw, vh, lettering = LETTERING) {
+  const [lw, lh] = lettering.size, scale = lettering.scale;
+  const w = scale ? (vw < vh ? vw * scale.phoneWidth : vh * scale.height * lw / lh)
+    : vw < vh ? vw * 0.84 : Math.min(vw * 0.44, vh * 0.8 * lw / lh, 980), h = w * lh / lw;
   return [(vw - w) / 2, (vh - h) / 2, w, h];
 }
 
@@ -54,6 +57,8 @@ export function placeWordmark(vw, vh) {
 export function wordmarkAt(tau, { still = false, stays = LETTERING.stays } = {}) {
   if (!(tau >= 0) || (tau >= WORD.gone && !stays)) return { on: false, formed: tau >= 0 ? 1 : 0, opacity: 0, blur: 0, scale: 1, shine: null };
   const W = WORDMARK, held = stays ? 1 : 1 - smooth((tau - WORD.out) / W.fade);
+  if (LETTERING.drawOn) return { on: true, formed: 1, opacity: held, blur: 0, scale: 1, shine: null,
+    drawTime: Math.max(0, tau - BURST), still, visible: tau >= BURST };
   if (still) return { on: true, formed: 1, opacity: held, blur: 0, scale: 1, shine: null };
   // the band's centre: 0 on the first letter at SHINE.start, 1 on the last at SHINE.end; it comes in from a band's
   // width to the left of the word, unseen (it lights the letters only)
@@ -75,10 +80,15 @@ export const metalSilver = (ink = '#ffffff') => css(rgb(ink), 0.78);
 
 // A canvas that draws it. size(cssWidth, dpr) lays it out; draw(state) paints wordmarkAt's state.
 export function createWordmark(canvas, { ink = '#ffffff' } = {}) {
+  // Light on colour artwork is white even when the lock's text ink is dark.
+  if (LETTERING.colour) ink = '#ffffff';
   const img = new Image();
   img.decoding = 'async';
   let source = img;
-  const ready = new Promise(ok => { img.onload = () => ok(true); img.onerror = () => { source = LETTERING.standIn?.() ?? null; ok(Boolean(source)); }; });
+  const imageReady = new Promise(ok => { img.onload = () => ok(true); img.onerror = () => { source = LETTERING.standIn?.() ?? null; ok(Boolean(source)); }; });
+  let drawing = null;
+  const ready = Promise.all([imageReady, LETTERING.drawOn ? loadDrawOn(LETTERING.drawOn).then(value => { drawing = value; }) : null])
+    .then(([image]) => Boolean(drawing || image));
   img.src = LETTERING.src;
   const colour = rgb(ink), aspect = LETTERING.size[1] / LETTERING.size[0];
   let W = 0, H = 0, css_w = 0, tinted = null, grains = null, cells = null, noise = null, gw = 0, gh = 0, painted = null, loaded = false;
@@ -88,11 +98,13 @@ export function createWordmark(canvas, { ink = '#ffffff' } = {}) {
   function build() {
     tinted = document.createElement('canvas'); tinted.width = W; tinted.height = H;
     const t = tinted.getContext('2d');
-    t.drawImage(source, 0, 0, W, H);
-    t.globalCompositeOperation = 'source-in';
-    const g = t.createLinearGradient(0, 0, 0, H); // brushed metal: a little lighter above
-    g.addColorStop(0, css(colour, 0.9)); g.addColorStop(0.5, metalSilver(ink)); g.addColorStop(1, css(colour, 0.64));
-    t.fillStyle = g; t.fillRect(0, 0, W, H);
+    if (source) t.drawImage(source, 0, 0, W, H);
+    if (!LETTERING.colour) {
+      t.globalCompositeOperation = 'source-in';
+      const g = t.createLinearGradient(0, 0, 0, H); // brushed metal: a little lighter above
+      g.addColorStop(0, css(colour, 0.9)); g.addColorStop(0.5, metalSilver(ink)); g.addColorStop(1, css(colour, 0.64));
+      t.fillStyle = g; t.fillRect(0, 0, W, H);
+    }
     // the grains: noise per cell, settling from the middle outwards
     const cell = WORDMARK.grain * (W / css_w);
     gw = Math.max(1, Math.ceil(W / cell)); gh = Math.max(1, Math.ceil(H / cell));
@@ -121,10 +133,17 @@ export function createWordmark(canvas, { ink = '#ffffff' } = {}) {
     draw(s) {
       const st = canvas.style;
       st.opacity = s.opacity.toFixed(3);
-      st.visibility = s.opacity > 0 ? 'visible' : 'hidden';
+      st.visibility = s.opacity > 0 && s.visible !== false ? 'visible' : 'hidden';
       st.filter = s.blur > 0.0005 ? `blur(${(s.blur * css_w).toFixed(2)}px)` : 'none';
       st.transform = s.scale !== 1 ? `scale(${s.scale.toFixed(4)})` : 'none';
       if (!tinted || s.opacity <= 0) return;
+      if (drawing && s.drawTime !== undefined) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+        const progress = drawing.paint(ctx, W, H, s.drawTime, s.still);
+        canvas.dataset.draw = String(progress); canvas.dataset.drawDuration = String(drawing.duration);
+        return;
+      }
+      canvas.dataset.draw = 'fallback';
       const key = s.formed < 1 || s.shine ? null : 'whole';
       if (key && painted === key) return; // nothing changes: keep the last paint
       ctx.setTransform(1, 0, 0, 1, 0, 0);

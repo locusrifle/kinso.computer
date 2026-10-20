@@ -49,8 +49,8 @@ export const BEATS = Object.freeze([
     text: "So here's the business I'd build. Not another AI subscription. For thirty-nine dollars a month, you rent your own computer with Kinso on it, and it runs on the Claude and ChatGPT subscriptions you already have." },
   { name: "It's real", screen: 'The cursor lets go of the window.',
     text: "And it's real. This one runs on my own subscriptions, so please don't go crazy, but you're free to use it. Ask it something, open the messages, look around." },
-  { name: 'The source', screen: 'Code glows in the menu bar; its window shows one command to copy.',
-    text: "If you'd like the source, it's under Code in the menu bar. Copy the command, paste it into your own agent, and it will install it for you." },
+  { name: 'The source', screen: 'The Kinso Computer page in the browser: Get yours.',
+    text: "If you'd like the source, press Get yours on the page. It's thirty-nine dollars, once, and then one command installs it with your own agent." },
   { name: 'Close', screen: '',
     text: "Thanks for watching. I'd love to help build this with you." },
 ]);

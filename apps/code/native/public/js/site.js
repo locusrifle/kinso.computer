@@ -4,6 +4,7 @@ import { mountArrival } from './arrival.js';
 import { notifyDemoReady } from './demo-ready.js';
 import { mountLaunchDrag } from './assembly.js';
 import { turn } from './turn.js';
+import { themeOptions, chooseTheme } from './theme-choice.js';
 
 const byId = id => document.getElementById(id);
 const input = byId('entry-input');
@@ -329,14 +330,12 @@ function takePick() {
 
 async function openThemes() {
   if (pickerOpen()) return;
-  let answer = {};
-  try { answer = await (await fetch('/themes.json', { cache: 'no-store' })).json(); }
-  catch { answer = {}; }
+  const answer = await themeOptions();
   if (pickerOpen()) return;
-  // Automatic first: the system's own light or dark, Mac · Light or Mac · Dark.
+  // Automatic first: the system's own light or dark, in this window's brand.
   const themes = answer.themes ?? [];
-  const light = themes.find(theme => theme.id === 'mac-light')?.background ?? '#ffffff';
-  const dark = themes.find(theme => theme.id === 'mac-dark')?.background ?? '#121214';
+  const light = themes.find(theme => /-light$/.test(theme.id))?.background ?? '#ffffff';
+  const dark = themes.find(theme => /-dark$/.test(theme.id))?.background ?? '#121214';
   paintThemes([{ id: 'auto', name: 'Automatic', background: `linear-gradient(135deg, ${light} 50%, ${dark} 50%)`, current: Boolean(answer.auto) },
     ...themes.map(theme => ({ ...theme, current: theme.current && !answer.auto }))]);
   pickerShownAt = performance.now();
@@ -357,11 +356,7 @@ function closePicker() {
 
 async function hangTheme(id) {
   try {
-    await fetch('/theme', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
+    await chooseTheme(id);
   } catch { /* the theme stays as it was, which is visible without a message */ }
 }
 

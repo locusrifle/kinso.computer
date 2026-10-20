@@ -162,8 +162,8 @@ export async function harnessFixture({ desk = false, messages, viewport = { widt
     if (!site && !launchFrame) await page.waitForFunction(() => harness.guiSnapshot().sessionId === 'thread-a');
     if (launchFrame) {
       fixture.product = page.frame({ url: `${productOrigin}/` });
-      await fixture.product.locator('#entry-terminal.fresh .fresh-question').waitFor();
-    } else await page.locator('#entry-output .gui-assistant, #entry-terminal.fresh .fresh-question').first().waitFor();
+      await fixture.product.locator('#entry-terminal.fresh .fresh-question, :root[data-brand="kinso"] #entry-input[placeholder="what do you want?"]').first().waitFor();
+    } else await page.locator('#entry-output .gui-assistant, #entry-terminal.fresh .fresh-question, :root[data-brand="kinso"] #entry-input[placeholder="what do you want?"]').first().waitFor();
     // A snapshot/attached transcript is not a painted, font-stable window.
     // Give every fixture the same settled starting frame by finishing the
     // window's entrance at once rather than watching it play (it was most of

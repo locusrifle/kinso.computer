@@ -16,6 +16,10 @@ test('Mac · Dark and Mac · Light ship to a fresh home, plain, and nothing else
     assert.equal(themes.find(theme => theme.current).id, 'mac-dark');
     // no picture under the window and no sky: the black and the white alone
     for (const id of ['mac-dark', 'mac-light']) assert.doesNotMatch(themeCss(await readTheme(id, dir)), /--theme-(underlay|wallpaper|sky)|url\(/);
+    for (const id of ['kinso-light', 'kinso-dark']) {
+      assert.equal(await readTheme(id, dir), null);
+      await assert.rejects(setTheme(id, dir), /No such theme/);
+    }
     await setTheme('auto', dir);
     assert.equal((await readTheme('mac-light', dir)).mode, 'light');
     // Auto: Mac · Dark, and Mac · Light when the system asks for light.

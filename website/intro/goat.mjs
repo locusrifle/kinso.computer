@@ -4,8 +4,8 @@
 //   The goat: once the word has gone, imperfect's J06 goat mark comes in at the same middle, holds, and goes; then the
 //   film. intro/goat-j06.webp is tools/assets/goat-head/goat-head.png (the J06 master), trimmed to its ink, 640 px
 //   tall: magick goat-head.png -trim +repage -filter Lanczos -resize x640 -quality 75 -define webp:alpha-quality=80
-import { WORD } from '../wordmark.mjs?v=kinso-install-1';
-import { variant } from '../variant.mjs?v=kinso-install-1';
+import { WORD } from '../wordmark.mjs?v=kinso-lift-2';
+import { variant } from '../variant.mjs?v=kinso-lift-2';
 
 // Where each mark's ink mass sits from its image's centre, as a share of the image (x right, y down), measured on
 // these very files as the page draws them: the wordmark is assets/wordmark/imperfect-spiky.png's alpha tinted with
@@ -45,8 +45,8 @@ export function goatAt(tau, { still = false } = {}) {
 }
 
 // The wordmark's place (wordmark.mjs placeWordmark: [left, top, width, height]) moved so its ink's mass is on the
-// screen's centre line.
-export const opticalWordmark = ([x, y, w, h]) => [x - MASS.wordmark[0] * w, y, w, h];
+// screen's centre line. Colour marks centre vertically too; imperfect keeps its original baseline.
+export const opticalWordmark = ([x, y, w, h]) => [x - MASS.wordmark[0] * w, y - (variant.lettering.colour ? MASS.wordmark[1] * h : 0), w, h];
 
 // The goat's place: its ink's mass on the very middle of the screen, GOAT.height x the wordmark's height.
 export function placeGoat(vw, vh, [, , , wordHeight]) {

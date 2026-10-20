@@ -21,6 +21,8 @@ export const config = Object.freeze({
   handoffMs: 1200,
   // Unlocked: the lock and its wallpaper fade away from the painting (0 with reduced motion).
   unlockMs: 600,
+  // Noah: the text/UI fades, then the page lifts to reveal Tahlia's desktop sitting still underneath.
+  kinsoUnlock: Object.freeze({ fadeMs: 300, liftMs: 700, fadeEase: [0, 0, .58, 1], liftEase: [.2, .8, .2, 1] }),
   // A one-word hint ("scroll") if the visitor has not moved them this long after the unlock. false removes it.
   scrollHint: true,
   hintAfterMs: 4000,

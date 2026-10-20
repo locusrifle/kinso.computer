@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { launchChromium } from '../../../../tools/test-browser.mjs';
 import { serveDirectory } from '../../../../tools/serve.mjs';
+// The tag launch.mjs asks intro.mjs under: the test drives the page's own instance, not a second copy.
+const INTRO = `intro/intro.mjs?v=${readFileSync(new URL('../../../../website/launch.mjs', import.meta.url), 'utf8').match(/intro\/intro\.mjs\?v=([^'"]+)/)[1]}`;
 
 const root = fileURLToPath(new URL('../../../../', import.meta.url));
 const evidence = process.env.GALAXY_EVIDENCE;
@@ -80,7 +83,7 @@ test('the website retains its wallpaper lock and account pages keep a solid back
     await page.route('**/unlock', route => route.fulfill({ json: { ok: false } }));
     await page.goto(server.origin + '/index.html');
     await page.waitForFunction(() => window.__launch?.().phase === 'intro', null, { timeout: 60000 });
-    await page.evaluate(async () => { (await import('/intro/intro.mjs?v=kinso-1')).intro.approach(); });
+    await page.evaluate(async path => { (await import(path)).intro.approach(); }, `/${INTRO}`);
     for (let i = 0; i < 140 && (await page.evaluate(() => window.__launch().phase)) !== 'ready'; i++) {
       await page.evaluate(() => { window.__introClock += .1; window.__introWall += .1; }); await frame(page);
     }

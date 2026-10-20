@@ -96,7 +96,7 @@ body.imperfect #entry-terminal.phone-layout > #session-rail:not(.collapsed) > .s
   display: flex; flex-direction: column; gap: 4px; flex: none;
   margin: 0; padding: 4px 0 calc(6px + var(--safe-bottom, 0px));
 }
-body.imperfect #entry-terminal.phone-layout .session-rail-foot > .session-rail-settings { height: 44px; font-size: 15px; }
+body.imperfect #entry-terminal.phone-layout #session-rail .session-rail-settings { height: 44px; font-size: 15px; }
 body.imperfect #entry-terminal.phone-layout .session-rail-foot > .session-rail-usage { font-size: 13px; gap: 10px 10px; }
 /* The sheet is the whole screen: the field waits under it, out of the way. */
 body.imperfect #entry-terminal.phone-layout:has(> #session-rail:not(.collapsed)) > :is(#entry-pending, .entry-connection, #entry-input-zone, .entry-status, #entry-work) { display: none; }

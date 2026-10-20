@@ -10,7 +10,7 @@ import { createDemoInbox } from '../../../../system/inbox-demo.mjs';
 import { themeCss } from '../../../../system/theme.mjs';
 
 const themeCSS = themeCss(JSON.parse(await readFile(new URL('./fixtures/themes/black.json', import.meta.url))));
-const shots = usageArtifacts('kinso-warm');
+const shots = process.env.KINSO_PRESENTATION_SHOTS || usageArtifacts('kinso-warm');
 const allLink = p => p.locator('#session-rail .sidebar-row').filter({ has: p.getByText('All messages', { exact: true }) }).locator('button').first();
 const rows = p => p.locator('.messages-row').evaluateAll(nodes => nodes.map(n => n.dataset.key));
 const style = (p, selector, property) => p.locator(selector).first().evaluate((n, property) => getComputedStyle(n)[property], property);
@@ -19,6 +19,29 @@ const shot = async (p, name) => {
   await p.waitForTimeout(700);
   await p.screenshot({ path: join(shots, `${name}.png`), caret: 'hide' });
 };
+async function darkContrast(p) {
+  const failures = await p.evaluate(() => {
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    const rgba = css => { ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = css; ctx.fillRect(0, 0, 1, 1); return [...ctx.getImageData(0, 0, 1, 1).data].map((v, i) => i === 3 ? v / 255 : v); };
+    const over = (a, b) => [0, 1, 2].map(i => a[i] * a[3] + b[i] * (1 - a[3]));
+    const luminance = colour => colour.slice(0, 3).map(v => v / 255).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4).reduce((sum, v, i) => sum + v * [.2126, .7152, .0722][i], 0);
+    const failures = [];
+    for (const n of document.querySelectorAll('.messages *')) {
+      if (![...n.childNodes].some(c => c.nodeType === Node.TEXT_NODE && c.textContent.trim()) || n.closest(':disabled, [aria-disabled="true"]') || !n.getClientRects().length) continue;
+      const r = n.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) continue;
+      const ancestors = []; for (let a = n; a; a = a.parentElement) ancestors.unshift(a);
+      let bg = [14, 14, 15]; for (const a of ancestors) bg = over(rgba(getComputedStyle(a).backgroundColor), bg);
+      const style = getComputedStyle(n), fg = rgba(style.color); fg[3] *= Number(style.opacity);
+      const [lo, hi] = [luminance(over(fg, bg)), luminance(bg)].sort((a, b) => a - b);
+      const ratio = (hi + .05) / (lo + .05);
+      if (ratio < 4.5) failures.push({ text: n.textContent.slice(0, 45), class: n.className, ratio, color: style.color, bg });
+    }
+    return failures;
+  });
+  assert.deepEqual(failures, [], 'visible dark Messages text meets WCAG AA');
+}
+
 async function fitsAndHits(p) {
   await p.waitForTimeout(900);
   const result = await p.evaluate(() => {
@@ -40,13 +63,13 @@ async function fitsAndHits(p) {
   return result;
 }
 
-for (const brand of ['kinso', 'imperfect']) for (const width of [1920, 390]) {
-  test(`${brand} warm Messages ${width}: list, filters, read-only mail/chat and composer in real layout`, { timeout: 120000 }, async t => {
+for (const [brand, appearance] of [['kinso', 'light'], ['kinso', 'dark'], ['imperfect', 'dark']]) for (const width of [1440, 390]) {
+  test(`${brand} ${appearance} Messages ${width}: list, filters, read-only mail/chat and composer in real layout`, { timeout: 120000 }, async t => {
     await mkdir(shots, { recursive: true });
     const phone = width === 390, calls = [], box = createDemoInbox(), list = await box.list();
     const readonly = answer => ({ ...answer, canSend: false, canConnect: false });
     const f = await harnessFixture({ productOrigin: brand === 'kinso' ? 'https://computer.kinso.computer' : 'https://noah.imperfect.computer',
-      desk: !phone, hasTouch: phone, viewport: { width, height: phone ? 844 : 1080 }, themeCSS,
+      desk: !phone, hasTouch: phone, viewport: { width, height: phone ? 844 : 900 }, themeCSS,
       messages: [{ role: 'user', content: 'Review the invented Fernlight conversations.' }, { role: 'assistant', content: 'The demo inbox is open beside this conversation. Sending and connecting are off on this computer.' }],
       handleRequest: async (req, res, path) => {
         if (!path.startsWith('/inbox/')) return false;
@@ -61,7 +84,9 @@ for (const brand of ['kinso', 'imperfect']) for (const width of [1920, 390]) {
         res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(data)); return true;
       } });
     t.after(() => f.close());
-    const p = f.page, name = `${brand}-${width}`;
+    const p = f.page, name = `${brand}-${appearance}-${width}`, dark = appearance === 'dark';
+    if (brand === 'kinso') await p.emulateMedia({ colorScheme: appearance });
+    await p.waitForFunction(() => !document.querySelector('.kinso-sharks') || document.querySelector('.kinso-sharks').dataset.palette === document.documentElement.dataset.kinsoAppearance);
     await p.addStyleTag({ content: 'html body #entry-terminal { height: 100vh !important; }' });
     if (phone) { await p.waitForFunction(() => document.querySelector('#entry-terminal').classList.contains('phone-layout')); await p.evaluate(() => harness.toggleRail()); }
     await allLink(p).waitFor();
@@ -81,10 +106,10 @@ for (const brand of ['kinso', 'imperfect']) for (const width of [1920, 390]) {
     const initial = await fitsAndHits(p);
     assert.equal(await p.getByRole('button', { name: /^(Done|Archive|Snooze)$/i }).count(), 0);
     if (brand === 'kinso') {
-      assert.equal(await style(p, '.messages', 'backgroundColor'), 'rgb(255, 250, 246)');
-      assert.equal(await style(p, '.messages-row', 'backgroundColor'), 'rgb(255, 255, 255)');
+      assert.equal(await style(p, '.messages', 'backgroundColor'), dark ? 'rgb(23, 22, 21)' : 'rgb(255, 250, 246)');
+      assert.equal(await style(p, '.messages-row', 'backgroundColor'), dark ? 'rgb(34, 33, 32)' : 'rgb(255, 255, 255)');
       assert.equal(await style(p, '.messages-row', 'borderRadius'), '12px');
-      assert.equal(await style(p, '.messages-row-time', 'color'), 'rgb(115, 115, 115)');
+      assert.equal(await style(p, '.messages-row-time', 'color'), dark ? 'rgb(181, 176, 169)' : 'rgb(115, 115, 115)');
       const contrast = await p.evaluate(() => {
         const luminance = value => {
           const channels = value.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => v / 255).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
@@ -92,21 +117,39 @@ for (const brand of ['kinso', 'imperfect']) for (const width of [1920, 390]) {
         };
         const row = document.querySelector('.messages-row'), time = row.querySelector('.messages-row-time');
         const badge = getComputedStyle(document.querySelector('.messages-demo-tag'));
+        const ratio = (a, b) => { const [lo, hi] = [luminance(a), luminance(b)].sort((a, b) => a - b); return (hi + .05) / (lo + .05); };
         return {
-          row: (luminance(getComputedStyle(row).backgroundColor) + .05) / (luminance(getComputedStyle(time).color) + .05),
-          badge: (luminance(badge.backgroundColor) + .05) / (luminance(badge.color) + .05),
+          row: ratio(getComputedStyle(row).backgroundColor, getComputedStyle(time).color),
+          badge: ratio(badge.backgroundColor, badge.color),
         };
       });
       assert.ok(contrast.row >= 4.5, `muted card labels meet AA: ${contrast.row}`);
       assert.ok(contrast.badge >= 4.5, `demo badge meets AA: ${contrast.badge}`);
       assert.match(await style(p, '.messages', 'fontFamily'), /Kinso Inter/);
-      assert.equal(await p.evaluate(() => document.fonts.check('400 13px "Kinso Inter"')), true);
+      // Font availability is checked separately, so a missing local asset does
+      // not hide the interaction, palette and contrast checks below.
       if (phone) assert.ok(initial.buttons.every(b => b.height >= 40), 'thumb targets');
     } else {
       assert.equal(await style(p, '.messages-row', 'borderRadius'), '0px');
       assert.notEqual(await style(p, '.messages-row', 'backgroundColor'), 'rgb(255, 255, 255)');
       assert.doesNotMatch(await style(p, '.messages', 'fontFamily'), /Kinso/);
       assert.equal(await p.locator('.kinso-sharks').count(), 0);
+    }
+    if (brand === 'kinso') {
+      const row = await p.locator('.messages-row').first().elementHandle();
+      await p.emulateMedia({ colorScheme: dark ? 'light' : 'dark' });
+      await p.waitForFunction(expected => document.querySelector('.kinso-sharks').dataset.palette === expected, dark ? 'light' : 'dark');
+      assert.equal(await style(p, '.messages-row', 'backgroundColor'), dark ? 'rgb(255, 255, 255)' : 'rgb(34, 33, 32)');
+      assert.equal(await row.evaluate(n => n === document.querySelector('.messages-row')), true, 'the open Messages view repaints without remounting');
+      await p.emulateMedia({ colorScheme: appearance });
+      await p.waitForFunction(expected => document.querySelector('.kinso-sharks').dataset.palette === expected, appearance);
+      if (dark) {
+        await darkContrast(p);
+        await p.locator('.messages-row').first().hover();
+        assert.equal(await style(p, '.messages-row', 'backgroundColor'), 'rgb(43, 40, 38)');
+        await darkContrast(p);
+        await p.mouse.move(0, 0);
+      }
     }
     await shot(p, `${name}-list`);
     const gmail = p.locator('.messages-chip').filter({ hasText: 'Gmail' });
@@ -129,28 +172,31 @@ for (const brand of ['kinso', 'imperfect']) for (const width of [1920, 390]) {
     assert.equal(await p.locator('.messages-send').isDisabled(), true);
     assert.equal(await p.locator('.messages-field').inputValue(), '');
     if (brand === 'kinso') {
-      assert.equal(await style(p, '.messages-letter', 'backgroundColor'), 'rgb(255, 255, 255)');
+      assert.equal(await style(p, '.messages-letter', 'backgroundColor'), dark ? 'rgb(34, 33, 32)' : 'rgb(255, 255, 255)');
       assert.equal(await style(p, '.messages-letter', 'borderRadius'), '12px');
-      assert.equal(await style(p, '.messages-send', 'backgroundColor'), 'rgb(0, 0, 0)');
-      assert.equal(await style(p, '.messages-field', 'backgroundColor'), 'rgb(255, 255, 255)');
+      assert.equal(await style(p, '.messages-send', 'backgroundColor'), dark ? 'rgb(243, 241, 237)' : 'rgb(0, 0, 0)');
+      assert.equal(await style(p, '.messages-field', 'backgroundColor'), dark ? 'rgb(34, 33, 32)' : 'rgb(255, 255, 255)');
     }
     await fitsAndHits(p);
     await p.locator('.messages-field').focus();
     assert.equal(await p.locator('.messages-field').evaluate(n => document.activeElement === n), true);
-    if (brand === 'kinso') assert.equal(await style(p, '.messages-field', 'boxShadow'), 'rgb(0, 0, 0) 0px 0px 0px 1px');
+    if (brand === 'kinso') assert.equal(await style(p, '.messages-field', 'boxShadow'), `${dark ? 'rgb(243, 241, 237)' : 'rgb(0, 0, 0)'} 0px 0px 0px 1px`);
+    if (brand === 'kinso' && dark) await darkContrast(p);
     await shot(p, `${name}-mail-composer`);
     if (await p.locator('.messages-back').isVisible()) await p.locator('.messages-back').click();
     const chat = list.conversations.find(c => c.kind === 'chat');
     await p.locator(`.messages-row[data-key="${chat.key}"]`).click();
     await p.locator('.messages-bubble').first().waitFor();
     assert.equal(await p.locator('.messages-send').isDisabled(), true);
-    await fitsAndHits(p); await shot(p, `${name}-chat-composer`);
+    await fitsAndHits(p);
+    if (brand === 'kinso' && dark) await darkContrast(p);
+    await shot(p, `${name}-chat-composer`);
     if (brand === 'kinso') {
       // A fresh session keeps Noah’s chosen pale grid renderer, including its quiet
       // reduced-motion still. Do not send a prompt or change panel geometry.
       await p.emulateMedia({ reducedMotion: 'reduce' });
       await p.evaluate(() => harness.newTab());
-      await p.waitForSelector('#entry-terminal.fresh');
+      await p.waitForSelector('#entry-terminal.choosing');
       await p.waitForFunction(() => document.querySelector('.kinso-sharks')?.width > 0);
       const palette = await p.evaluate(() => {
         const c = document.querySelector('.kinso-sharks'), ctx = c.getContext('2d'), counts = new Map();
@@ -159,7 +205,7 @@ for (const brand of ['kinso', 'imperfect']) for (const width of [1920, 390]) {
         }
         return [...counts].sort((a,b) => b[1] - a[1])[0][0];
       });
-      assert.equal(palette, '252,252,251,255', 'opaque light canvas ground, not a CSS-only colour illusion');
+      assert.equal(palette, dark ? '11,12,15,255' : '252,252,251,255', 'the opaque canvas ground follows the appearance, not a CSS-only illusion');
       await shot(p, `${name}-fresh-still`);
     }
     assert.ok(calls.every(([method, path]) => method === 'GET' && /^\/inbox\/(list|thread|search)(\?|$)/.test(path)), JSON.stringify(calls));
@@ -168,3 +214,11 @@ for (const brand of ['kinso', 'imperfect']) for (const width of [1920, 390]) {
     await writeFile(join(shots, `${name}-checks.json`), JSON.stringify({ initial, calls, faults: f.errors, readonly: true }, null, 2));
   });
 }
+
+test('Kinso’s local Inter font is available', async t => {
+  const f = await harnessFixture({ productOrigin: 'https://computer.kinso.computer', themeCSS,
+    messages: [{ role: 'assistant', content: 'An invented font check.' }] });
+  t.after(() => f.close());
+  await f.page.evaluate(() => document.fonts.ready);
+  assert.equal(await f.page.evaluate(() => document.fonts.check('400 13px "Kinso Inter"')), true);
+});

@@ -48,6 +48,7 @@ test('a new session asks what is wanted over its bar, names the harness, and mak
   try {
     assert.equal(await page.evaluate(() => document.documentElement.dataset.brand), 'imperfect');
     assert.equal(await page.locator('.kinso-sharks').count(), 0, 'imperfect has no sea');
+    assert.equal(await page.locator('#entry-input').getAttribute('placeholder'), 'Message');
     const foot = await barMiddle(page);
     await page.evaluate(() => harness.newTab());
     await page.waitForSelector('#entry-terminal.fresh .fresh-question');
@@ -128,7 +129,7 @@ test('the sidebar names sessions without marks', async () => {
   } finally { await f.close(); }
 });
 
-test('Kinso\'s window: its name from the address for the tab, its mark, and sharks only while a session is fresh', async () => {
+test('Kinso\'s window: its name from the address for the tab, its mark, and sharks throughout the conversation', async () => {
   const f = await freshFixture(); const { page } = f;
   try {
     const origin = new URL(page.url()).origin;
@@ -144,30 +145,115 @@ test('Kinso\'s window: its name from the address for the tab, its mark, and shar
     await mount('');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.brand), 'kinso');
     assert.equal(await page.locator('#entry-pi-label .brand-mark').getAttribute('data-brand'), 'kinso');
-    assert.equal(await page.locator('#entry-input').getAttribute('placeholder'), 'Ask Kinso anything…');
+    assert.equal(await page.locator('#entry-input').getAttribute('placeholder'), 'what do you want?');
+    assert.equal(await page.locator('.fresh-question').count(), 0);
     const sea = () => page.evaluate(() => Number(getComputedStyle(document.querySelector('.kinso-sharks')).opacity));
-    assert.equal(await sea(), 0, 'no sharks behind a conversation');
+    assert.equal(await sea(), 1, 'sharks behind an existing conversation');
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.evaluate(() => { for (const style of document.querySelectorAll('style')) if (style.textContent.startsWith('#harness-reach')) style.textContent = '#harness-reach{display:none}'; });
     await page.evaluate(() => harness.newTab());
-    await page.waitForSelector('#entry-terminal.fresh');
+    await page.waitForSelector('#entry-terminal.choosing');
+    assert.equal(await page.locator('.fresh-question').count(), 0);
+    assert.equal(await page.locator('#entry-input').getAttribute('placeholder'), 'what do you want?');
     await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('.kinso-sharks')).opacity) === 1);
+    await page.evaluate(() => { for (const a of document.getAnimations()) if (Number.isFinite(a.effect?.getComputedTiming().endTime)) a.finish(); });
     const geometry = await page.evaluate(() => {
       const input = document.querySelector('#entry-input-zone').getBoundingClientRect(), status = document.querySelector('.entry-status').getBoundingClientRect();
       const model = document.querySelector('#entry-pi-label').getBoundingClientRect(), send = document.querySelector('#entry-send').getBoundingClientRect();
       return { width: input.width, height: status.bottom - input.top, modelLeft: model.left, sendLeft: send.left, modelTop: model.top, statusTop: status.top };
     });
-    assert.equal(geometry.width, 618);
-    assert.equal(geometry.height, 88);
+    assert.equal(geometry.width, 720);
+    assert.equal(geometry.height, 63);
     assert.ok(geometry.modelLeft < geometry.sendLeft && geometry.modelTop >= geometry.statusTop, 'model and harness bottom left, send right');
     await page.locator('#entry-input').fill('hello');
     await page.keyboard.press('Enter');
     await page.waitForSelector('#entry-output .gui-typing');
     assert.match(await page.locator('#entry-output .gui-typing .gui-typing-who').textContent(), /^Kinso is typing…$/);
-    await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('.kinso-sharks')).opacity) === 0);
+    assert.equal(await sea(), 1, 'sharks remain behind the first output');
+    assert.equal(await page.locator('#entry-terminal.fresh-move').count(), 0);
+    assert.equal(await page.locator('.fresh-question').count(), 0);
     assert.deepEqual(f.errors, []);
   } finally { await f.close(); }
 });
+
+for (const reduced of [false, true]) test(`Kinso starts empty at the foot with a live or still sea (${reduced ? 'reduced motion' : 'motion'})`, async () => {
+  const f = await freshFixture({ productOrigin: 'https://computer.kinso.computer', messages: [],
+    snapshot: { tabs: [{ id: 'tab-a', sessionId: 'thread-a', focused: true, agent: 'pi', prompt: '', status: 'idle' }], harnesses: HARNESSES } });
+  const { page } = f;
+  try {
+    await page.emulateMedia({ reducedMotion: reduced ? 'reduce' : 'no-preference', colorScheme: 'dark' });
+    assert.equal(await page.locator('html').getAttribute('data-kinso-theme'), 'auto');
+    await page.waitForFunction(() => document.querySelector('.kinso-sharks')?.dataset.palette === 'dark');
+    const sea = await page.locator('.kinso-sharks').elementHandle();
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.waitForFunction(() => document.querySelector('.kinso-sharks')?.dataset.palette === 'light');
+    assert.equal(await sea.evaluate(n => n === document.querySelector('.kinso-sharks')), true);
+    const before = await page.locator('#entry-input-zone').boundingBox();
+    assert.equal(await page.locator('.fresh-question, #entry-terminal.fresh, #entry-terminal.fresh-move').count(), 0);
+    assert.equal(await page.locator('#entry-input').getAttribute('placeholder'), 'what do you want?');
+    await page.waitForFunction(() => document.querySelector('.kinso-sharks')?.width > 0);
+    await page.locator('#entry-input').fill('first words');
+    await page.keyboard.press('Enter');
+    await page.locator('#entry-output .gui-typing').waitFor();
+    assert.deepEqual(await page.locator('#entry-input-zone').boundingBox(), before);
+    assert.equal(await page.locator('.kinso-sharks').evaluate(n => getComputedStyle(n).opacity), '1');
+    assert.deepEqual(f.errors, []);
+  } finally { await f.close(); }
+});
+
+for (const layout of ['focus', 'scrolling', 'dwindle']) for (const width of [1920, 390]) {
+  test(`Kinso's bar stays at the foot through the first send (${layout}, ${width})`, async () => {
+    const f = await freshFixture({ layout, viewport: { width, height: 900 }, productOrigin: 'https://computer.kinso.computer' });
+    const { page } = f;
+    try {
+      await page.addStyleTag({ content: 'html body #entry-terminal { height: 100vh !important; }' });
+      // The fine-pointer narrow window opens with its sidebar over the bar.
+      // Fold it as a person would before checking conversation hit targets.
+      if (layout === 'focus' && width === 390) await page.locator('.session-rail-fold').click();
+      await page.evaluate(() => { for (const a of document.getAnimations()) if (Number.isFinite(a.effect?.getComputedTiming().endTime)) a.finish(); });
+      await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+      const rect = () => { const r = document.querySelector('#entry-input-zone').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; };
+      const before = await page.evaluate(rect);
+      await page.evaluate(() => {
+        window.barFrames = []; window.barMoving = false; window.sampleBar = true;
+        window.originalSea = document.querySelector('.kinso-sharks');
+        const sample = () => {
+          const r = document.querySelector('#entry-input-zone').getBoundingClientRect();
+          barFrames.push([r.x, r.y, r.width, r.height]);
+          barMoving ||= document.querySelector('#entry-terminal').classList.contains('fresh-move');
+          if (sampleBar) requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      });
+      await page.evaluate(() => harness.newTab());
+      await page.waitForSelector('#entry-terminal.choosing');
+      assert.deepEqual(await page.evaluate(rect), before, 'fresh starts at the conversation position');
+      assert.equal(await page.locator('.fresh-question').count(), 0);
+      assert.equal(await page.locator('#entry-input').getAttribute('placeholder'), 'what do you want?');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'entry-input');
+      await page.locator('#entry-input').fill('hello');
+      await page.keyboard.press('Enter');
+      await page.waitForSelector('#entry-output .gui-typing');
+      await page.waitForTimeout(650);
+      const frames = await page.evaluate(() => { sampleBar = false; return barFrames; });
+      for (const frame of frames) assert.deepEqual(frame, before, 'no intermediate frame moves or resizes the bar');
+      assert.equal(await page.evaluate(() => barMoving), false);
+      const layers = await page.evaluate(() => {
+        const canvas = document.querySelector('.kinso-sharks'), output = document.querySelector('#entry-output');
+        const input = document.querySelector('#entry-input'); const r = input.getBoundingClientRect();
+        return { same: canvas === originalSea, opacity: getComputedStyle(canvas).opacity,
+          z: Number(getComputedStyle(canvas).zIndex), outputZ: Number(getComputedStyle(output).zIndex),
+          events: getComputedStyle(canvas).pointerEvents, inputHit: document.elementFromPoint((Math.max(0, r.x) + Math.min(r.right, innerWidth)) / 2, r.y + r.height / 2)?.id,
+          lift: document.querySelector('#entry-terminal').style.getPropertyValue('--fresh-lift') };
+      });
+      assert.equal(layers.same, true); assert.equal(layers.opacity, '1'); assert.equal(layers.events, 'none');
+      assert.ok(layers.z < layers.outputZ, 'sea is below the messages');
+      assert.equal(layers.inputHit, 'entry-input', 'sea never takes input clicks');
+      assert.equal(layers.lift, '', 'Kinso never measures the old question or bar lift');
+      assert.deepEqual(f.errors, []);
+    } finally { await f.close(); }
+  });
+}
 
 test('the send button makes one local session and sends once, even if pressed again while creation waits', async () => {
   const f = await freshFixture(); const { page } = f;

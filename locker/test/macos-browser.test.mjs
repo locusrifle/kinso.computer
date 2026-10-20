@@ -1,13 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
 import { launchChromium } from '../../tools/test-browser.mjs';
 import { macosLaunch } from './fixtures/macos-launch.mjs';
+import { visibleCursor } from './fixtures/visible-cursor.mjs';
 
 test('macOS website lock refuses with no message on screen, clears, then unlocks to audible QuickTime and continues the actual build', async () => {
   const browser = await launchChromium({ headless: true, args: ['--no-sandbox', '--autoplay-policy=document-user-activation-required'] });
   let f;
   try {
-    f = await macosLaunch(browser); await f.lock();
+    f = await macosLaunch(browser);
+    await visibleCursor(f.page, 'imperfect-opener');
+    assert.equal(await f.page.locator('[data-menu="shop"]').count(), 1, 'imperfect keeps its Shop menu');
+    await f.lock();
+    await visibleCursor(f.page, 'imperfect-lock');
     assert.equal((await f.state()).phase, 'ready');
     assert.equal(await f.page.locator('.macos-name').textContent(), 'imperfect');
     await f.page.locator('#password').fill('refused'); await f.page.getByRole('button', { name: 'Unlock', exact: true }).click();
@@ -23,10 +29,19 @@ test('macOS website lock refuses with no message on screen, clears, then unlocks
     await f.page.locator('#password').fill('fixture-password'); await f.page.keyboard.press('Enter');
     await f.page.waitForFunction(() => window.__launch().phase === 'mac-unlocking');
     await f.step(.3);
+    assert.match(await f.page.locator('.mac-wall').evaluate(el => getComputedStyle(el).backgroundImage), /\/wallpaper\.webp/);
+    assert.match(await f.page.locator('.launch-wallpaper').evaluate(el => getComputedStyle(el).backgroundImage), /\/wallpaper\.webp/);
+    assert.equal(await f.page.locator('#lockScreen').getAttribute('data-departure'), null, 'imperfect still dissolves; it never takes Kinso’s lift');
+    assert.equal(await f.page.locator('#lockScreen').isHidden(), true);
+    if (process.env.KINSO_LIFT_STILLS) {
+      await mkdir(process.env.KINSO_LIFT_STILLS, { recursive: true });
+      await f.page.screenshot({ path: `${process.env.KINSO_LIFT_STILLS}/imperfect-settled.png`, caret: 'hide' });
+    }
     assert.equal(await f.page.locator('[data-window-thumbnail="quicktime"] .shell-thumbnail-app').count(), 1);
     await f.step(.5); await f.page.waitForFunction(() => !!document.querySelector('.genie-mesh'));
     assert.equal(await f.page.locator('.genie-strip').count(), 64);
     await f.step(.7); await f.page.waitForFunction(() => window.__launch().phase === 'quicktime');
+    await visibleCursor(f.page, 'imperfect-quicktime');
     assert.equal((await f.state()).quicktime.muted, false); assert.equal((await f.state()).quicktime.paused, false);
     assert.equal(await f.page.locator('.quicktime .shell-titlebar').textContent(), 'kinso-variations.mp4');
     assert.equal(await f.page.locator('#curtain').isVisible(), false);
@@ -36,9 +51,12 @@ test('macOS website lock refuses with no message on screen, clears, then unlocks
     await f.page.waitForFunction(() => window.__launch().quicktime.ending);
     await f.step(.7); await f.page.waitForFunction(() => window.__launch().phase === 'mac');
     assert.equal((await f.state()).quicktime.window, 'minimized');
+    assert.equal(await f.page.locator('.mac-build-shield').count(), 1, 'the shield still stops clicks during the build');
+    await visibleCursor(f.page, 'imperfect-build');
     await f.page.locator('#skip').evaluate(el => el.click());
     await f.page.waitForFunction(() => window.__launch().phase === 'demo', null, { timeout: 30000 });
     assert.equal((await f.state()).demoVerified, true);
+    await visibleCursor(f.page, 'imperfect-demo');
     assert.deepEqual(f.errors, []); assert.deepEqual(f.refusals, []);
   } finally { await f?.close(); await browser.close(); }
 });
@@ -52,6 +70,11 @@ test('phone, light appearance and Reduce Motion keep the password usable and omi
     await f.page.waitForFunction(() => window.__launch().phase === 'ready'); await f.step(.2);
     assert.equal((await f.state()).lock.unlocked, false);
     await f.page.setViewportSize({ width: 390, height: 420 });
+    // visualViewport applies its keyboard-height layout on the following resize frame.
+    await f.page.waitForFunction(() => {
+      const field = document.querySelector('#password').getBoundingClientRect();
+      return field.y > 150 && field.bottom < 420;
+    });
     const field = await f.page.locator('#password').boundingBox(); assert.ok(field.y > 150 && field.y + field.height < 420);
     await f.page.locator('#password').fill('fixture-password'); await f.page.keyboard.press('Enter');
     await f.page.waitForFunction(() => window.__launch().phase === 'demo', null, { timeout: 30000 });

@@ -15,7 +15,7 @@
 .mac-cursor { position: absolute; left: 0; top: 0; width: 17px; height: 23px; z-index: 1202; pointer-events: none; will-change: translate; }
 .mac-ghost { position: absolute; z-index: 1201; display: block; pointer-events: none; will-change: translate; object-fit: contain; }
 .mac-consumed, .dock-slot.consumed { display: none !important; }
-.mac-build-shield { position: absolute; inset: 25px 0 0; z-index: 950; cursor: none; }
+.mac-build-shield { position: absolute; inset: 25px 0 0; z-index: 950; }
 .curtain { position: fixed; inset: 0; background: #000; box-shadow: 0 30px 90px 30px #000b; pointer-events: none; }
 body[data-curtain] :is(#introScreen, #filmScreen, #curtain) { transition: transform var(--rise-ms, 1500ms) cubic-bezier(.65, 0, .25, 1); will-change: transform; }
 body[data-curtain="up"] :is(#introScreen, #filmScreen, #curtain) { transform: translateY(calc(-100% - 140px)); }

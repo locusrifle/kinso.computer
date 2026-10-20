@@ -104,7 +104,6 @@ export function mountGueyPi({ hooks = {} } = {}) {
 	harnessCaption.className = 'entry-harness-name';
 	modelName.replaceChildren(brandMark(), modelCaption, document.createTextNode(' '), harnessCaption);
 	let socket = null, state = null;
-	let sharks = null; // Kinso's window: the sea behind a fresh session (kinso-sharks.js)
 	let usageView = null;
 	// Messages (messages.js) and its window, once made.
 	let messages = null, messagesWin = null;
@@ -809,7 +808,8 @@ export function mountGueyPi({ hooks = {} } = {}) {
 	async function askMachines() {
 		try {
 			const data = await (await fetch('/machines.json', { cache: 'no-store' })).json();
-			const previousMachine = machineRows.find(machine => machine.self)?.id;
+			// Compared as hereOwner() gives it ('' when none is ours), so an unchanged inventory says nothing again.
+			const previousMachine = hereOwner();
 			machineRows = data.machines ?? [];
 			// The socket can open before inventory. Declare our computer once
 			// it is known, rather than leaving its close audit unnamed.
@@ -1083,10 +1083,9 @@ export function mountGueyPi({ hooks = {} } = {}) {
 	// Safari's sidebars hold them. What it reads from the browser, Files and
 	// the windows, once they exist (sidebarHooks, set below).
 	let sidebarHooks = null, historyAll = false, historyOwner = null, historyTried = 0;
-	// Settings, at the sidebar's foot over the line above usage: where models
-	// and providers are signed in to and out of, the themes, and the keys
-	// (settings.js).
-	let settings = null, settingsWin = null, usageWin = null;
+	// Settings: after Messages for Kinso, otherwise at the foot above usage.
+	// Models and providers, the themes, and the keys (settings.js).
+	let settings = null, settingsWin = null, usageWin = null, railSettings = null;
 	function settingsButton() {
 		const button = el('button', null, 'session-rail-settings');
 		button.type = 'button';
@@ -1391,7 +1390,15 @@ export function mountGueyPi({ hooks = {} } = {}) {
 			list.append(agents, past);
 			sessionRail.replaceChildren(heading, list);
 		}
-		if (railFooter) sessionRail.append(railFooter);
+		if (railFooter) {
+			const list = brand.id === 'kinso' && sessionRail.querySelector('.session-rail-sidebar');
+			if (list) {
+				const section = el('div', null, 'session-rail-settings-section');
+				section.append(railSettings);
+				list.append(section);
+			} else railFooter.prepend(railSettings);
+			sessionRail.append(railFooter);
+		}
 	}
 
 	// The windows (windows.js): the conversation is the first, Workbench is
@@ -1421,12 +1428,12 @@ export function mountGueyPi({ hooks = {} } = {}) {
 		input.focus({ preventScroll: true });
 	}
 	const middle = terminal.querySelector('.entry-screen');
-	// A fresh session's question, over its input bar (paintFresh).
-	const freshQuestion = el('h1', 'what do you want?', 'fresh-question');
-	middle.append(freshQuestion);
-	// The bar stays where it belongs as the window or the words in it change size.
-	new ResizeObserver(() => { if (terminal.classList.contains('fresh')) placeFresh(); }).observe(terminal);
-	new ResizeObserver(() => { if (terminal.classList.contains('fresh')) placeFresh(); }).observe(byId('entry-input-zone'));
+	// Kinso asks in the placeholder; its bar stays at the foot from the start.
+	if (brand.id !== 'kinso') {
+		middle.append(el('h1', 'what do you want?', 'fresh-question'));
+		new ResizeObserver(() => { if (terminal.classList.contains('fresh')) placeFresh(); }).observe(terminal);
+		new ResizeObserver(() => { if (terminal.classList.contains('fresh')) placeFresh(); }).observe(byId('entry-input-zone'));
+	}
 	const wm = mountWindows({ conversation, panel: middle, keys: conversationKeys, held: keysHeld,
 		restoredOrder: restoredView?.order ?? (restoredView?.windows ? ['conversation', ...restoredView.windows.map(win => win.kind)] : []),
 		// Only this version's reloads may restore a layout; older choices
@@ -1440,12 +1447,10 @@ export function mountGueyPi({ hooks = {} } = {}) {
 			paintSessionRail();
 		},
 	});
-	// The sea fills the shared strip, including under its floating right panel;
-	// the glow stays with the question, without moving or widening the middle.
-	if (brand.id === 'kinso') sharks = mountSharks({ host: middle, canvasHost: middle.parentElement, avoid: () => {
-		const bar = barBox(true), shown = terminal.classList.contains('fresh');
-		const question = shown ? freshQuestion.getBoundingClientRect() : null;
-		return [bar, question].filter(box => box && box.width && box.height);
+	// The sea fills the frame; only the conversation gets a quiet veil.
+	if (brand.id === 'kinso') mountSharks({ host: middle, canvasHost: terminal, avoid: () => {
+		const bar = barBox(true);
+		return bar?.width && bar.height ? [bar] : [];
 	} });
 	// Hardware controls share the right panel; they never replace a conversation.
 	let systemWin = null;
@@ -1758,6 +1763,8 @@ export function mountGueyPi({ hooks = {} } = {}) {
 	const FRESH_MOVE_MS = 420;
 	let freshMoveTimer = 0;
 	function paintFresh() {
+		// Kinso's fresh session has the same layout as its conversation, always.
+		if (brand.id === 'kinso') return;
 		const fresh = freshView(), was = terminal.classList.contains('fresh');
 		// Sent: the question fades, and the input bar resizes and glides down
 		// to its place while the conversation appears (imperfect.css). Only
@@ -1769,7 +1776,6 @@ export function mountGueyPi({ hooks = {} } = {}) {
 		}
 		terminal.classList.toggle('fresh', fresh);
 		if (fresh) placeFresh();
-		sharks?.show(fresh);
 	}
 	// Where the input bar sits in a fresh session: a little under the middle of
 	// the conversation's height, the question over it. Measured from the bar's
@@ -1796,7 +1802,6 @@ export function mountGueyPi({ hooks = {} } = {}) {
 		const lift = Math.min(0, Math.round(want - bar.top));
 		terminal.style.setProperty('--fresh-lift', `${lift}px`);
 		middle.style.setProperty('--fresh-bar-top', `${Math.round(bar.top + lift - screenTop)}px`);
-		middle.style.setProperty('--fresh-question-width', `${screen.width}px`);
 	}
 	let renderedSessionId = null;
 	let guiTop = 0;
@@ -1819,8 +1824,7 @@ export function mountGueyPi({ hooks = {} } = {}) {
 			transcriptScroller.latest();
 			return;
 		}
-		// A fresh session is its question (freshQuestion, over the input bar);
-		// there is nothing of it to draw here.
+		// Nothing has been asked in a fresh session yet.
 		if (fresh) { renderedSessionId = null; place([]); return; }
 		if (renderedSessionId !== editorKey(state)) {
 			renderedSessionId = editorKey(state);
@@ -2605,7 +2609,8 @@ export function mountGueyPi({ hooks = {} } = {}) {
 		railFooter = el('div', null, 'session-rail-foot');
 		usageView.summary.classList.add('session-rail-usage');
 		usageView.summary.addEventListener('click', railChosen);
-		railFooter.append(settingsButton(), usageView.summary);
+		railSettings = settingsButton();
+		railFooter.append(railSettings, usageView.summary);
 		railLook = '';
 		paintSessionRail();
 		dock.addEventListener('mousedown', event => { if (document.activeElement === input) event.preventDefault(); });
@@ -2978,7 +2983,7 @@ export function mountGueyPi({ hooks = {} } = {}) {
 		input.parentNode.insertBefore(wrap, input);
 		wrap.append(input);
 		// Shown only where the cursor is the system's own (focus.css).
-		if (!input.placeholder) input.placeholder = brand.id === 'imperfect' ? 'Message' : `Ask ${brand.agent} anything…`;
+		if (!input.placeholder) input.placeholder = brand.id === 'kinso' ? 'what do you want?' : 'Message';
 		caretMirror = el('div', null, 'entry-caret-mirror');
 		caretMirror.setAttribute('aria-hidden', 'true');
 		wrap.append(caretMirror);

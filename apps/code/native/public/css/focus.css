@@ -364,14 +364,14 @@ body.imperfect #entry-terminal > #session-rail > .session-rail-foot { display: n
 body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) > .session-rail-foot {
   display: flex; flex-direction: column; gap: 4px; flex: none; margin: 0 10px; padding: 2px 0 0;
 }
-body.imperfect .session-rail-foot > .session-rail-settings {
+body.imperfect #session-rail .session-rail-settings {
   appearance: none; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px;
   border: 0; border-radius: var(--radius-s); background: none;
   color: var(--label); font: var(--text)/1 var(--ui); text-align: left; cursor: default;
 }
-body.imperfect .session-rail-foot > .session-rail-settings > svg { width: 15px; height: 15px; color: var(--label-2); flex: none; }
-body.imperfect .session-rail-foot > .session-rail-settings:hover,
-body.imperfect .session-rail-foot > .session-rail-settings[aria-expanded="true"] { background: var(--fill-2); }
+body.imperfect #session-rail .session-rail-settings > svg { width: 15px; height: 15px; color: var(--label-2); flex: none; }
+body.imperfect #session-rail .session-rail-settings:hover,
+body.imperfect #session-rail .session-rail-settings[aria-expanded="true"] { background: var(--fill-2); }
 body.imperfect .session-rail-foot > .session-rail-usage {
   appearance: none; display: grid; grid-template-columns: auto minmax(30px, 1fr) auto auto; align-items: center; gap: 7px 8px;
   width: 100%; min-height: 0; margin: 0; padding: 12px 8px 12px;
@@ -539,7 +539,7 @@ body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:
    window's foot (Noah): no space between them, nor under them. */
 body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) > .session-rail-foot { margin: 0; gap: 0; }
 body.imperfect #entry-terminal.focus-layout > #session-rail:not(.collapsed) { padding-bottom: 0; }
-body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) > .session-rail-foot > .session-rail-settings { border-radius: 0; padding: 0 14px 0 20px; }
+body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) .session-rail-settings { border-radius: 0; padding: 0 14px 0 20px; }
 body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed) > .session-rail-foot > .session-rail-usage { padding: 12px 14px 12px 20px; }
 
 /* ==== one column ========================================================= */

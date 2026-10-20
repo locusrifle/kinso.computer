@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { access, readFile, readdir } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 
@@ -159,6 +160,20 @@ test('the standalone Shop uses external assets without Mac dependencies, popups 
   assert.doesNotMatch(html, /<style\b|\sstyle\s*=|\son\w+\s*=|<iframe\b/i);
   assert.doesNotMatch(html + script, /mac\/|mac:shop|createShellWindow|window\.open\s*\(|\/shop\/code\/status|setInterval\s*\(/, 'the actual page is not the removed Mac storefront and never waits on popup payment polling');
   assert.match(script, /location\.assign\(/, 'Stripe checkout navigates this same browser tab');
+});
+
+test('Tahlia’s photograph belongs only to Kinso’s desktop; imperfect keeps its original night bytes and crop', async () => {
+  const { VARIANTS } = await import('../../website/variant.mjs');
+  assert.match(VARIANTS.kinso.wallpaper, /\/mac\/wallpaper-kinso\.webp$/);
+  assert.match(VARIANTS.imperfect.wallpaper, /\/mac\/wallpaper\.webp$/);
+  assert.equal(createHash('sha256').update(await readFile(join(SITE, 'mac/wallpaper.webp'))).digest('hex'),
+    '26cf6dece7cc62565b673afee115cccaa1df8717f4bd6172d3793c21455824d4');
+  // Apple's, so never in this source: git ignores it, and where a copy has it, it is a WebP.
+  assert.match(await readFile(join(SITE, '../.gitignore'), 'utf8'), /^website\/mac\/wallpaper-kinso\.webp$/m);
+  const photo = await readFile(join(SITE, 'mac/wallpaper-kinso.webp')).catch(() => null);
+  if (photo) assert.equal(photo.subarray(8, 12).toString(), 'WEBP');
+  assert.match(await page('mac/desktop.css'), /background: url\('wallpaper.webp'\) center \/ cover/);
+  assert.match(await page('macos/wallpaper.css'), /background: url\('\.\.\/mac\/wallpaper.webp'\) center \/ cover/);
 });
 
 test('the Mac, its phone, the lock\'s wallpaper and the Shop are always dark: there is no light mode', async () => {

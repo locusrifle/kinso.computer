@@ -6,6 +6,7 @@
 // change; what runs is imperfect either way. Where nothing names a brand,
 // the copy's own default does (brand-default.js: Kinso's repository says kinso).
 import fallback from './brand-default.js';
+import { applyKinsoTheme } from './kinso-theme.js';
 const BRANDS = Object.freeze({
   imperfect: Object.freeze({ id: 'imperfect', name: 'imperfect', agent: 'Locus' }),
   // Kinso's own logo and type are theirs, never in this source: a computer
@@ -38,6 +39,7 @@ export function applyBrand(doc = globalThis.document, which = brand) {
   if (!doc) return;
   doc.documentElement.dataset.brand = which.id;
   if (which.id !== 'imperfect') doc.title = which.name;
+  if (which.id === 'kinso') applyKinsoTheme(doc);
 }
 
 // The brand's mark beside the model's name, where the harness's was: the

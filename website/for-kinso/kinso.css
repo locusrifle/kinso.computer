@@ -1,4 +1,4 @@
-/* kinso.computer only (site.mjs adds it): the lock's sharks, the film window, the build's subtitles, Code. Mac points,
+/* kinso.computer only (site.mjs adds it): the lock's sharks, the film window, the build's subtitles. Mac points,
    inside the scaled stage, in macOS's own fonts like the rest of the Mac, but for Kinso's name. */
 
 /* Kinso's name is set in their own type, Inter Tight, from the rebuild of their page (git-ignored, served at /kinso/a/:
@@ -9,11 +9,13 @@
 .macos-lock .macos-name, .mac .shell-app-menu.is-main-app, .mac [data-app="kinso"] .shell-dock-label, .kinso-about h1 {
   font-family: 'Kinso Inter Tight', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing: 0; }
 .macos-lock .macos-name, .mac .shell-app-menu.is-main-app { font-weight: 600; }
-/* Only the opener/lock changes ground. The unlocked Mac keeps its own wallpaper. */
+/* The opener and lock keep their sea; the lifted sheet reveals Tahlia's photograph. */
 body[data-company="kinso"] #sky { background: #fcfcfb !important; }
 body[data-company="kinso"] #sky .macos-wallpaper { display: none; }
+body[data-company="kinso"] .macos-lock[data-sheet="true"] { background: #fcfcfb; }
 .kinso-sharks { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
-/* The boot renderer owns the mask/shine; the lock owns only this crossfade envelope. */
+/* The boot renderer owns the draw; the lock only hides the logo when it leaves. */
+body[data-company="kinso"] .macos-user { top: var(--kinso-field-top, 60%); bottom: auto; }
 body[data-company="kinso"] #wordmark.kinso-lock-word { opacity: var(--kinso-word-opacity, 1) !important; }
 /* Dark ink on the light grid: clock, caret, placeholder, submit and checking all remain legible. */
 body[data-company="kinso"] .macos-lock { color: #30302e; color-scheme: light; }
@@ -47,14 +49,5 @@ body[data-company="kinso"] .macos-check { border-color: #30302e40; border-top-co
   transform: translateX(-50%); border-radius: 8px; background: #000000c2; color: #fff; text-align: center; pointer-events: none;
   font: 500 22px/1.36 -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif; letter-spacing: -.1px; text-wrap: balance;
   box-shadow: 0 6px 24px #0005; }
-
-/* Code in the menu bar, lit while it is named, and its window: one command to copy. */
-.mac .shell-menu-trigger.is-glowing { background: #ffffff2e; box-shadow: 0 0 0 .5px #ffffff80, 0 0 16px 3px #ffffffa0; animation: kinso-glow 1.4s ease-in-out infinite; }
-@keyframes kinso-glow { 50% { box-shadow: 0 0 0 .5px #ffffff50, 0 0 7px 1px #ffffff60; } }
-.shell-code-window .shell-body { padding: 18px 20px; }
-.shell-code p { margin: 0 0 14px; color: var(--win-ink); }
-.shell-code-line { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; border-radius: 7px; background: #00000059; box-shadow: inset 0 0 0 .5px #ffffff1f; }
-.shell-code-line code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 13px/1.5 ui-monospace, Menlo, monospace; color: #f2f2f7; user-select: all; }
-.mac .shell-code-copy { flex: none; padding: 4px 12px; border-radius: 5px; background: var(--button-bg); color: var(--button-ink); box-shadow: inset 0 0 0 .5px var(--button-edge); font-size: 13px; cursor: default; }
-
-@media (prefers-reduced-motion: reduce) { .mac .shell-menu-trigger.is-glowing { animation: none; } }
+/* The logo's still copy on the lifting sheet (lock-sharks.mjs cover), where the live one stood. */
+.kinso-sheet-logo { position: absolute; display: block; pointer-events: none; }

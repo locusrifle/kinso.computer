@@ -239,6 +239,7 @@ test('launch config: no film for now (the v8 trailer is archived), 10 s preload,
   assert.equal(config.cuesUrl, undefined, 'no hyperdrive cues without a film');
   assert.equal(config.unlockMs, 600); assert.equal('powerMs' in config, false); assert.equal(config.scrollHint, true); assert.equal(config.hintAfterMs, 4000);
   assert.equal(fadeDuration(true, config.unlockMs), 0);
+  assert.deepEqual(config.kinsoUnlock, { fadeMs: 300, liftMs: 700, fadeEase: [0, 0, .58, 1], liftEase: [.2, .8, .2, 1] });
   assert.equal(config.preloadAfterS, 10); assert.equal(config.preloadAheadS, 15);
   assert.equal(config.handoffMs, 1200); assert.equal(config.fadeMs, 650); assert.equal(config.demoTimeoutMs, 15000);
   assert.equal(fadeDuration(true, config.handoffMs), 0); assert.equal(fadeDuration(false, config.handoffMs), 1200);
@@ -404,6 +405,7 @@ async function parentHarness({ reduced = false, film = false, site = 'imperfect'
     createMac: options => { callbacks = options; return mac; }, initShell() {}, initShop(options) { shopOptions = options; }, setTrash() {}, setDockIcon() {},
     // imperfect.computer's page (website/variant.mjs); kinso.computer's own pieces are never loaded here.
     variant: VARIANTS[site], MACOS,
+    Image: class { decode() { return Promise.resolve(); } },
     createFilmLayer: () => ({ stop() {}, start() {}, state: () => ({}), mode: 'plain' }),
     performance: { now: () => ++now }, matchMedia: () => ({ matches: reduced, addEventListener() {} }),
     location: { href: 'https://imperfect.computer/' },

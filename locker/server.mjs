@@ -497,6 +497,8 @@ export async function createLockerServer(options) {
         if (await sendFile(res, join(publicDir, 'store/kinso'), path.slice('/kinso'.length), { cache: /\.html?$/.test(path) || path.endsWith('/') ? FRESH : LONG })) return;
         return text(res, 404, 'not found\n');
       }
+      // kinso.computer's source, paid for once (/source, its checkout and status: shop.mjs).
+      if (KINSO_HOSTS.includes(requestHost) && await shop.kinso(req, res, url)) return;
       // kinso.computer's install command (variant.mjs): the same rootless script as imperfect.computer/install, cloning
       // Kinso's own repository (github.com/locusrifle/kinso.computer).
       if (req.method === 'GET' && path === '/install' && KINSO_HOSTS.includes(requestHost)) {

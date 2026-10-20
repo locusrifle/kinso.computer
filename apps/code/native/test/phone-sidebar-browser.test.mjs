@@ -3,11 +3,15 @@ import assert from 'node:assert/strict';
 import { launchChromium } from '../../../../tools/test-browser.mjs';
 import { serve } from '../../tools/gui-preview.mjs';
 
+// Pin the primary pointer before Electron's first paint, as harnessFixture
+// does: a touch context alone can leave its fine-pointer layout in place.
+const phoneBrowser = () => launchChromium({ headless: true, args: ['--no-sandbox', '--blink-settings=primaryHoverType=1,availableHoverTypes=1,primaryPointerType=2,availablePointerTypes=2'] });
+
 for (const width of [320, 390, 700]) test(`phone ${width}: the agents are a strip across the top, the list a sheet`, async () => {
   const { server, sockets, port } = await serve(':root { --pi-accent: #4f8cff; }');
   const calls = [];
   sockets.on('connection', socket => socket.on('message', raw => calls.push(JSON.parse(raw))));
-  const browser = await launchChromium({ headless: true, args: ['--no-sandbox'] });
+  const browser = await phoneBrowser();
   try {
     const page = await browser.newPage({ viewport: { width, height: 844 }, isMobile: true, hasTouch: true });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -26,6 +30,8 @@ for (const width of [320, 390, 700]) test(`phone ${width}: the agents are a stri
     });
     // Folded: a strip of marks across the top of the screen, above the work.
     const strip = await geometry();
+    assert.equal(await rail.evaluate(n => getComputedStyle(n).backdropFilter), 'none', 'imperfect keeps its plain strip');
+    assert.equal(await page.locator('.kinso-sharks').count(), 0);
     assert.ok(strip.top === 0 && Math.abs(strip.width - strip.full) < 1, JSON.stringify(strip));
     assert.ok(strip.height === 52 && strip.below, JSON.stringify(strip));
     assert.ok(Math.abs(strip.screen - strip.full) < 1 && !strip.overflow, JSON.stringify(strip));
@@ -36,6 +42,7 @@ for (const width of [320, 390, 700]) test(`phone ${width}: the agents are a stri
     // Unfolded: the whole list over the work, Settings and usage at its foot.
     await page.getByRole('button', { name: 'show the agents', exact: true }).tap();
     const sheet = await geometry();
+    assert.equal(await rail.evaluate(n => getComputedStyle(n).backdropFilter), 'none', 'imperfect keeps its plain sheet');
     assert.ok(Math.abs(sheet.width - sheet.full) < 1 && sheet.height > 600 && !sheet.overflow, JSON.stringify(sheet));
     // Open tabs and history share subtitle styling, but are separate groups.
     assert.deepEqual(await rail.locator('.session-rail-agents .session-rail-asked').allTextContents(), [
@@ -75,7 +82,7 @@ test('phone: a session is swiped away like a notification, and the fold sits at 
   const { server, sockets, port } = await serve(':root { --pi-accent: #4f8cff; }');
   const calls = [];
   sockets.on('connection', socket => socket.on('message', raw => calls.push(JSON.parse(raw))));
-  const browser = await launchChromium({ headless: true, args: ['--no-sandbox'] });
+  const browser = await phoneBrowser();
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     const errors = []; page.on('pageerror', error => errors.push(error.message));

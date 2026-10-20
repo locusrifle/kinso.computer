@@ -19,7 +19,7 @@ const wifi = svg('<g fill="none" stroke="currentColor" stroke-width="1.7" stroke
 const battery = svg('<rect x="1" y="5" width="19" height="10" rx="2" fill="none" stroke="currentColor" opacity=".6"/><rect x="3" y="7" width="15" height="6" rx=".6"/><path d="M22 8v4" stroke="currentColor" stroke-width="2"/>');
 const arrow = '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="M5 10h9m-4-4 4 4-4 4"/></svg>';
 
-export function mountLock({ screen, native = false, identity = LOCK_USER, reduced = matchMedia('(prefers-reduced-motion: reduce)'), clock = motionClock, date = () => new Date(), locale } = {}) {
+export function mountLock({ screen, native = false, identity = LOCK_USER, reduced = matchMedia('(prefers-reduced-motion: reduce)'), clock = motionClock, date = () => new Date(), locale, wakeMs = MACOS.wakeMs, onwake = () => {} } = {}) {
   metrics(); screen.classList.add('macos-lock');
   const content = node('div', 'macos-lock-content'), status = node('div', 'macos-lock-status');
   status.setAttribute('aria-hidden', 'true');
@@ -28,8 +28,11 @@ export function mountLock({ screen, native = false, identity = LOCK_USER, reduce
   status.append(keyboard, network, power);
   const clockBox = node('div', 'macos-lock-clock'), day = node('span', 'macos-date'), time = node('time', 'macos-time');
   clockBox.append(day, time);
-  const user = node('div', 'macos-user'), picture = node('img', 'macos-avatar'), name = node('p', 'macos-name', identity.name);
-  picture.src = identity.picture; picture.alt = ''; picture.draggable = false;
+  const user = node('div', 'macos-user');
+  if (!identity.logo) {
+    const picture = node('img', 'macos-avatar'), name = node('p', 'macos-name', identity.name);
+    picture.src = identity.picture; picture.alt = ''; picture.draggable = false; user.append(picture, name);
+  }
   const form = node(native ? 'div' : 'form'); form.id = native ? 'nativePassword' : 'lock';
   form.setAttribute('aria-label', 'Locked');
   if (!native) { form.autocomplete = 'off'; form.noValidate = true; }
@@ -45,9 +48,10 @@ export function mountLock({ screen, native = false, identity = LOCK_USER, reduce
   placeholder.setAttribute('aria-hidden', 'true'); dots.id = 'dots'; dots.setAttribute('aria-hidden', 'true'); check.setAttribute('aria-hidden', 'true');
   field.append(placeholder, dots, check);
   if (!native) { const submit = node('button', 'macos-submit'); submit.id = 'unlock'; submit.type = 'submit'; submit.setAttribute('aria-label', 'Unlock'); submit.innerHTML = arrow; field.append(submit); }
-  form.append(field); user.append(picture, name, form); content.append(status, clockBox, user); screen.replaceChildren(content);
+  form.append(field); user.append(form); content.append(status, clockBox, user); screen.replaceChildren(content);
   let state = 'idle', count = 0, active = false, appeared = null, wrongAt = null, leavingAt = null, left, timer, raf;
   const duration = () => reduced.matches ? MACOS.reduceMs : MACOS.unlockMs;
+  let departure = null;
   function set(next) { state = next; screen.dataset.state = next; form.dataset.state = next; if (input) input.readOnly = next !== 'idle'; }
   function tickClock() {
     const now = date(), text = clockText(now, locale);
@@ -66,7 +70,10 @@ export function mountLock({ screen, native = false, identity = LOCK_USER, reduce
   function render(now = clock()) {
     if (!active) return;
     const ms = now * 1000;
-    if (appeared !== null) content.style.opacity = String(ease((ms - appeared) / (reduced.matches ? MACOS.reduceMs : MACOS.wakeMs)));
+    if (appeared !== null && leavingAt === null) {
+      const progress = ease((ms - appeared) / (reduced.matches ? MACOS.reduceMs : wakeMs));
+      content.style.opacity = String(progress); onwake(progress);
+    }
     if (wrongAt !== null) {
       const elapsed = ms - wrongAt;
       field.style.transform = `translateX(${shakeAt(elapsed, reduced.matches)}px)`;
@@ -76,9 +83,9 @@ export function mountLock({ screen, native = false, identity = LOCK_USER, reduce
     }
     if (state === 'checking') check.style.transform = `rotate(${reduced.matches ? 0 : ms * .36}deg)`;
     if (leavingAt !== null) {
-      const p = ease((ms - leavingAt) / duration());
+      const p = ease((ms - leavingAt) / (departure?.ms ?? duration()), departure?.curve);
       content.style.opacity = String(1 - p);
-      content.style.transform = reduced.matches ? 'none' : `scale(${1 + (MACOS.unlockScale - 1) * p})`;
+      content.style.transform = reduced.matches || departure?.zoom === false ? 'none' : `scale(${1 + (MACOS.unlockScale - 1) * p})`;
       if (p === 1) { active = false; leavingAt = null; left?.(); left = null; }
     }
   }
@@ -103,8 +110,9 @@ export function mountLock({ screen, native = false, identity = LOCK_USER, reduce
     checking() { wrongAt = null; set('checking'); },
     wrong() { wrongAt = clock() * 1000; set('wrong'); },
     open() { wrongAt = null; set('open'); },
-    leave() {
+    leave(options) {
       if (leavingAt !== null) return Promise.resolve();
+      departure = options;
       input?.blur(); if (input) input.value = ''; wrongAt = null; set('leaving'); leavingAt = clock() * 1000;
       return new Promise(resolve => { left = resolve; });
     },
@@ -112,8 +120,8 @@ export function mountLock({ screen, native = false, identity = LOCK_USER, reduce
   };
 }
 
-export function createLock({ screen, reduced, onsubmit, identity }) {
-  const view = mountLock({ screen, reduced, identity }), { input, form } = view;
+export function createLock({ screen, reduced, onsubmit, identity, wakeMs, onwake }) {
+  const view = mountLock({ screen, reduced, identity, wakeMs, onwake }), { input, form } = view;
   // macOS's arrow submits without taking the field's keyboard focus.
   screen.querySelector('#unlock').addEventListener('pointerdown', event => event.preventDefault());
   input.addEventListener('input', () => { if (view.state === 'idle') view.setCount(input.value.length); });

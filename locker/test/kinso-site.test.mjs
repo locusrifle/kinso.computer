@@ -22,8 +22,18 @@ const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const SITE = join(ROOT, 'website');
 const exists = path => stat(path).then(() => true, () => false);
 
-test('kinso.computer\'s Code menu installs Kinso\'s own repository, not imperfect\'s', () => {
+test('Get yours sells Kinso\'s own source, with no Code menu or command window', async () => {
   assert.equal(VARIANTS.kinso.install, 'curl -fsSL https://kinso.computer/install | sh');
+  assert.equal(VARIANTS.kinso.source.page, '/source');
+  assert.equal(VARIANTS.kinso.menu.last, null);
+  const shell = await readFile(join(SITE, 'mac/shell.mjs'), 'utf8');
+  assert.doesNotMatch(shell, /openCode|glowMenu|shell-code|kinso-source-paid/);
+  assert.match(shell, /variant.menu.last\]\.filter\(Boolean\)/);
+  assert.doesNotMatch(await readFile(join(SITE, 'for-kinso/kinso.css'), 'utf8'), /shell-code|is-glowing/);
+  assert.deepEqual(BEATS.find(beat => beat.name === 'The source'), {
+    name: 'The source', screen: 'The Kinso Computer page in the browser: Get yours.',
+    text: "If you'd like the source, press Get yours on the page. It's thirty-nine dollars, once, and then one command installs it with your own agent.",
+  });
 });
 
 test('the variant is chosen by the address: kinso.computer, or ?for=kinso anywhere; imperfect otherwise', () => {
@@ -47,12 +57,26 @@ test('imperfect.computer keeps its own Dock, steps, lettering and phone; Kinso\'
   assert.equal(plain.for, null); assert.equal(plain.phone, true); assert.equal(plain.lock, null); assert.equal(plain.title, null);
   assert.equal(plain.menu.last, 'Shop');
   const kinso = VARIANTS.kinso;
+  assert.match(plain.wallpaper, /\/mac\/wallpaper\.webp$/);
+  assert.match(kinso.wallpaper, /\/mac\/wallpaper-kinso\.webp$/);
   assert.equal(kinso.name, 'Kinso'); assert.equal(kinso.title, 'Kinso Computer'); assert.equal(kinso.lock.name, 'Kinso');
   assert.deepEqual(kinso.assembly, ['bare', 'claude', 'codex', 'files', 'browser', 'messages', 'done']);
   assert.deepEqual(kinso.dock.map(([id]) => id), ['finder', 'safari', 'claude', 'chatgpt', 'gmail', 'linkedin', 'instagram', 'kinso', 'settings', 'app-store', 'launchpad', 'trash']);
-  assert.equal(kinso.for, 'kinso'); assert.equal(kinso.phone, false); assert.equal(kinso.menu.last, 'Code');
-  // Kinso's own wordmark, served from the git-ignored rebuild of their page; never a file in this source.
-  assert.match(kinso.lettering.src, /^\/kinso\/a\/[0-9a-f]{16}\.png$/);
+  assert.equal(kinso.for, 'kinso'); assert.equal(kinso.phone, false); assert.equal(kinso.menu.last, null);
+  // Kinso's colour logo, served from the git-ignored rebuild; never a file in this source.
+  assert.equal(kinso.lettering.src, '/kinso/a/aa106999c9d67289.png');
+  assert.deepEqual(kinso.lettering.size, [919, 1024]);
+  assert.equal(kinso.lettering.colour, true);
+  assert.deepEqual(kinso.lettering.drawOn, {
+    src: '/kinso/logo-draw.svg?v=kinso-logo-lock-1', timing: '/kinso/logo-draw.json?v=kinso-logo-lock-1',
+  });
+  assert.deepEqual(kinso.lettering.mass, [-0.00547, 0.01372]);
+  const { placeWordmark } = await import('../../website/wordmark.mjs');
+  for (const [w, h] of [[1920, 1080], [390, 844]]) {
+    const [x, y, mw, mh] = placeWordmark(w, h, kinso.lettering);
+    assert.ok(Math.abs((w < h ? mw / w : mh / h) - (w < h ? .36 : .22)) < 1e-9);
+    assert.equal(x + mw / 2, w / 2); assert.equal(y + mh / 2, h / 2);
+  }
   assert.equal(kinso.lettering.stays, true); assert.equal(typeof kinso.lettering.standIn, 'function');
   for (const [id] of kinso.dock.filter(([id]) => id !== 'kinso' && id !== 'trash')) assert.ok(await exists(join(SITE, 'mac/icons', `dock-${id}.webp`)), id);
 });
@@ -100,7 +124,7 @@ test('every step of the build lands on a word that is said in its beat', () => {
   assert.deepEqual([...times].sort((a, b) => a - b), times, 'the apps go in the order they are named');
   assert.deepEqual(DRAGS.map(drag => drag.build).filter(Boolean), ['claude', 'codex', 'files', 'browser', 'messages']);
   assert.ok(cueTime(words, MOMENTS.done) < cueTime(words, MOMENTS.page) && cueTime(words, MOMENTS.page) < cueTime(words, MOMENTS.letGo));
-  assert.ok(cueTime(words, MOMENTS.glow) < cueTime(words, MOMENTS.code));
+  assert.equal(MOMENTS.glow, undefined); assert.equal(MOMENTS.code, undefined);
 });
 
 test('Noah\'s recording drops in: its word timings move every cue, and a pinned beat holds', () => {
@@ -131,9 +155,10 @@ test('Kinso\'s files stay out of this source; the computer\'s own address is nev
   const run = promisify(execFile);
   const tracked = (await run('git', ['ls-files'], { cwd: ROOT, maxBuffer: 1 << 26 })).stdout.split('\n');
   assert.deepEqual(tracked.filter(path => path.startsWith('locker/public/store/kinso/')), []);
+  assert.deepEqual(tracked.filter(path => /logo-draw\.(?:svg|json)$/.test(path)), [], 'client paths and calibration are never vendored');
   assert.deepEqual(tracked.filter(path => /\.woff2?$/.test(path) && path.startsWith('website/for-kinso/')), []);
   const ours = (await readdir(join(SITE, 'for-kinso'))).filter(name => /\.(?:mjs|css)$/.test(name));
-  assert.deepEqual(ours.sort(), ['brand.mjs', 'build.mjs', 'film.mjs', 'kinso.css', 'lock-sharks.mjs', 'narration.mjs', 'script.mjs', 'sharks.mjs', 'site.mjs', 'timeline.mjs']);
+  assert.deepEqual(ours.sort(), ['brand.mjs', 'build.mjs', 'film.mjs', 'kinso.css', 'lock-sharks.mjs', 'logo-lock.mjs', 'narration.mjs', 'script.mjs', 'sharks.mjs', 'site.mjs', 'timeline.mjs']);
   for (const name of ours) {
     const text = await readFile(join(SITE, 'for-kinso', name), 'utf8');
     assert.doesNotMatch(text, /computer\.kinso\.computer|noah\.imperfect\.computer/, `${name} names no computer`);
@@ -150,7 +175,7 @@ test('the locker names kinso.computer\'s front page for Kinso and serves their l
   assert.match(page, /<meta property="og:image" content="https:\/\/kinso\.computer\/kinso\/a\/[0-9a-f]{16}\.png">/);
   assert.match(page, /<meta name="twitter:card" content="summary">/);
   assert.doesNotMatch(page, /<title>imperfect<\/title>|og\.png/);
-  assert.match(page, /launch\.mjs\?v=kinso-install-1/);
+  assert.match(page, /launch\.mjs\?v=kinso-lift-2/);
 
   const publicDir = await mkdtemp(join(tmpdir(), 'kinso-public-'));
   await mkdir(join(publicDir, 'store/kinso/a'), { recursive: true });
@@ -229,10 +254,20 @@ test('every import of a changed module asks for it under one tag, so the page lo
     }
   }
   for (const [target, seen] of tags) assert.equal(seen.size, 1, `${target}: ${[...seen].join(', ')}`);
-  // Kinso's install command changed in variant.mjs: every module on a tagged path to it asks for the new copy.
+  // Every changed module and each tagged path to it asks for the new copy: the lock's lift (launch-config, macos/lock,
+  // macos/launch, lock-sharks, variant's wallpapers) followed through every importer, including the native lock.
   for (const target of ['website/variant.mjs', 'website/wordmark.mjs', 'website/mac/shell.mjs', 'website/boot/sequence.mjs',
-    'website/intro/intro.mjs', 'website/for-kinso/site.mjs', 'website/launch.mjs'])
-    assert.deepEqual([...tags.get(target)], ['kinso-install-1'], target);
-  for (const target of ['website/for-kinso/lock-sharks.mjs', 'website/for-kinso/sharks.mjs'])
-    assert.deepEqual([...tags.get(target)], ['kinso-pale-grid-1'], target);
+    'website/intro/intro.mjs', 'website/intro/goat.mjs', 'website/for-kinso/site.mjs', 'website/launch.mjs',
+    'website/launch-config.mjs', 'website/for-kinso/lock-sharks.mjs', 'website/for-kinso/logo-lock.mjs',
+    'website/macos/launch.mjs', 'website/macos/quicktime.mjs', 'website/macos/lock.mjs'])
+    assert.deepEqual([...tags.get(target)], ['kinso-lift-2'], target);
+  // The logo's own modules are unchanged since they drew it.
+  for (const target of ['website/for-kinso/build.mjs', 'website/for-kinso/film.mjs', 'website/for-kinso/script.mjs', 'website/draw-on.mjs'])
+    assert.deepEqual([...tags.get(target)], ['kinso-logo-lock-1'], target);
+  // The shark engine (swimming, colours, no ink eyes) ships with the lift, so the lock asks for the new copy too.
+  assert.deepEqual([...tags.get('website/for-kinso/sharks.mjs')], ['kinso-lift-2']);
+  assert.match(await readFile(join(SITE, 'for-kinso/site.mjs'), 'utf8'), /kinso\.css\?v=kinso-lift-2/);
+  // The native page is served with website as its base, not from its source directory.
+  assert.match(await readFile(join(ROOT, 'desktop/lock/index.html'), 'utf8'), /lock\.mjs\?v=kinso-lift-2/);
+  assert.match(await readFile(join(SITE, 'index.html'), 'utf8'), /mac\/desktop\.css\?v=kinso-logo-lock-1/);
 });

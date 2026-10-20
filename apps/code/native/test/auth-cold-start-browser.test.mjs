@@ -27,7 +27,10 @@ async function cold(options = {}) {
   await product.addStyleTag({ content: 'html body #entry-terminal { height:100vh !important; }' });
   await product.evaluate(() => document.fonts.ready);
   await product.evaluate(() => { for (const a of document.getAnimations()) if (Number.isFinite(a.effect?.getComputedTiming().endTime)) a.finish(); });
-  await product.locator('.fresh-question').waitFor({ state: 'visible' });
+  if (await product.locator('html').getAttribute('data-brand') === 'kinso') {
+    await product.locator('#entry-input[placeholder="what do you want?"]').waitFor();
+    assert.equal(await product.locator('.fresh-question').count(), 0);
+  } else await product.locator('.fresh-question').waitFor({ state: 'visible' });
   return f;
 }
 const noAuthFlow = f => assert.equal(f.commands.some(c => c.type === 'auth_login' || c.type === 'auth_answer'), false, 'opening sign-in does not start a provider flow');

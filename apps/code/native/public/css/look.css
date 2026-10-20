@@ -49,7 +49,11 @@
 
   --radius-xs: 3px;
   --radius-s: 6px;
+  /* Kinso's window rounds a little differently (css/messages.css): its
+     controls at 8px, its cards and bubbles at 12px. */
+  --radius-m: 8px;
   --radius: 10px;
+  --radius-card: 12px;
   --radius-l: 14px;
   --radius-xl: 18px;
   --radius-pill: 999px;

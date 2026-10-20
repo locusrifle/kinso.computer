@@ -148,6 +148,9 @@ for (const phone of [false, true]) test(`Kinso uses the same utility panel and k
   const f = await fixture(t, phone, true); const { page } = f;
   await page.locator('#entry-input').fill('Kinso unsent draft');
   await settings(page);
+  await page.waitForFunction(() => document.querySelectorAll('.settings-theme').length === 3);
+  assert.deepEqual(await page.locator('.settings-theme-name').allTextContents(), ['Automatic', 'Kinso Light', 'Kinso Dark']);
+  assert.equal(await page.locator('.settings-theme[aria-pressed="true"]').textContent(), 'Automatic');
   await page.screenshot({ path: join(shots, `kinso-settings-${phone ? 'phone' : '1920'}.png`) });
   assert.equal(await page.locator(phone ? '.wm-settings' : '.wm-settings.wm-in-panel').count(), 1);
   await page.getByRole('button', { name: 'Usage and limits', exact: false }).click();

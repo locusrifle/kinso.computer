@@ -62,7 +62,10 @@ for (const phone of [false, true]) test(`${phone ? 'phone waits' : 'local deskto
   });
   let browser;
   try {
-    browser = await launchChromium({ headless: true, args: ['--no-sandbox'] });
+    // A phone's browser is a phone's from its first paint, as harness-page.mjs pins it: the launcher's
+    // fine pointer (a desktop's) can otherwise win the touch emulation race on the first renderer.
+    browser = await launchChromium({ headless: true, args: ['--no-sandbox', ...(phone
+      ? ['--blink-settings=primaryHoverType=1,availableHoverTypes=1,primaryPointerType=2,availablePointerTypes=2'] : [])] });
     const page = await browser.newPage({ viewport: { width: phone ? 390 : 1200, height: 900 }, hasTouch: phone });
     page.setDefaultTimeout(15000);
     await observeProtocol(page);

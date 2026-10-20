@@ -1,7 +1,7 @@
 // Presentation only. The native session-lock keeper consumes ALL keys and authenticates
 // through PAM. Its bridge sends counts/check/results, never a password to this page.
-import { createSequence } from '../../website/boot/sequence.mjs?v=kinso-install-1';
-import { mountLock } from '../../website/macos/lock.mjs?v=sequoia-4';
+import { createSequence } from '../../website/boot/sequence.mjs?v=kinso-lift-2';
+import { mountLock } from '../../website/macos/lock.mjs?v=kinso-lift-2';
 import { MACOS, ease } from '../../website/macos/timings.mjs?v=sequoia-4';
 import { BURST } from '../../website/bootup.mjs';
 

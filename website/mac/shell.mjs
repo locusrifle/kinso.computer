@@ -1,6 +1,6 @@
 // The Mac shell owns window chrome, not the computer document inside it.
 import { runGenie } from '../macos/genie.mjs?v=sequoia-4';
-import { variant } from '../variant.mjs?v=kinso-install-1';
+import { variant } from '../variant.mjs?v=kinso-lift-2';
 export const WINDOW_DEFAULT = Object.freeze({ x: 160, y: 25, width: 1280, height: 796 });
 export const DESKTOP_BAND = Object.freeze({ x: 0, y: 25, width: 1600, height: 796 });
 const geometryStyle = ({ x, y, width, height }) => ({ left: `${x}px`, top: `${y}px`, width: `${width}px`, height: `${height}px` });
@@ -23,9 +23,6 @@ export const setTrash = items => activeShell?.setTrash(items);
 export const markDockConsumed = (id, consumed = true) => activeShell?.markDockConsumed(id, consumed);
 // An app's Dock icon drawn by the page (Kinso's, once its logo has loaded: for-kinso/brand.mjs).
 export const setDockIcon = (id, url) => activeShell?.setIcon(id, url);
-// Code in the menu bar: lit, and its window with the command to copy (the Kinso site's build, for-kinso/build.mjs).
-export const glowMenu = (key, on = true) => activeShell?.glow(key, on);
-export const openCodeWindow = () => activeShell?.openCode();
 export function frameDragAllowed(event, frame, base = globalThis.location?.href) {
   if (!frame || event.source !== frame.contentWindow || event.data?.type !== 'imperfect:window-drag') return false;
   let url;
@@ -222,7 +219,7 @@ export function initShell({ stage, appWindow, window: windowElement, frame, dock
   }
   trigger(menuSide, 'Apple', 'apple', symbols.apple);
   trigger(menuSide, NAME, 'app');
-  for (const name of ['File', 'Edit', 'View', 'Window', 'Help', variant.menu.last]) trigger(menuSide, name, name.toLowerCase());
+  for (const name of ['File', 'Edit', 'View', 'Window', 'Help', variant.menu.last].filter(Boolean)) trigger(menuSide, name, name.toLowerCase());
   for (const [key, label] of [['control', 'Control Centre'], ['wifi', 'Wi-Fi'], ['battery', 'Battery'], ['spotlight', 'Spotlight'], ['siri', 'Siri']]) trigger(statusSide, label, key, symbols[key]);
   const clock = trigger(statusSide, '', 'clock'); clock.classList.add('mac-clock');
   const tick = () => { const date = new Date(); clock.textContent = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(date).replace(',', '') + '  ' + new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date); clock.setAttribute('aria-label', date.toLocaleString()); };
@@ -294,7 +291,6 @@ export function initShell({ stage, appWindow, window: windowElement, frame, dock
     if (key === 'window') return [row('Minimize', '⌘M', () => win?.minimize(), !win), row('Zoom', '', () => win?.zoom(), !win), row('Move & Resize', '›'), row('Tile Window', '›'), separator, row('Bring All to Front', '', () => { for (const w of windows.values()) if (w.state === 'open') w.focus(); }), separator, ...[...windows.values()].map(w => row(`${w === win ? '✓  ' : '    '}${w.title}`, '', () => w.restore()))];
     if (key === 'help') return [row(`${app} Help`), row(variant.menu.help, '', doShop)];
     if (key === 'shop') return [row('Shop imperfect…', '', doShop)];
-    if (key === 'code') return [row('Get the Source…', '', openCode)];
     return [];
   }
   function showMenu(button, key) {
@@ -380,19 +376,6 @@ export function initShell({ stage, appWindow, window: windowElement, frame, dock
     const img = dock.querySelector(`[data-app="${id}"] img`); if (img) img.src = url;
     if (id === APP) main.icon = url;
   }
-  function glow(key, on = true) { menuSide.querySelector(`[data-menu="${key}"]`)?.classList.toggle('is-glowing', on); }
-  // The source, to copy: one command for your own agent (variant.install).
-  function openCode() {
-    const body = make('div', 'shell-code');
-    const line = make('div', 'shell-code-line'), command = make('code', '', variant.install), copy = make('button', 'shell-code-copy', 'Copy');
-    copy.type = 'button';
-    copy.addEventListener('click', () => {
-      Promise.resolve(navigator.clipboard?.writeText(variant.install)).then(() => { copy.textContent = 'Copied'; }, () => { copy.textContent = 'Select and copy'; });
-    });
-    line.append(command, copy);
-    body.append(make('p', '', 'The source for this computer. Paste this into your own agent and it installs it for you.'), line);
-    return open({ id: 'code', title: 'Code', appName: NAME, content: body, className: 'shell-code-window', width: 600, height: 196, x: 500, y: 92 });
-  }
-  activeShell = { stage, windows, open, setTrash: setTrashLocal, markDockConsumed: consume, setIcon, glow, openCode, main, focus, closeMenu, openTrash, openFinder };
+  activeShell = { stage, windows, open, setTrash: setTrashLocal, markDockConsumed: consume, setIcon, main, focus, closeMenu, openTrash, openFinder };
   main.focus(); return activeShell;
 }

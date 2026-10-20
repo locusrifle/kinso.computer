@@ -25,28 +25,32 @@ const DOCK = Object.freeze({
   ],
 });
 
-// A word drawn white on transparent, filling a w x h box (a quarter of it, as the wordmark only scales it): the
-// stand-in for a wordmark that could not be loaded.
-function standIn(word, [w, h]) {
-  const canvas = document.createElement('canvas'); canvas.width = Math.round(w / 4); canvas.height = Math.round(h / 4);
-  const ctx = canvas.getContext('2d'), size = canvas.height * .98;
-  ctx.font = `600 ${size}px -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif`;
-  const bare = ctx.measureText(word).width, gap = Math.max(0, (canvas.width - bare) / (word.length - 1));
-  ctx.fillStyle = '#fff'; ctx.textBaseline = 'alphabetic';
-  let x = 0; const base = canvas.height * .86, squeeze = Math.min(1, canvas.width / bare);
-  for (const letter of word) {
-    const width = ctx.measureText(letter).width * squeeze;
-    ctx.save(); ctx.translate(x, base); ctx.scale(squeeze, 1); ctx.fillText(letter, 0, 0); ctx.restore();
-    x += width + gap * squeeze;
+// A quiet stand-in when Kinso's untracked artwork is absent: two opposing, interlocked outlines, not a word.
+function standInLogo() {
+  const canvas = document.createElement('canvas'); canvas.width = 230; canvas.height = 256;
+  const ctx = canvas.getContext('2d'), gradient = ctx.createLinearGradient(0, 0, 230, 256);
+  gradient.addColorStop(0, '#f45a20'); gradient.addColorStop(.5, '#ffd1be'); gradient.addColorStop(1, '#398e91');
+  ctx.strokeStyle = gradient; ctx.lineWidth = 12; ctx.lineJoin = 'round';
+  for (const flip of [false, true]) {
+    ctx.save(); if (flip) { ctx.translate(230, 256); ctx.rotate(Math.PI); }
+    ctx.beginPath(); ctx.moveTo(24, 8); ctx.lineTo(118, 8); ctx.quadraticCurveTo(148, 8, 148, 38);
+    ctx.lineTo(148, 165); ctx.quadraticCurveTo(148, 194, 119, 194); ctx.lineTo(24, 194);
+    ctx.quadraticCurveTo(2, 194, 10, 177); ctx.lineTo(48, 101); ctx.lineTo(10, 27);
+    ctx.quadraticCurveTo(2, 8, 24, 8); ctx.closePath(); ctx.stroke(); ctx.restore();
   }
   return canvas;
 }
+
+// The Mac's own night wallpaper: imperfect.computer's desktop, and what shows wherever another is missing.
+const NIGHT = new URL('mac/wallpaper.webp', import.meta.url).href;
 
 export const VARIANTS = Object.freeze({
   imperfect: Object.freeze({
     id: 'imperfect',
     // The app in the Dock and the menu bar, and the Mac window's title.
     app: 'imperfect', name: 'imperfect',
+    wallpaper: NIGHT,
+    wallpapers: Object.freeze([NIGHT]),
     title: null, // index.html's own
     // The word the bubble bursts into (wordmark.mjs): its white-on-transparent mask, its pixel size, and where its
     // ink's mass sits from the image's centre (a share of the image, x right, y down; intro/goat.mjs).
@@ -63,22 +67,27 @@ export const VARIANTS = Object.freeze({
   kinso: Object.freeze({
     id: 'kinso',
     app: 'kinso', name: 'Kinso',
+    // Tahlia's photograph (Apple's, git-ignored), over the night for a copy without it (launch.mjs).
+    wallpaper: new URL('mac/wallpaper-kinso.webp', import.meta.url).href,
+    wallpapers: Object.freeze([new URL('mac/wallpaper-kinso.webp', import.meta.url).href, NIGHT]),
     title: 'Kinso Computer',
-    // Kinso's own wordmark, KINSO in white (kinso.ai's header in dark mode). It is theirs, so it is never in this source:
-    // the locker serves it from the git-ignored rebuild of their page (/kinso/a/, locker/server.mjs). Where that is
-    // missing, the word is set in a plain sans instead (standIn). Its mass is measured as goat.mjs says. It stays on
-    // through the lock, the sharks swimming round it (wordmark.mjs wordmarkAt, for-kinso/lock-sharks.mjs).
-    lettering: Object.freeze({ src: '/kinso/a/e838d36149f98461.png', size: [4873, 863], mass: [0.00572, -0.0249], stays: true,
-      standIn: () => standIn('KINSO', [4873, 863]) }),
+    // Their colour logo lives only in the git-ignored rebuild (/kinso/a/). Its alpha x luminance mass is measured
+    // on the original colours (intro/goat.mjs). The near-square mark needs its own scale, not a word's width.
+    lettering: Object.freeze({ src: '/kinso/a/aa106999c9d67289.png', size: [919, 1024], mass: [-0.00547, 0.01372], colour: true,
+      scale: Object.freeze({ height: .22, phoneWidth: .36 }), stays: true, standIn: standInLogo,
+      drawOn: Object.freeze({ src: '/kinso/logo-draw.svg?v=kinso-logo-lock-1', timing: '/kinso/logo-draw.json?v=kinso-logo-lock-1' }) }),
     lock: Object.freeze({ name: 'Kinso' }),
     dock: DOCK.kinso,
     assembly: Object.freeze(['bare', 'claude', 'codex', 'files', 'browser', 'messages', 'done']),
     for: 'kinso',
     phone: false,
-    menu: Object.freeze({ last: 'Code', help: 'Kinso Computer' }),
-    // What Code in the menu bar gives to copy: paste it into your own agent and it installs this computer, from
+    menu: Object.freeze({ last: null, help: 'Kinso Computer' }),
+    // What Get yours unlocks: paste it into your own agent and it installs this computer, from
     // Kinso's own repository (kinso.computer/install: locker/public/install-kinso.sh).
     install: 'curl -fsSL https://kinso.computer/install | sh',
+    // ...once its source is paid for: one payment (Noah: "one off payment for the source"). A paywall, not a lock: the
+    // repository stays public. The locker sells it (locker/shop.mjs, /source); kinso.computer/source shows it after.
+    source: Object.freeze({ price: 39, label: 'US$39', page: '/source', checkout: '/source/checkout', status: '/source/status' }),
   }),
 });
 

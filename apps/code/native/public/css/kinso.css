@@ -1,9 +1,8 @@
 /* Kinso's window (brand.js: the launch site's ?for=kinso), and only it. It
-   wears Kinso's light look whatever the theme: Kinso's ground and ink, and
-   the input bar frosted so what passes under it blurs. Its fresh session
-   takes Kinso's own: a large thin question over the bar in a soft glow, and
-   the sharks swimming behind (kinso-sharks.js); with the first prompt they
-   fade as the bar goes down, and the session has the plain ground. Nothing
+   keeps its own light/dark appearance: Kinso's ground and ink, and
+   the input bar frosted so what passes under it blurs. The bar stays at the
+   foot from the start, asking in its placeholder. Sharks swim underneath
+   the input and outputs for the whole session (Noah). Nothing
    here reaches imperfect's own window, which keeps its square edges and
    plain ground (AGENTS.md). */
 
@@ -13,7 +12,7 @@
 @font-face { font-family: 'Kinso Inter'; src: url('../kinso/inter-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Kinso Inter'; src: url('../kinso/inter-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
 @font-face { font-family: 'Kinso Inter Tight'; src: url('../kinso/inter-tight-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
-/* The question's thin sans (Kinso's family, light, as in its reference). */
+/* Kinso's name falls back to the bundled family. */
 @font-face {
   font-family: 'Inter Tight';
   src: url('../fonts/inter-tight.woff2') format('woff2');
@@ -43,89 +42,111 @@
   --theme-magenta: #ad4688;
   --theme-goat-filter: invert(1);
   --theme-cloud-ink: #737373;
-  --kinso-type: 'Inter Tight', 'Inter', 'Helvetica Neue', system-ui, sans-serif;
+  --kinso-scheme: light;
+  --kinso-veil: rgb(252 252 251 / 0.65);
+  --kinso-frost: rgb(234 234 229 / 0.62);
+  --kinso-frost-filter: blur(11px) saturate(1.05);
+  --kinso-frost-shadow: 0 0 0 1px rgb(60 60 50 / 0.16), inset 0 1px 0 rgb(255 255 255 / 0.5), 0 10px 40px rgb(0 0 0 / 0.035);
   --kinso-words: 'Kinso Inter', 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   --ui: var(--kinso-words);
   --brand-type: 'Kinso Inter Tight', 'Inter Tight', 'Inter', system-ui, sans-serif;
 }
 :root[data-brand="kinso"],
-:root[data-brand="kinso"] body { background: var(--theme-bg); color: var(--theme-ink); color-scheme: light; }
+:root[data-brand="kinso"] body { background: var(--theme-bg); color: var(--theme-ink); color-scheme: var(--kinso-scheme); scrollbar-color: var(--theme-muted) var(--theme-bg); }
 
-/* The sea: behind everything in the conversation's window, only on a fresh
-   session. It fades as the bar moves down (SHARKS_FADE_MS) and comes back
-   with the next fresh one. The glow lies over it where the question and the
-   bar sit, so sharks passing behind them recede into it. */
-body.imperfect .kinso-sharks,
-body.imperfect .kinso-veil {
+/* The sea stays behind the whole session. Neither layer takes input. */
+:root[data-brand="kinso"] body.imperfect .kinso-sharks,
+:root[data-brand="kinso"] body.imperfect .kinso-veil {
   position: absolute;
   z-index: 0;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 420ms cubic-bezier(0.22, 0.8, 0.24, 1);
+  opacity: 1;
 }
-/* The sea belongs to the canvas, not the clipped middle window. Isolate its
-   negative layer at the frame: cards/content stay above, and local pickers
-   can still rise over the shared composer. Absolute placement keeps the sea
-   out of the phone’s swipe columns. */
+/* Only the sea fills the frame, under the sidebar too. The conversation's
+   veil stays in the middle. Isolate the negative layer here so every control
+   stays above it, without adding a column to the phone's swipe strip. */
 :root[data-brand="kinso"] body.imperfect #entry-terminal { isolation: isolate; }
-:root[data-brand="kinso"] body.imperfect .canvas-strip > .kinso-sharks {
+:root[data-brand="kinso"] body.imperfect #entry-terminal > .kinso-sharks {
   position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1;
   scroll-snap-align: none; scroll-snap-stop: normal;
 }
 :root[data-brand="kinso"] body.imperfect .canvas-strip > .entry-screen { background: transparent; }
-:root[data-brand="kinso"] body.imperfect .focus-layout .canvas-strip > .wm-panel-card {
-  background: color-mix(in srgb, var(--surface-card) 80%, transparent);
-  -webkit-backdrop-filter: blur(11px) saturate(1.05);
-          backdrop-filter: blur(11px) saturate(1.05);
+:root[data-brand="kinso"] body.imperfect .kinso-veil {
+  inset: 0;
+  background: var(--kinso-veil);
 }
-body.imperfect .kinso-veil {
-  left: 50%;
-  top: calc(var(--fresh-bar-top, 50%) + 9px);
-  width: min(1000px, 100%);
-  height: min(780px, 88%);
-  transform: translate(-50%, -50%);
-  background: radial-gradient(closest-side,
-    rgb(216 216 210 / 0.8) 0%, rgb(216 216 210 / 0.62) 20%, rgb(216 216 210 / 0.34) 42%,
-    rgb(216 216 210 / 0.12) 62%, rgb(216 216 210 / 0.03) 80%, rgb(216 216 210 / 0) 100%);
-}
-body.imperfect #entry-terminal.fresh :is(.kinso-sharks, .kinso-veil) { opacity: 1; }
 :root[data-brand="kinso"] body.imperfect .entry-screen > :is(#entry-output, #entry-queue, #entry-flash) { position: relative; z-index: 1; }
-@media (prefers-reduced-motion: reduce) { body.imperfect :is(.kinso-sharks, .kinso-veil) { transition: none; } }
-
-/* The question: large, thin, lowercase. */
-:root[data-brand="kinso"] body.imperfect .fresh-question {
-  top: calc(var(--fresh-bar-top, 50%) - 18px);
-  color: var(--theme-ink);
-  font: 300 clamp(28px, calc((var(--fresh-question-width, 100vw) - 48px) / 8), 58px)/1.1 var(--kinso-type);
-  letter-spacing: -0.035em;
-}
 
 /* The input bar, frosted, before and after the first prompt: in focus the
    one surface under its rows. */
-:root[data-brand="kinso"] body.imperfect #entry-terminal.focus-layout::after {
-  border-radius: var(--radius-l);
-  background: rgb(234 234 229 / 0.62);
-  -webkit-backdrop-filter: blur(11px) saturate(1.05);
-          backdrop-filter: blur(11px) saturate(1.05);
-  box-shadow: 0 0 0 1px rgb(60 60 50 / 0.16), inset 0 1px 0 rgb(255 255 255 / 0.5), 0 10px 40px rgb(0 0 0 / 0.035);
+:root[data-brand="kinso"] body.imperfect #entry-terminal.focus-layout::after { border-radius: var(--radius-l); }
+/* One material for the field, floating cards and visible sidebar. A folded
+   desktop rail has no surface; the phone still has its strip of sessions. */
+:root[data-brand="kinso"] body.imperfect #entry-terminal.focus-layout::after,
+:root[data-brand="kinso"] body.imperfect .focus-layout .canvas-strip > .wm-panel-card,
+:root[data-brand="kinso"] body.imperfect #entry-terminal:is(.focus-layout, .phone-layout) > #session-rail:not(.collapsed),
+:root[data-brand="kinso"] body.imperfect #entry-terminal.phone-layout > #session-rail.collapsed,
+:root[data-brand="kinso"] body.imperfect #entry-terminal.phone-layout > :is(#entry-input-zone, .entry-status) {
+  background: var(--kinso-frost);
+  -webkit-backdrop-filter: var(--kinso-frost-filter);
+          backdrop-filter: var(--kinso-frost-filter);
+  box-shadow: var(--kinso-frost-shadow);
 }
+/* Muted words and small unread marks need more ink on translucent glass
+   than on the plain ground, including under hover and selected fills. */
+:root[data-brand="kinso"] #session-rail {
+  /* Dim labels hold 4.5:1 even over a dark shark under the glass. */
+  --label-2: color-mix(in srgb, var(--theme-muted) 66%, var(--theme-ink));
+  --label-3: var(--label-2);
+  --kinso-rail-dot: color-mix(in srgb, var(--theme-blue) 75%, var(--theme-ink));
+  --kinso-rail-alert: color-mix(in srgb, var(--theme-red) 75%, var(--theme-ink));
+}
+:root[data-brand="kinso"] body.imperfect .session-rail-sidebar [data-state="done"] .session-rail-state,
+:root[data-brand="kinso"] body.imperfect .session-rail-sidebar .sidebar-unread { background: var(--kinso-rail-dot); }
+:root[data-brand="kinso"] body.imperfect .session-rail-sidebar [data-state="blocked"] .session-rail-state { background: var(--kinso-rail-alert); }
+:root[data-brand="kinso"] body.imperfect .session-rail-sidebar .session-rail-item.active[data-state="done"] .session-rail-state { background: none; }
 :root[data-brand="kinso"] body.imperfect #entry-input { font-family: var(--kinso-words); }
+/* Settings follows Messages in the scrolling list, with the same section
+   break as Files and Sites. Usage alone stays at the rail's foot. */
+:root[data-brand="kinso"] .session-rail-settings-section {
+  border-top: 0.5px solid var(--sep-strong); padding-top: 14px;
+}
+:root[data-brand="kinso"] .session-rail-settings-section > .session-rail-settings { width: 100%; }
+:root[data-brand="kinso"] #entry-terminal.phone-layout .session-rail-settings-section { padding-top: 18px; }
 /* Kinso's name where the app says it: "Kinso is typing…". */
 :root[data-brand="kinso"] .gui-typing { font-family: var(--kinso-words); }
 :root[data-brand="kinso"] .gui-typing .gui-typing-who { font-weight: 500; }
-/* On a phone the bar is its two rows: each is frosted. */
-:root[data-brand="kinso"] body.imperfect #entry-terminal.phone-layout > :is(#entry-input-zone, .entry-status) {
-  background: rgb(234 234 229 / 0.62);
-  -webkit-backdrop-filter: blur(11px) saturate(1.05);
-          backdrop-filter: blur(11px) saturate(1.05);
-}
-:root[data-brand="kinso"] body.imperfect #entry-input::placeholder { color: #737373; -webkit-text-fill-color: #737373; }
+:root[data-brand="kinso"] body.imperfect #entry-input::placeholder { color: var(--theme-muted); -webkit-text-fill-color: var(--theme-muted); }
 
-/* The phone shares its composer across swipe panels. Lift it only over the
-   fresh conversation, never across Messages/Files content in another column. */
-:root[data-brand="kinso"] body.imperfect #entry-terminal.phone-layout.fresh > :is(#entry-pending, .entry-connection, #entry-input-zone, .entry-status) {
-  transform: translateY(calc(var(--fresh-lift, 0px) * (1 - var(--wm-away, 0))));
+/* The store's dark ground and warm ink, with the same glass and curves. */
+:root[data-brand="kinso"][data-kinso-appearance="dark"] {
+  --kinso-scheme: dark;
+  --on-tint: #0e0e0f;
+  --theme-bg: #0e0e0f;
+  --theme-raised: #18181a;
+  --theme-bar-bg: #18181a;
+  --theme-band: #28282b;
+  --theme-ink: #f3f1ed;
+  --theme-bright: #f3f1ed;
+  --theme-muted: #b5b0a9;
+  --theme-dim: #b5b0a9;
+  --theme-rule: #3b3b3e;
+  --theme-accent: #ff9366;
+  --theme-secondary: #8ad3cf;
+  --theme-red: #f0a488;
+  --theme-yellow: #f2cf9f;
+  --theme-green: #8ad3ad;
+  --theme-orange: #ff9366;
+  --theme-blue: #9ab8ff;
+  --theme-cyan: #8ad3cf;
+  --theme-magenta: #e9a0ce;
+  --theme-goat-filter: brightness(1);
+  --theme-cloud-ink: #b5b0a9;
+  --kinso-veil: rgb(14 14 15 / 0.8);
+  --kinso-frost: rgb(24 24 26 / 0.8);
+  --kinso-frost-shadow: 0 0 0 1px rgb(255 255 255 / 0.16), inset 0 1px 0 rgb(255 255 255 / 0.05), 0 10px 40px rgb(0 0 0 / 0.2);
 }
+:root[data-brand="kinso"][data-kinso-appearance="dark"] .brand-mark > img { filter: invert(1); }
 
 /* Kinso's sidebar is words, not app/service badges. Keep disclosure and
    close controls usable, but omit decorative row/settings/usage icons. */

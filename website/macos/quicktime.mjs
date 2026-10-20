@@ -1,4 +1,4 @@
-import { openShellWindow } from '../mac/shell.mjs?v=kinso-install-1';
+import { openShellWindow } from '../mac/shell.mjs?v=kinso-lift-2';
 import { waitForMedia, primeVideo, playVideo, firstVideoFrame } from '../media.mjs';
 import { MACOS, animate, metrics, motionClock } from './timings.mjs?v=sequoia-4';
 import { moviePicture } from './window-picture.mjs?v=sequoia-4';

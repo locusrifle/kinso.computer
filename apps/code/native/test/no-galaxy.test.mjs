@@ -29,5 +29,7 @@ test('every changed website/file-lock import edge selects the fresh no-effect gr
     ['website/boot/sequence.mjs', 'reveal.mjs'], ['website/sequence.css', 'boot/sequence.css'],
     ['desktop/lock/index.html', 'desktop/lock/lock.mjs'], ['desktop/lock/index.html', 'boot/sequence.css'], ['desktop/lock/index.html', 'style.css'],
     ['website/host.html', 'landing.css'], ['locker/accounts.mjs', 'landing.css'], ['locker/server.mjs', 'landing.css'], ['locker/shop.mjs', 'landing.css'],
-  ]) assert.match(await read(path), new RegExp(`${edge.replace(/\./g, '\\.')}\\?v=(?:plain|kinso)-1\\b`), `${path} refreshes ${edge}`);
+  // plain-1 and kinso-1 are the graph without the galaxy; a later kinso-… tag (kinso-pale-grid-1, kinso-install-1)
+  // is a later refresh of that same graph, never the old one.
+  ]) assert.match(await read(path), new RegExp(`${edge.replace(/\./g, '\\.')}\\?v=(?:plain|kinso(?:-[a-z]+)*)-\\d+\\b`), `${path} refreshes ${edge}`);
 });

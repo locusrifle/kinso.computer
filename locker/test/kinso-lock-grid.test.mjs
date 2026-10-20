@@ -9,7 +9,7 @@ import { kinsoLaunch } from './fixtures/kinso-launch.mjs';
 const evidence = process.env.KINSO_STILLS && resolve(process.env.KINSO_STILLS);
 // Review the spacing worker's exact module without editing/cherry-picking its owned source.
 const rendererOverlay = process.env.KINSO_SHARKS_MODULE && resolve(process.env.KINSO_SHARKS_MODULE);
-test('Kinso light grid: real-time word/password crossfade, entering sharks and ticket unlock', { timeout: 120000 }, async () => {
+test('Kinso light grid: the colour logo stays through password wake, entering sharks and ticket unlock', { timeout: 120000 }, async () => {
   const f = await kinsoLaunch();
   let browser, context;
   const faults = [], requests = [], frames = [];
@@ -63,7 +63,7 @@ test('Kinso light grid: real-time word/password crossfade, entering sharks and t
     await page.goto(f.url);
     await page.waitForFunction(() => window.__launch?.().phase === 'intro', null, { timeout: 60000 });
     await page.keyboard.press('ArrowDown');
-    await page.waitForFunction(() => window.__launch().intro.tau > 7 && window.__launch().intro.tau < 8);
+    await page.waitForFunction(() => window.__launch().intro.tau > 7 && window.__launch().intro.tau < 8, null, { timeout: 30000 });
     await shot('01-before-password');
     const cdp = await context.newCDPSession(page);
     cdp.on('Page.screencastFrame', frame => {
@@ -91,10 +91,10 @@ test('Kinso light grid: real-time word/password crossfade, entering sharks and t
     }
     const ready = observed.timeline.filter(row => row.phase === 'ready');
     assert.ok(ready.length > 3, 'observed the actual fade');
-    assert.ok(ready[0].tau >= 8.01 && ready[0].tau < 8.3, 'wake starts at Kinso hold end, not after the old fade');
-    assert.ok(ready.some(row => row.word > .1 && row.word < .9 && row.user > .1 && row.user < .9), 'both fade simultaneously');
-    assert.ok(ready.every(row => Math.abs(row.word + row.user - 1) < .2), 'opposite opacity envelopes share the wake');
-    assert.ok(ready.some(row => row.word === 0 && row.user === 1));
+    assert.ok(ready[0].tau >= 8.61 && ready[0].tau < 8.95, 'wake starts on WORD.gone, shared with the logo shrink');
+    assert.ok(ready.some(row => row.user > .1 && row.user < .9), 'the password still wakes gradually');
+    assert.ok(ready.every(row => row.word === 1), 'the logo stays visible throughout the wake');
+    assert.ok(ready.some(row => row.word === 1 && row.user === 1));
     assert.equal(observed.pixels[0].dark, 0, 'enter:true starts with every shark fully outside the visible canvas');
     assert.equal(observed.pixels[0].changed, 0, 'first swimming frame is pixel-identical to the empty grid, including pale cells');
     // Plankton can produce isolated interior pixels before the bodies reach the edge.
@@ -102,20 +102,21 @@ test('Kinso light grid: real-time word/password crossfade, entering sharks and t
     assert.ok(observed.pixels.some(row => row.edgeDark > 0), 'visible body cells cross the canvas edge after the blank entrance');
     assert.ok(observed.pixels.some(row => row.dark > 20), 'sharks really enter after wake');
     await page.waitForTimeout(2200); await shot('05-settled-grid-lock');
-    assert.equal(await page.locator('.macos-name').textContent(), 'Kinso');
+    assert.equal(await page.locator('.macos-avatar, .macos-name').count(), 0);
     assert.equal(await page.locator('.macos-lock').evaluate(el => getComputedStyle(el).color), 'rgb(48, 48, 46)');
     assert.equal(await page.locator('#sky .macos-wallpaper').evaluate(el => getComputedStyle(el).display), 'none');
-    assert.equal(await page.locator('#wordmark').evaluate(el => getComputedStyle(el).opacity), '0');
+    assert.equal(await page.locator('#wordmark').evaluate(el => getComputedStyle(el).opacity), '1');
     assert.equal(await page.locator('#wordmark').evaluate(el => el.width > 0 && el.height > 0), true);
-    assert.ok(requests.includes('/kinso/a/e838d36149f98461.png'), 'their real wordmark requested');
-    assert.equal(await page.evaluate(() => document.fonts.check('600 13px "Kinso Inter Tight"')), true, 'their own font loaded');
-    assert.ok(requests.includes('/kinso/a/db1cd1e8d78c4905.woff2') || requests.includes('/kinso/a/938081690ba37404.woff2'), 'their own font requested');
+    assert.ok(requests.includes('/kinso/a/aa106999c9d67289.png'), 'their real colour logo requested');
+    assert.ok(requests.includes('/kinso/logo-draw.json'), 'their app animation requested from the local rebuild');
     await page.locator('#password').fill('wrong'); await page.keyboard.press('Enter');
     await page.waitForFunction(() => window.__launch().phase === 'ready' && document.querySelector('#password').value === '');
     await page.locator('#password').fill('kinso'); await page.keyboard.press('Enter');
     await page.waitForFunction(() => document.querySelector('#lockScreen').hidden && document.querySelector('#introScreen').hidden &&
       !document.querySelector('#macScreen').hidden && Number(getComputedStyle(document.querySelector('#macScreen')).opacity) === 1);
     await shot('06-unlocked-desktop');
+    assert.match(await page.locator('.mac-wall').evaluate(el => getComputedStyle(el).backgroundImage), /\/wallpaper-kinso\.webp/);
+    assert.equal(await page.evaluate(() => window.__launch().kinso.sharks.swimming), false);
     await page.waitForFunction(() => window.__launch().demoVerified);
     assert.ok(f.product.seen.tickets.some(row => row.valid && row.id === 'kinso'));
     assert.equal(new URL(await page.locator('#computer').getAttribute('src')).origin, f.product.origin);
@@ -127,6 +128,7 @@ test('Kinso light grid: real-time word/password crossfade, entering sharks and t
     await page.waitForFunction(() => window.__launch?.().phase === 'intro', null, { timeout: 60000 });
     assert.equal(await page.locator('body').getAttribute('data-company'), null);
     assert.equal(await page.locator('.kinso-sharks').count(), 0);
+    assert.match(await page.locator('.mac-wall').evaluate(el => getComputedStyle(el).backgroundImage), /\/wallpaper\.webp/);
     assert.equal(await page.locator('.macos-lock').evaluate(el => getComputedStyle(el).color), 'rgb(255, 255, 255)');
     assert.notEqual(await page.locator('#sky .macos-wallpaper').evaluate(el => getComputedStyle(el).display), 'none');
     await page.keyboard.press('ArrowDown');
@@ -135,13 +137,25 @@ test('Kinso light grid: real-time word/password crossfade, entering sharks and t
     assert.equal(await page.locator('#wordmark').evaluate(el => getComputedStyle(el).opacity), '0');
     assert.equal(await page.locator('.macos-name').textContent(), 'imperfect');
     await context.clearCookies(); await page.emulateMedia({ reducedMotion: 'reduce' });
+    // A clean checkout has no untracked Kinso image; still draw a compact, coloured mark rather than a word.
+    await context.route('**/kinso/a/aa106999c9d67289.png', route => route.abort());
+    await context.route('**/kinso/logo-draw.json*', route => route.abort());
     await page.goto(f.url);
     await page.waitForFunction(() => window.__launch?.().phase === 'intro', null, { timeout: 60000 });
     await page.keyboard.press('ArrowDown');
     await page.waitForFunction(() => window.__launch().phase === 'ready', null, { timeout: 15000 });
-    await page.waitForTimeout(250); await shot('08-reduced-motion-grid');
-    assert.equal(await page.locator('#wordmark').evaluate(el => getComputedStyle(el).opacity), '0');
+    await page.waitForTimeout(250); await shot('08-reduced-motion-grid-fallback');
+    assert.equal(await page.locator('#wordmark').evaluate(el => getComputedStyle(el).opacity), '1');
+    assert.ok(await page.locator('#wordmark').evaluate(el => {
+      const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+      let colour = 0;
+      for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 128 && Math.abs(d[i] - d[i + 2]) > 20) colour++;
+      return colour > 100;
+    }), 'the missing-image stand-in is a colour outline');
     assert.equal(await page.evaluate(() => window.__launch().kinso.sharks.swimming), false, 'Reduce Motion stays on the quiet grid; no pre-rolled shark pop');
+    await page.locator('#password').fill('kinso'); await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.querySelector('#lockScreen').hidden);
+    assert.equal(await page.locator('#lockScreen').evaluate(el => getComputedStyle(el).transform), 'none');
     assert.deepEqual(faults, []);
     if (evidence) await writeFile(join(evidence, 'result.json'), JSON.stringify({ faults, ticketAccepted: true, originalImperfectUnchanged: true, reducedMotionQuietGrid: true, rendererOverlay: rendererOverlay || null }, null, 2));
   } finally { await context?.close(); await browser?.close(); await f.close(); }

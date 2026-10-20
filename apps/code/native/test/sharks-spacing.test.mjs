@@ -117,6 +117,7 @@ test('long swimming, late arrivals, obstacle changes, phone/narrow resizes and c
     let rects = [{ left: 480, right: 960, top: 360, bottom: 520 }];
     const { probe, stop, resize } = sea({ seed, cell: seed === 852 ? 'auto' : 14, avoid: () => rects });
     const sizes = [[1440, 900], [390, 844], [240, 320], [844, 390], [1920, 1080], [320, 900]];
+    let full = 0, short = 0, longest = 0;
     for (let frame = 0; frame < 10800; frame++) { // six minutes/seed at 30 Hz
       if (frame % 1800 === 0) {
         resize(...sizes[frame / 1800]);
@@ -128,8 +129,14 @@ test('long swimming, late arrivals, obstacle changes, phone/narrow resizes and c
       if (frame === 7200) stop.set({ sharks: 4 });
       probe.step(1 / 30);
       if (frame % 15 === 0) { assertClear(probe, `${seed}/${frame}`, frame % 300 === 0); samples++; }
+      // Once the extra two have swum off: a shark that leaves is replaced
+      // after its slot's short wait, so the school is short only briefly.
+      if (frame >= 7500) {
+        if (probe.sharks.length >= 4) { full++; short = 0; } else longest = Math.max(longest, ++short);
+      }
     }
-    assert.ok(probe.sharks.length >= 4, 'requested count retained');
+    assert.ok(full / 3300 > 0.75, `requested count retained most of the time: ${full / 3300}`);
+    assert.ok(longest < 6 * 30, `a missing shark is replaced within seconds: ${longest / 30}s`);
     fallbacks += stop.stats.fallbacks || 0;
     stop();
   }

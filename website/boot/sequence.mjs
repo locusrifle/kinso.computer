@@ -12,8 +12,8 @@ import { bubblePath } from '../bubble.mjs';
 import { BURST, createPlayer } from '../bootup.mjs';
 import { revealAt } from '../reveal.mjs?v=plain-1';
 import { soundMotion } from '../bubble-sound.mjs';
-import { WORD, createWordmark, wordmarkAt, placeWordmark, metalSilver } from '../wordmark.mjs?v=kinso-install-1';
-import { opticalWordmark } from '../intro/goat.mjs?v=kinso-install-1';
+import { WORD, createWordmark, wordmarkAt, placeWordmark, metalSilver } from '../wordmark.mjs?v=kinso-lift-2';
+import { opticalWordmark } from '../intro/goat.mjs?v=kinso-lift-2';
 
 export function createSequence({
   clock = () => performance.now() / 1000, fixed = () => false, wall = () => Date.now() / 1000,

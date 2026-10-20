@@ -9,6 +9,9 @@
 // travelling wave from head to tail. Each frame the outline is sampled at the
 // centre of every character cell it covers; the cell gets a tinted tile and a
 // glyph from a pre-rendered sprite atlas, so a frame is one drawImage per cell.
+//
+// The same sea can be drawn two other ways (render: 'smooth', 'dots'; see
+// DEFAULTS); the swimming never depends on how it is drawn.
 
 const TAU = Math.PI * 2;
 const SPINE = 36; // samples along a body
@@ -34,11 +37,12 @@ const bodyId = (tint, tone, ink, g) => ((tint * TONES + tone) * 2 + ink) * G + g
 const ACC0 = TINTS.length * TONES * 2 * G;
 const accentId = (hue, style, g) => ACC0 + (hue * 2 + style) * G + g;
 const SP0 = ACC0 + ACCENTS * 2 * G;
-const EYE = SP0; // + shade 0..1
+// (SP0 and SP0 + 1 were ink eyes; sharks no longer have them)
 const EDGE = SP0 + 2; // + shade * 4 + mark
 const DASH = EDGE + 12; // + shade 0..2
 const DOT = DASH + 3; // + tint * 4 + level
-const SPRITES = DOT + 8;
+const EDGE_T = DOT + 8; // edges in the body's own colours: + (tint * 3 + shade) * 4 + mark
+const SPRITES = EDGE_T + TINTS.length * 12;
 
 const PALETTES = {
   light: {
@@ -52,7 +56,6 @@ const PALETTES = {
     blackInk: '#0e1117',
     accentBase: '#80858e',
     accents: ['#2e8b57', '#24878a', '#8a5bd6', '#d4507c', '#c97a2e', '#5470d8'],
-    eye: ['#2b2f37', '#666a73'],
     edge: ['#8e929a', '#aeb1b8', '#cbcdd2'],
     dash: ['#3b3e44', '#8a8e95', '#bdbfc4'],
     dot: ['#a9afb6', '#86aea7'],
@@ -68,16 +71,57 @@ const PALETTES = {
     blackInk: '#0b0c0f',
     accentBase: '#3e434c',
     accents: ['#47b37a', '#3fb0b3', '#a283ea', '#e7709a', '#e09450', '#7b93ee'],
-    eye: ['#d6dbe4', '#8b919c'],
     edge: ['#6a707b', '#4c515a', '#363a41'],
     dash: ['#b9bec7', '#6b7079', '#41454c'],
     dot: ['#4f5560', '#3f6e66'],
+  },
+  // Kinso's own colours: its peach, coral and teal (the brand gradient runs
+  // peach to coral to teal) and its orange for accents, on its warm white.
+  // Nothing is drawn in black: the ink glyphs and the marks along the edges
+  // take each body's own darker tone (blackInk and edge null). along: each
+  // species' colour turns toward the next along its body, snout to tail, as
+  // in the brand gradient.
+  kinso: {
+    ground: '#fcfcfb',
+    grid: 'rgba(115,92,74,0.06)',
+    tints: {
+      blue: { dark: '#173f3c', lo: '#4ea8a2', hi: '#b6e0dc', faint: '#dcf0ee', inkLo: '#effaf9', inkHi: '#f2faf9', inkFaint: '#8dbcb8' },
+      warm: { dark: '#4b2013', lo: '#d2714e', hi: '#f2c4b0', faint: '#f9e5db', inkLo: '#fff3ed', inkHi: '#fff5f0', inkFaint: '#d29884' },
+      grey: { dark: '#4e3415', lo: '#d9a463', hi: '#f6dfc0', faint: '#fbf0e1', inkLo: '#fff8ee', inkHi: '#fffaf3', inkFaint: '#cdab82' },
+    },
+    along: { blue: 'warm', warm: 'blue', grey: 'warm' },
+    blackInk: null,
+    accentBase: '#737373',
+    accents: ['#ff6d33', '#de8363', '#67bcb7', '#edbf86', '#ff6d33', '#67bcb7'],
+    edge: null,
+    dash: ['#3d3a38', '#737373', '#c4bcb6'],
+    dot: ['#cdbbad', '#8ccac5'],
+  },
+  // The same on Kinso Dark's near-black: lit from within, like the dark palette.
+  'kinso-dark': {
+    ground: '#0d0d0d',
+    grid: 'rgba(255,255,255,0.03)',
+    tints: {
+      blue: { dark: '#a6e3de', lo: '#3c8984', hi: '#1c3a38', faint: '#121a19', inkLo: '#eefaf9', inkHi: '#9fd3cf', inkFaint: '#2f5755' },
+      warm: { dark: '#f7bba3', lo: '#b55f3f', hi: '#47231a', faint: '#1a1210', inkLo: '#fff1ea', inkHi: '#efb49d', inkFaint: '#5c3427' },
+      grey: { dark: '#f8dcb4', lo: '#b4874e', hi: '#46341b', faint: '#19140e', inkLo: '#fff7ec', inkHi: '#e8c79a', inkFaint: '#5a4428' },
+    },
+    along: { blue: 'warm', warm: 'blue', grey: 'warm' },
+    blackInk: null,
+    accentBase: '#3a3a3a',
+    accents: ['#ff6d33', '#de8363', '#67bcb7', '#edbf86', '#ff6d33', '#67bcb7'],
+    edge: null,
+    dash: ['#cfc8c2', '#737373', '#454545'],
+    dot: ['#4a4038', '#2f5c59'],
   },
 };
 
 // Bodies, seen from above. s runs from the snout (0) to the tail tip (1); u is
 // the half-width as a fraction of body length. Fins are triangles in (s, u):
-// leading root, tip, trailing root, and how dense they read.
+// leading root, tip, trailing root, and how dense they read. wave is how the
+// body swims: the length of its body wave, in body lengths, and how much of
+// the tail's swing reaches mid-body. Hammerheads and reef sharks swim with
+// the back half (carangiform); the leopard shark bends more of its length.
 const SPECIES = {
   hammerhead: {
     tint: 'blue', weight: 0.4, len: [29, 37], speed: [0.18, 0.27],
@@ -86,7 +130,7 @@ const SPECIES = {
     hammer: { span: 0.215, sweep: 0.045, back: 0.088 },
     fins: [[[0.2, 0.09], [0.4, 0.25], [0.33, 0.095], 0.62], [[0.58, 0.06], [0.68, 0.11], [0.65, 0.05], 0.4],
       [[0.82, 0.02], [0.995, 0.065], [0.92, 0.012], 0.4]],
-    dorsal: [0.27, 0.45], eyes: null, saddles: 0, spots: 0,
+    dorsal: [0.27, 0.45], eyes: null, saddles: 0, spots: 0, wave: [0.9, 0.22],
   },
   leopard: {
     tint: 'warm', weight: 0.34, len: [26, 33], speed: [0.2, 0.3],
@@ -95,7 +139,7 @@ const SPECIES = {
     hammer: null,
     fins: [[[0.15, 0.085], [0.31, 0.2], [0.27, 0.088], 0.6], [[0.45, 0.065], [0.55, 0.115], [0.53, 0.05], 0.42],
       [[0.66, 0.03], [0.9, 0.055], [0.98, 0.014], 0.38]],
-    dorsal: [0.3, 0.42], eyes: [0.05, 0.056], saddles: 7.5, spots: 0.07,
+    dorsal: [0.3, 0.42], eyes: [0.05, 0.056], saddles: 7.5, spots: 0.07, wave: [0.72, 0.36],
   },
   reef: {
     tint: 'grey', weight: 0.26, len: [23, 30], speed: [0.22, 0.33],
@@ -104,7 +148,7 @@ const SPECIES = {
     hammer: null,
     fins: [[[0.2, 0.075], [0.4, 0.235], [0.31, 0.08], 0.6], [[0.56, 0.045], [0.65, 0.09], [0.62, 0.04], 0.4],
       [[0.8, 0.015], [0.99, 0.075], [0.9, 0.01], 0.42]],
-    dorsal: [0.3, 0.42], eyes: [0.075, 0.05], saddles: 0, spots: 0,
+    dorsal: [0.3, 0.42], eyes: [0.075, 0.05], saddles: 0, spots: 0, wave: [0.85, 0.25],
   },
 };
 
@@ -115,13 +159,24 @@ const DEFAULTS = {
   enter: false,
   palette: 'light',
   avoid: null,
-  ground: true, // paint the ground and its faint grid; false leaves the canvas transparent
+  ground: true, // paint the ground (and the characters' faint grid); false leaves the canvas transparent
   plankton: true,
   wake: true,
   speed: 1,
   size: 1,
   seed: undefined,
   font: '"JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace',
+  // How the same sea is drawn: 'ascii' (characters on the grid), 'smooth'
+  // (outlines and shading at full resolution, no grid) or 'dots' (a still
+  // field of identical dots that light up where a shark is under them).
+  render: 'ascii',
+  pitch: 9, // dots: CSS px from one dot to the next
+  dot: 0.66, // dots: a dot's size, as a share of the pitch
+  shape: 'round', // dots: 'round' or 'square'
+  rest: 0, // dots: how faintly an empty dot shows, 0 (not at all) to 1
+  // Eyes: none by default. true marks each eye faintly, one shade darker
+  // than the body around it; never in ink.
+  eyes: false,
 };
 
 // ---------- small helpers
@@ -147,6 +202,25 @@ const wrap = a => { a %= TAU; return a > Math.PI ? a - TAU : a < -Math.PI ? a + 
 const rgb = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 const mixc = (a, b, t) => [0, 1, 2].map(i => Math.round(a[i] + (b[i] - a[i]) * t));
 const css = c => `rgb(${c[0]},${c[1]},${c[2]})`;
+// Smooth noise in time: random values a unit apart, eased between, so a
+// wandering course bends gently and never repeats.
+function drift(seed, t) {
+  const i = Math.floor(t), f = t - i, e = f * f * f * (f * (f * 6 - 15) + 10);
+  return lerp(hash(seed, i, 71), hash(seed, i + 1, 71), e) * 2 - 1;
+}
+
+// How sharks swim. Thrust from the tail grows with the square of how hard it
+// beats and the water drags back with the square of the speed, so a shark
+// settles at its cruising speed, slows through a glide, and takes seconds to
+// gather speed again. It turns by a yaw rate that eases in and out, never
+// tighter than a radius its speed allows: no pivoting on the spot.
+const DRAG_S = 5; // gliding from cruising speed, the speed halves in this many seconds
+const TURN_RADIUS = 0.3; // the tightest turn, in body lengths
+const TURN_MAX = 0.85; // rad/s, at any speed
+const YAW_S = 0.45; // how quickly the yaw rate follows the steering
+const STRIDE = 0.6; // body lengths swum per tail beat
+const STIFF = 0.8; // how much of its path's bend the body takes up; the rest swings the tail wide
+const CANDIDATES = 9, AHEAD = 6; // curves considered at each look ahead, and points along each
 
 function resolvePalette(p) {
   if (p && typeof p === 'object') {
@@ -190,15 +264,45 @@ for (const [name, sp] of Object.entries(SPECIES)) {
     if (sp.hammer && s0 < sp.hammer.back + sp.hammer.sweep + 0.02) r = Math.max(r, sp.hammer.span);
     reach[k] = r;
   }
-  PREP[name] = { ...sp, name, table, finsP: fins, reach, tintIndex: TINTS.indexOf(sp.tint) };
+  // The swing along the body, as a share of the tail's: a parabola from a
+  // twentieth at the snout, through the species' share at mid-body, to all
+  // of it at the tail tip.
+  const mid = sp.wave[1], a2 = 4 * (0.53 - mid);
+  const swing = [0.06, 0.94 - a2, a2];
+  let front = 0;
+  for (let k = 0; k < (SPINE - 1) / 2; k++) front = Math.max(front, reach[k]);
+  PREP[name] = { ...sp, name, table, finsP: fins, reach, front, swing, k: TAU / sp.wave[0], tintIndex: TINTS.indexOf(sp.tint) };
 }
 
-// What a body is at (s, u): its density 0..1 and what kind of cell it is.
+// How far the body swings sideways at s, in body lengths, for a tail swing A
+// and the wave's phase. Toward the tail the wave falls further behind, so the
+// caudal fin trails the body by a seventh of a beat more than the wave alone.
+function swingAt(sp, A, phase, s) {
+  const w = sp.swing;
+  return A * (w[0] + s * (w[1] + s * w[2])) * Math.sin(sp.k * s + 0.9 * smooth(0.6, 1, s) - phase);
+}
+
+// A tint's colour for a body density d, as the character tiles shade it:
+// faint at the thin edge of a fin, through hi and lo, to the dark core along
+// the back. Seen from above, a shark is countershaded: darker down its back,
+// lighter toward its flanks, and its tail paler than its head.
+function tintRamp(t) { return { dark: rgb(t.dark), lo: rgb(t.lo), hi: rgb(t.hi), faint: rgb(t.faint) }; }
+function shadeAt(r, d) {
+  if (d >= 0.95) return mixc(r.lo, r.dark, Math.min(1, (d - 0.95) / 0.35) * 0.8);
+  if (d >= 0.4) return mixc(r.hi, r.lo, (d - 0.4) / 0.55);
+  return mixc(r.faint, r.hi, Math.max(0, d) / 0.4);
+}
+const tailFade = s => 1 - 0.5 * smooth(0.42, 1, s);
+const alongMix = s => smooth(0.1, 0.95, s);
+
+// What a body is at (s, u): its density 0..1 and what kind of cell it is. An
+// eye (only with an eye radius) keeps the density of the body under it.
 const K_NONE = 0, K_BODY = 1, K_FIN = 2, K_EYE = 3, K_EDGE = 4, K_SPOT = 5;
-let outD = 0, outK = 0;
+// outSD: the signed distance to the outline, in body lengths (inside < 0).
+let outD = 0, outK = 0, outSD = -1;
 function shape(sp, s, t, L, edgeM, eyeR, tex) {
   const u = t < 0 ? -t / L : t / L;
-  outD = 0; outK = K_NONE;
+  outD = 0; outK = K_NONE; outSD = -1;
   if (s < -0.04 || s > 1.04) return;
   let sd = 9; // signed distance to the outline, in body lengths (approximate)
   // body
@@ -224,8 +328,8 @@ function shape(sp, s, t, L, edgeM, eyeR, tex) {
     const front = -0.012 + (h.sweep + 0.012) * r * r, back = h.back + 0.006 * r * r;
     const hsd = Math.max(front - s, s - back, u - h.span);
     if (hsd <= 0) {
-      if (u > h.span - eyeR * 3.2) { outK = K_EYE; outD = 1; return; }
       const d = 0.74 - 0.24 * r;
+      if (u > h.span - eyeR * 3.2) { outK = K_EYE; outD = Math.max(outD, d); return; }
       if (d > outD) { outD = d; outK = K_BODY; }
     }
     if (hsd < sd) sd = hsd;
@@ -233,7 +337,7 @@ function shape(sp, s, t, L, edgeM, eyeR, tex) {
   // eyes
   if (sp.eyes && outK === K_BODY) {
     const es = (s - sp.eyes[0]) * L, eu = (u - sp.eyes[1]) * L;
-    if (es * es + eu * eu < eyeR * eyeR * L * L) { outK = K_EYE; outD = 1; return; }
+    if (es * es + eu * eu < eyeR * eyeR * L * L) { outK = K_EYE; return; }
   }
   // fins
   const fins = sp.finsP;
@@ -253,6 +357,7 @@ function shape(sp, s, t, L, edgeM, eyeR, tex) {
     }
     if (fd < sd) sd = fd;
   }
+  outSD = sd;
   if (outK === K_NONE && sd < edgeM) { outK = K_EDGE; outD = 1 - sd / edgeM; }
 }
 
@@ -271,7 +376,8 @@ export function swim(canvas, options = {}) {
   let cwD = 9, chD = 14, cols = 0, rows = 0, ox = 0, oy = 0, cw = 9, ch = 14;
   let colX = new Float32Array(0), rowY = new Float32Array(0); // cell centres, CSS px
   let markS, bestD, bestS, bestT, fbStamp, fbSprite, fbPrio, frameCells, sharkCells, wake;
-  let frameCellCount = 0, stampS = 0, stampF = 0;
+  let frameCellCount = 0, stampF = 0;
+  let cells = null, dots = null; // the character grid, and the dot field (render: 'dots')
   let atlas = null, spriteX = new Int32Array(SPRITES), spriteY = new Int32Array(SPRITES), groundPattern = null;
 
   // the world
@@ -319,7 +425,10 @@ export function swim(canvas, options = {}) {
     markS = new Int32Array(n); bestD = new Float32Array(n); bestS = new Float32Array(n); bestT = new Float32Array(n);
     fbStamp = new Int32Array(n); fbSprite = new Int32Array(n); fbPrio = new Float32Array(n);
     frameCells = new Int32Array(n); sharkCells = new Int32Array(n); wake = new Float32Array(n);
-    stampS = 0; stampF = 0;
+    stampF = 0;
+    cells = { pw: cwD, ph: chD, cols, rows, ox, oy, colX, rowY, mark: markS, bestD, bestS, bestT, list: sharkCells, stamp: 0 };
+    dots = null;
+    if (o.render === 'dots') buildDots();
     if (rebuild) buildAtlas();
     buildGround();
     if (sharks && oldW && oldH) {
@@ -330,7 +439,7 @@ export function swim(canvas, options = {}) {
           sh.trX[i] = x + (sh.trX[i] - sh.x) * scale;
           sh.trY[i] = y + (sh.trY[i] - sh.y) * scale;
         }
-        sh.x = x; sh.y = y; sh.L = L; sh.base *= scale; sh.step *= scale;
+        sh.x = x; sh.y = y; sh.L = L; sh.base *= scale; sh.U *= scale; sh.step *= scale;
         sh.tx *= W / oldW; sh.ty *= H / oldH;
         spine(sh);
       }
@@ -366,7 +475,9 @@ export function swim(canvas, options = {}) {
     TINTS.forEach((name, ti) => {
       const t = pal.tints[name];
       const dark = rgb(t.dark), lo = rgb(t.lo), hi = rgb(t.hi), faint = rgb(t.faint);
-      const inkLo = rgb(t.inkLo), inkHi = rgb(t.inkHi), inkFaint = rgb(t.inkFaint), black = rgb(pal.blackInk);
+      const inkLo = rgb(t.inkLo), inkHi = rgb(t.inkHi), inkFaint = rgb(t.inkFaint), black = rgb(pal.blackInk || t.dark);
+      // edge marks in this body's own colours, for palettes without edge greys
+      [lo, mixc(lo, hi, 0.5), hi].forEach((col, sh) => ["'", ',', '.', '`'].forEach((mk, i) => tile(EDGE_T + (ti * 3 + sh) * 4 + i, null, css(col), mk)));
       for (let k = 0; k < TONES; k++) {
         let bg, ink;
         if (k === 0) { bg = dark; ink = mixc(inkLo, [255, 255, 255], 0.3); }
@@ -386,8 +497,7 @@ export function swim(canvas, options = {}) {
         tile(accentId(h, 1, gl), css(abase), css(hue), GLYPHS[gl]);
       }
     });
-    pal.eye.forEach((col, i) => tile(EYE + i, null, col, 'o'));
-    pal.edge.forEach((col, sh) => ["'", ',', '.', '`'].forEach((mk, i) => tile(EDGE + sh * 4 + i, null, col, mk)));
+    (pal.edge || []).forEach((col, sh) => ["'", ',', '.', '`'].forEach((mk, i) => tile(EDGE + sh * 4 + i, null, col, mk)));
     const dw = Math.max(2, Math.round(cwD * 0.46)), dh = Math.max(1, Math.round(chD * 0.07));
     pal.dash.forEach((col, i) => {
       const x = spriteX[DASH + i], y = spriteY[DASH + i];
@@ -445,8 +555,10 @@ export function swim(canvas, options = {}) {
   // away from where the other sharks are and are going.
   function pickInterior(sh) {
     let best = null, bestScore = -1e9;
+    // far enough in from the edges to turn round there
+    const mx = Math.min(Math.max(W * 0.08, sh.L * 0.3), W * 0.35), my = Math.min(Math.max(H * 0.08, sh.L * 0.3), H * 0.35);
     for (let i = 0; i < 8; i++) {
-      const x = W * (0.08 + 0.84 * rnd()), y = H * (0.08 + 0.84 * rnd());
+      const x = mx + (W - 2 * mx) * rnd(), y = my + (H - 2 * my) * rnd();
       const dx = x - sh.x, dy = y - sh.y, d = Math.hypot(dx, dy) || 1;
       let score = Math.min(d, sh.L * 2) / sh.L;
       score += 0.5 * ((dx * Math.cos(sh.a) + dy * Math.sin(sh.a)) / d);
@@ -481,14 +593,21 @@ export function swim(canvas, options = {}) {
     const sh = {
       sp, L, units, seed: (rnd() * 1e9) | 0, base: L * lerp(sp.speed[0], sp.speed[1], rnd()) * o.speed,
       x: 0, y: 0, a: 0, av: 0, tx: 0, ty: 0, legs: 1 + ((rnd() * 2.6) | 0), legT: 0, leaving: false,
-      phase: rnd() * TAU, amp: lerp(0.045, 0.06, rnd()), bold: lerp(0.35, 1, rnd()),
+      phase: rnd() * TAU, amp: lerp(0.065, 0.08, rnd()), bold: lerp(0.35, 1, rnd()),
       age: 0, seen: false, outside: 0, boost: 0, hold: 0, dead: false, z: rnd(),
       step: Math.max(1.5, L / 140), back: [0, 0],
+      // swimming: speed, effort (1 cruises), the tail's swing, the steering
+      U: 0, vx: 0, vy: 0, effort: 1, beat: 1, mode: 0, gaitT: 0, planT: 0, want: 0, cmd: 0, danger: 0, blocked: 0, yielding: false, radMax: 0,
     };
+    sh.U = sh.base;
+    // Its own random choices (glides, bursts), so they never shift the sea's.
+    sh.rng = mulberry32(sh.seed ^ 0x5bd1e995);
+    sh.gaitT = lerp(3, 9, sh.rng());
     sh.cap = Math.ceil((L * 1.3) / sh.step) + 8;
     sh.trX = new Float32Array(sh.cap); sh.trY = new Float32Array(sh.cap); sh.trN = 0; sh.trH = -1;
     sh.qx = new Float32Array(SPINE); sh.qy = new Float32Array(SPINE);
     sh.px = new Float32Array(SPINE); sh.py = new Float32Array(SPINE);
+    sh.rad = new Float32Array(SPINE - 1);
     // enter from an edge, head just outside
     const pickSide = () => { const r = rnd() * 2 * (W + H); return r < W ? 0 : r < W + H ? 1 : r < 2 * W + H ? 2 : 3; };
     const m = cw * 1.5 + L * 0.06;
@@ -535,7 +654,13 @@ export function swim(canvas, options = {}) {
     if (sh.trN < sh.cap) sh.trN++;
   }
 
-  // Resample the swum path into SPINE points, then add the body wave.
+  // The body: the path its head swam, resampled into SPINE points, then laid
+  // down again segment by segment from the snout, so its length never
+  // changes. Each segment takes most of the path's bend at that point, not
+  // all of it: a shark is stiffer than its path, so in a turn the body curves
+  // in and the tail sweeps wide. On that line runs the swimming wave, from
+  // head to tail: the snout barely yaws, the swing grows toward the tail and
+  // the caudal fin lags behind the body.
   function spine(sh) {
     const L = sh.L, ds = L / (SPINE - 1), px = sh.px, py = sh.py;
     let cx = sh.x, cy = sh.y, k = 1, need = ds, i = 0, bx = sh.back[0], by = sh.back[1];
@@ -550,14 +675,20 @@ export function swim(canvas, options = {}) {
       else { need -= sl; cx = nx; cy = ny; i++; }
     }
     for (; k < SPINE; k++) { cx += bx * need; cy += by * need; need = ds; px[k] = cx; py[k] = cy; }
-    const qx = sh.qx, qy = sh.qy;
-    for (let j = 0; j < SPINE; j++) {
-      const a = Math.max(0, j - 1), b = Math.min(SPINE - 1, j + 1);
-      let tx = px[a] - px[b], ty = py[a] - py[b]; const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
-      const s = j / (SPINE - 1);
-      const off = L * sh.amp * (0.12 + 0.88 * s * s) * Math.sin(TAU * 0.8 * s - sh.phase);
-      qx[j] = px[j] - ty * off; qy[j] = py[j] + tx * off;
+    const qx = sh.qx, qy = sh.qy, A = sh.amp * sh.beat, n = SPINE - 1;
+    let h0 = swingAt(sh.sp, A, sh.phase, 0), was = sh.a, turned = 0;
+    qx[0] = px[0]; qy[0] = py[0];
+    for (let j = 0; j < n; j++) {
+      const h1 = swingAt(sh.sp, A, sh.phase, (j + 1) / n);
+      // how far the path has turned by here, counted on past half a turn
+      const dir = Math.atan2(py[j] - py[j + 1], px[j] - px[j + 1]);
+      turned += wrap(dir - was); was = dir;
+      const ang = sh.a + STIFF * turned + Math.atan((h1 - h0) * n);
+      qx[j + 1] = qx[j] - Math.cos(ang) * ds; qy[j + 1] = qy[j] - Math.sin(ang) * ds;
+      h0 = h1;
     }
+    sh.radMax = 0;
+    for (let j = 0; j < n; j++) { sh.rad[j] = radius(sh, j); if (sh.rad[j] > sh.radMax) sh.radMax = sh.rad[j]; }
   }
 
   // Conservative capsules around EVERY rendered spine segment, including
@@ -575,7 +706,7 @@ export function swim(canvas, options = {}) {
   function bounds(sh) {
     let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
     for (let k = 0; k < SPINE - 1; k++) {
-      const r = radius(sh, k);
+      const r = sh.rad[k];
       left = Math.min(left, sh.qx[k] - r, sh.qx[k + 1] - r);
       right = Math.max(right, sh.qx[k] + r, sh.qx[k + 1] + r);
       top = Math.min(top, sh.qy[k] - r, sh.qy[k + 1] - r);
@@ -597,8 +728,7 @@ export function swim(canvas, options = {}) {
   function contact(a, b) {
     const A = bounds(a), B = bounds(b);
     if (A.right < B.left || B.right < A.left || A.bottom < B.top || B.bottom < A.top) return null;
-    const ra = Array.from({ length: SPINE - 1 }, (_, k) => radius(a, k));
-    const rb = Array.from({ length: SPINE - 1 }, (_, k) => radius(b, k));
+    const ra = a.rad, rb = b.rad; // the radii, kept by spine()
     let best = null, depth = 0;
     for (let i = 0; i < SPINE - 1; i++) for (let j = 0; j < SPINE - 1; j++) {
       const r = ra[i] + rb[j];
@@ -660,12 +790,134 @@ export function swim(canvas, options = {}) {
     }
   }
 
+  // ---------- swimming
+
+  // What a shark would rather avoid at a point its head may reach in t
+  // seconds: the page's boxes and a berth around them, the screen's edge
+  // while it means to stay, and other sharks' bodies where they will be by
+  // then. Squared depths in body lengths, so the cost grows smoothly and a
+  // shark starts to bend away well before it is close.
+  function hazard(sh, x, y, t) {
+    const L = sh.L, soft = L * 0.3;
+    let c = 0;
+    const m = L * (0.1 + 0.08 * sh.bold) + cw;
+    for (let i = 0; i < avoidRects.length; i++) {
+      const r = avoidRects[i];
+      const dx = Math.max(r.left - x, x - r.right), dy = Math.max(r.top - y, y - r.bottom);
+      const sd = dx > 0 || dy > 0 ? Math.hypot(Math.max(dx, 0), Math.max(dy, 0)) : Math.max(dx, dy);
+      const p = (m + soft - sd) / L;
+      if (p > 0) c += 30 * p * p;
+    }
+    // the screen's edge, while it means to stay; coming in, a gentler pull
+    if (!sh.leaving) {
+      const e = Math.min(W, H) * 0.08;
+      const out = Math.max(e - x, x - (W - e), e - y, y - (H - e)) / L;
+      if (out > 0) c += (sh.seen ? 60 : 15) * out * out;
+    }
+    // Other sharks: a berth of a fifth of a length, and far more for coming
+    // within touch of a body with its own head and fins, or within reach of
+    // a tail's swing.
+    const touch = sh.sp.front * L + cw * 1.2 + Math.hypot(cw, ch) * 0.5 + L * 0.04, berth = L * 0.2, close = L * 0.06;
+    let near = 0;
+    for (let i = 0; i < sharks.length; i++) {
+      const o2 = sharks[i];
+      if (o2 === sh || o2.dead) continue;
+      // Where its body will be: each part moves up the body's own path, to
+      // where the parts ahead of it are now, and ahead of the snout along
+      // its heading.
+      const ds = o2.L / (SPINE - 1), shift = ((o2.hold > 0 ? 0 : o2.U) * t) / ds;
+      const fx = Math.cos(o2.a) * ds, fy = Math.sin(o2.a) * ds, far = o2.L * 0.55 + o2.radMax + touch + berth;
+      let at = (SPINE >> 1) - shift;
+      const cx = (at >= 0 ? o2.qx[at | 0] : o2.qx[0] - fx * at) - x, cy = (at >= 0 ? o2.qy[at | 0] : o2.qy[0] - fy * at) - y;
+      if (cx * cx + cy * cy > far * far) continue;
+      for (let k = 0; k < SPINE - 1; k += 2) {
+        at = k - shift;
+        const ex = (at >= 0 ? o2.qx[at | 0] : o2.qx[0] - fx * at) - x, ey = (at >= 0 ? o2.qy[at | 0] : o2.qy[0] - fy * at) - y;
+        const swing = k > SPINE / 2 ? o2.amp * o2.L : 0;
+        const hard = touch + o2.rad[k] + swing, need = hard + berth, d2 = ex * ex + ey * ey;
+        if (d2 >= need * need) continue;
+        const d = Math.sqrt(d2), p = (need - d) / L;
+        near += 20 * p * p;
+        if (d < hard + close) { const q = (hard + close - d) / close; near += 10 * q * q; }
+      }
+    }
+    crowd = near;
+    return c + near;
+  }
+
+  // Cruising, and now and then a glide on the speed it has, or a few harder
+  // beats. Never a glide in a tight turn or with something in the way.
+  function gait(sh, dt, turnLimit) {
+    sh.gaitT -= dt;
+    if (sh.gaitT <= 0) {
+      const r = sh.rng();
+      if (sh.mode) { sh.mode = 0; sh.gaitT = lerp(5, 12, sh.rng()); }
+      else if (r < 0.45) { sh.mode = 1; sh.gaitT = lerp(1.2, 2.6, sh.rng()); }
+      else if (r < 0.7) { sh.mode = 2; sh.gaitT = lerp(1.5, 3.5, sh.rng()); }
+      else sh.gaitT = lerp(3, 8, sh.rng());
+    }
+    let want = 1 + 0.06 * drift(sh.seed + 2, time / 3);
+    if (sh.mode === 1 && sh.age > 5 && !sh.leaving && sh.danger < 0.5 && Math.abs(sh.av) < 0.4 * turnLimit) want = 0.15;
+    else if (sh.mode === 2 || sh.leaving) want = 1.25;
+    if (sh.yielding) want = Math.min(want, 0.55);
+    want *= 1 + sh.boost * Math.exp(-sh.age / 1.3);
+    sh.effort += (want - sh.effort) * Math.min(1, dt / 0.7);
+  }
+
+  const costs = new Float64Array(2 * CANDIDATES), risks = new Float64Array(2 * CANDIDATES), crowds = new Float64Array(2 * CANDIDATES);
+  let crowd = 0; // what hazard() last found of other sharks
+
+  // A shark looks ahead: it imagines the curves it could swim next, each a
+  // yaw rate its speed allows, followed a few seconds ahead with the lag it
+  // really turns with. It takes the one that keeps clear of what it would
+  // rather avoid while staying closest to its course: toward the next place
+  // it has in mind, bent by a slow wander.
+  function plan(sh, U, limit) {
+    const L = sh.L;
+    let err = wrap(Math.atan2(sh.ty - sh.y, sh.tx - sh.x) - sh.a);
+    // turning right round: keep to the way it is already turning
+    if (Math.abs(err) > 2.6 && sh.cmd * err < 0) err -= Math.sign(err) * TAU;
+    const wander = 0.65 * drift(sh.seed, time / 5) + 0.35 * drift(sh.seed + 1, time / 2.1);
+    const course = clamp(((1.6 * err + 0.7 * wander) / L) * U, -limit, limit);
+    const ahead = clamp((1.3 * L) / Math.max(U, 1), 2, 6) / AHEAD, ease = Math.exp(-ahead / (YAW_S + 0.35));
+    // The same curves swum slower are considered only when another shark is
+    // in the way: then it may ease off and let it pass.
+    let best = 0, slower = false;
+    for (let c = 0; c < 2 * CANDIDATES; c++) {
+      if (c === CANDIDATES) { if (crowds[best] < 0.3) break; slower = true; }
+      const yaw = limit * (2 * (c % CANDIDATES) / (CANDIDATES - 1) - 1), v = slower ? U * 0.6 : U;
+      let a = sh.a, w = sh.av, x = sh.x, y = sh.y, risk = 0, many = 0;
+      for (let i = 1; i <= AHEAD; i++) {
+        const w1 = yaw + (w - yaw) * ease, half = a + 0.25 * (w + w1) * ahead;
+        a += 0.5 * (w + w1) * ahead; w = w1;
+        x += Math.cos(half) * v * ahead; y += Math.sin(half) * v * ahead;
+        const fall = 1 / (1 + 0.15 * i);
+        risk += hazard(sh, x, y, i * ahead) * fall; many += crowd * fall;
+      }
+      const off = (yaw - course) / limit, change = (yaw - sh.cmd) / limit;
+      costs[c] = risk + 0.6 * off * off + 0.25 * change * change + (slower ? 0.3 : 0); risks[c] = risk; crowds[c] = many;
+      if (costs[c] < costs[best]) best = c;
+    }
+    // between the two neighbouring curves, where the cost is least
+    const j = best % CANDIDATES, base = best - j;
+    let want = limit * (2 * j / (CANDIDATES - 1) - 1);
+    if (j > 0 && j < CANDIDATES - 1) {
+      const c0 = costs[base + j - 1], c1 = costs[best], c2 = costs[base + j + 1], den = c0 - 2 * c1 + c2;
+      if (den > 1e-9) want += clamp((0.5 * (c0 - c2)) / den, -0.5, 0.5) * ((2 * limit) / (CANDIDATES - 1));
+    }
+    sh.want = want; sh.danger = risks[best]; sh.yielding = best >= CANDIDATES;
+  }
+
+  // One step of swimming: the plan eased into the yaw rate, so the path stays
+  // a smooth curve; thrust against drag; the tail's beat.
   function steer(sh, dt) {
     const L = sh.L;
     if (sh.hold > 0) { sh.hold -= dt; return; }
     sh.legT += dt;
     const dx = sh.tx - sh.x, dy = sh.ty - sh.y, dist = Math.hypot(dx, dy);
-    if (!sh.leaving && (dist < L * 0.35 || sh.legT > 16)) {
+    // reached, or passed too close to come round to without circling
+    const passed = dist < L * 1.1 && dx * Math.cos(sh.a) + dy * Math.sin(sh.a) < -0.2 * dist;
+    if (!sh.leaving && (dist < L * 0.45 || passed || sh.legT > 18)) {
       sh.legT = 0;
       if (--sh.legs <= 0) {
         let staying = 0;
@@ -674,45 +926,27 @@ export function swim(canvas, options = {}) {
         else { sh.leaving = true; pickExit(sh); }
       } else pickInterior(sh);
     }
-    const ca = Math.cos(sh.a), sa = Math.sin(sh.a);
-    let turn = wrap(Math.atan2(sh.ty - sh.y, sh.tx - sh.x) - sh.a) * 0.9;
-    turn += 0.26 * Math.sin(time * 0.29 + sh.seed) + 0.14 * Math.sin(time * 0.71 + sh.seed * 0.37);
-    // curve around what the page asked to keep clear, but not always
-    for (const r of avoidRects) {
-      const m = L * 0.1;
-      for (const look of [0.3, 0.75]) {
-        const lx = sh.x + ca * L * look, ly = sh.y + sa * L * look;
-        if (lx > r.left - m && lx < r.right + m && ly > r.top - m && ly < r.bottom + m) {
-          const cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
-          const cr = ca * (cy - sh.y) - sa * (cx - sh.x);
-          turn += (cr > 0 ? -1 : 1) * 0.7 * sh.bold * (look < 0.5 ? 1.2 : 0.8);
-          break;
-        }
-      }
-    }
-    // stay on screen until it is time to go
-    if (!sh.leaving && sh.seen) {
-      const lx = sh.x + ca * L * 0.6, ly = sh.y + sa * L * 0.6, mx = W * 0.03, my = H * 0.03;
-      if (lx < mx || lx > W - mx || ly < my || ly > H - my) turn += wrap(Math.atan2(H / 2 - sh.y, W / 2 - sh.x) - sh.a) * 0.7;
-    }
-    // Anticipate neighbours before the full-body hard constraint is needed.
-    const hx0 = sh.x + ca * L * 0.25, hy0 = sh.y + sa * L * 0.25;
-    for (const other of sharks) {
-      if (other === sh || other.dead) continue;
-      const lim = 0.8 * Math.max(L, other.L);
-      let bx = 0, by = 0, bd = 1e9;
-      for (let k = 0; k < SPINE; k += 2) { const ex = other.qx[k] - hx0, ey = other.qy[k] - hy0, d = ex * ex + ey * ey; if (d < bd) { bd = d; bx = ex; by = ey; } }
-      bd = Math.sqrt(bd);
-      if (bd < lim && bd > 1) turn += (ca * by - sa * bx > 0 ? -1 : 1) * 1.2 * (1 - bd / lim);
-    }
-    const maxTurn = 0.75;
-    turn = clamp(turn, -maxTurn, maxTurn);
-    sh.av += (turn - sh.av) * Math.min(1, dt * 1.6);
+    // thrust against drag, and a little more drag in a turn
+    gait(sh, dt, Math.min(TURN_MAX, sh.U / (TURN_RADIUS * L)));
+    const Uc = Math.max(sh.base, 1e-6), e = sh.effort, was = sh.U;
+    const U = sh.U = Math.max(0, was + (((e * e * Uc * Uc - was * was) / (DRAG_S * Uc)) - 0.3 * Math.abs(sh.av) * was) * dt);
+    const limit = Math.min(TURN_MAX, U / (TURN_RADIUS * L));
+    // a fresh look ahead fifteen times a second; the steering eases between
+    sh.planT -= dt;
+    if (sh.planT <= 0) { sh.planT += 1 / 15; plan(sh, U, limit); }
+    // somewhere it cannot get to for long: it thinks of somewhere else
+    sh.blocked = sh.danger > 1 ? sh.blocked + dt : Math.max(0, sh.blocked - dt);
+    if (sh.blocked > 4 && !sh.leaving) { sh.blocked = 0; pickInterior(sh); }
+    sh.cmd += (clamp(sh.want, -limit, limit) - sh.cmd) * Math.min(1, dt / 0.35);
+    sh.av = clamp(sh.av + (sh.cmd - sh.av) * Math.min(1, dt / YAW_S), -limit, limit);
     sh.a = wrap(sh.a + sh.av * dt);
-    const boost = 1 + sh.boost * Math.exp(-sh.age / 1.3);
-    const v = sh.base * (1 + 0.1 * Math.sin(time * 0.5 + sh.seed)) * (1 - 0.22 * Math.min(1, Math.abs(sh.av) / maxTurn)) * boost;
-    sh.x += Math.cos(sh.a) * v * dt; sh.y += Math.sin(sh.a) * v * dt;
-    sh.phase += TAU * (0.35 + 1.5 * (v / L)) * dt;
+    sh.vx = Math.cos(sh.a) * sh.U; sh.vy = Math.sin(sh.a) * sh.U;
+    sh.x += sh.vx * dt; sh.y += sh.vy * dt;
+    // The tail beats faster and wider the harder it works, and all but stops
+    // in a glide; the body straightens while the shark coasts.
+    const beat = e <= 1 ? 0.12 + 0.88 * smooth(0.2, 1, e) : Math.min(1.3, 1 + 0.25 * (e - 1));
+    sh.beat += (beat - sh.beat) * Math.min(1, dt / 0.6);
+    sh.phase += TAU * (0.1 + (e * Uc) / (STRIDE * L)) * dt;
     const hx = sh.trX[sh.trH], hy = sh.trY[sh.trH];
     if ((sh.x - hx) ** 2 + (sh.y - hy) ** 2 >= sh.step * sh.step) pushTrail(sh);
     sh.age += dt;
@@ -804,17 +1038,22 @@ export function swim(canvas, options = {}) {
 
   function stepWake(dt) {
     if (!o.wake) return;
-    const k = Math.exp(-dt / 0.6);
-    for (let i = 0; i < wake.length; i++) if (wake[i] > 0.004) wake[i] *= k; else wake[i] = 0;
+    wakeOn(cells, wake, dt);
+    if (dots) wakeOn(dots, dots.wake, dt);
+  }
+
+  function wakeOn(g, field, dt) {
+    const k = Math.exp(-dt / 0.6), { cols, rows, pw, ph, colX: gx, rowY: gy } = g;
+    for (let i = 0; i < field.length; i++) if (field[i] > 0.004) field[i] *= k; else field[i] = 0;
     for (const sh of sharks) {
       const r = sh.L * 0.04 + cw * 1.3;
       for (let j = Math.floor(SPINE * 0.84); j < SPINE; j += 2) {
         const x = sh.qx[j], y = sh.qy[j];
-        const i0 = Math.max(0, Math.floor(((x - r) * dpr - ox) / cwD)), i1 = Math.min(cols - 1, Math.floor(((x + r) * dpr - ox) / cwD));
-        const j0 = Math.max(0, Math.floor(((y - r) * dpr - oy) / chD)), j1 = Math.min(rows - 1, Math.floor(((y + r) * dpr - oy) / chD));
+        const i0 = Math.max(0, Math.floor(((x - r) * dpr - g.ox) / pw)), i1 = Math.min(cols - 1, Math.floor(((x + r) * dpr - g.ox) / pw));
+        const j0 = Math.max(0, Math.floor(((y - r) * dpr - g.oy) / ph)), j1 = Math.min(rows - 1, Math.floor(((y + r) * dpr - g.oy) / ph));
         for (let b = j0; b <= j1; b++) for (let a = i0; a <= i1; a++) {
-          const ex = colX[a] - x, ey = rowY[b] - y, d = Math.sqrt(ex * ex + ey * ey);
-          if (d < r) { const v = 0.85 * (1 - d / r) + 0.15; const id = b * cols + a; if (wake[id] < v) wake[id] = v; }
+          const ex = gx[a] - x, ey = gy[b] - y, d = Math.sqrt(ex * ex + ey * ey);
+          if (d < r) { const v = 0.85 * (1 - d / r) + 0.15; const id = b * cols + a; if (field[id] < v) field[id] = v; }
         }
       }
     }
@@ -829,42 +1068,51 @@ export function swim(canvas, options = {}) {
 
   // ---------- rasterising sharks into cells
 
-  function raster(sh, prio) {
+  // Every cell of grid g within reach of a shark's body, with the nearest
+  // point of its spine: s along it, t across it (signed). They are listed in
+  // g.list; returns how many.
+  function cover(sh, g, margin) {
     const sp = sh.sp, L = sh.L, qx = sh.qx, qy = sh.qy;
-    const stamp = ++stampS;
+    const { cols, rows, pw, ph, colX: gx, rowY: gy, mark, bestD: bd, bestS: bs, bestT: bt, list } = g;
+    const gox = g.ox, goy = g.oy, stamp = ++g.stamp;
     let n = 0;
-    const margin = cw * 1.2;
     for (let k = 0; k < SPINE - 1; k++) {
       const ax = qx[k], ay = qy[k], dx = qx[k + 1] - ax, dy = qy[k + 1] - ay;
-      const len2 = dx * dx + dy * dy || 1e-6, len = Math.sqrt(len2);
+      const len2 = dx * dx + dy * dy || 1e-6;
       const r = sp.reach[k] * L + margin;
       const minx = Math.min(ax, ax + dx) - r, maxx = Math.max(ax, ax + dx) + r;
       const miny = Math.min(ay, ay + dy) - r, maxy = Math.max(ay, ay + dy) + r;
-      const i0 = Math.max(0, Math.floor((minx * dpr - ox) / cwD)), i1 = Math.min(cols - 1, Math.floor((maxx * dpr - ox) / cwD));
-      const j0 = Math.max(0, Math.floor((miny * dpr - oy) / chD)), j1 = Math.min(rows - 1, Math.floor((maxy * dpr - oy) / chD));
+      const i0 = Math.max(0, Math.floor((minx * dpr - gox) / pw)), i1 = Math.min(cols - 1, Math.floor((maxx * dpr - gox) / pw));
+      const j0 = Math.max(0, Math.floor((miny * dpr - goy) / ph)), j1 = Math.min(rows - 1, Math.floor((maxy * dpr - goy) / ph));
       if (i0 > i1 || j0 > j1) continue;
       const s0 = k / (SPINE - 1), sd = 1 / (SPINE - 1);
       const first = k === 0, lastSeg = k === SPINE - 2;
       for (let j = j0; j <= j1; j++) {
-        const cy = rowY[j], row = j * cols;
+        const cy = gy[j], row = j * cols;
         for (let i = i0; i <= i1; i++) {
-          const cx = colX[i];
+          const cx = gx[i];
           let tau = ((cx - ax) * dx + (cy - ay) * dy) / len2;
           if (tau < 0 && !first) tau = 0; else if (tau > 1 && !lastSeg) tau = 1;
           const ex = cx - (ax + tau * dx), ey = cy - (ay + tau * dy);
           const d2 = ex * ex + ey * ey;
           if (d2 > r * r) continue;
           const id = row + i;
-          if (markS[id] !== stamp) { markS[id] = stamp; bestD[id] = d2; sharkCells[n++] = id; }
-          else if (d2 >= bestD[id]) continue;
-          bestD[id] = d2;
-          bestS[id] = s0 + tau * sd;
-          bestT[id] = (dx * ey - dy * ex) > 0 ? Math.sqrt(d2) : -Math.sqrt(d2);
+          if (mark[id] !== stamp) { mark[id] = stamp; bd[id] = d2; list[n++] = id; }
+          else if (d2 >= bd[id]) continue;
+          bd[id] = d2;
+          bs[id] = s0 + tau * sd;
+          bt[id] = (dx * ey - dy * ex) > 0 ? Math.sqrt(d2) : -Math.sqrt(d2);
         }
       }
     }
-    const edgeM = (cw * 0.75) / L, eyeR = (cw * 0.62) / L, tex = cw * 0.95;
-    const tint = sp.tintIndex, epochT = time * 0.7;
+    return n;
+  }
+
+  function raster(sh, prio) {
+    const sp = sh.sp, L = sh.L;
+    const n = cover(sh, cells, cw * 1.2);
+    const edgeM = (cw * 0.75) / L, eyeR = o.eyes ? (cw * 0.62) / L : 0, tex = cw * 0.95;
+    const tint = sp.tintIndex, epochT = time * 0.7, along = alongTint(sp);
     for (let c = 0; c < n; c++) {
       const id = sharkCells[c];
       const s = bestS[id], t = bestT[id];
@@ -875,9 +1123,9 @@ export function swim(canvas, options = {}) {
       let sprite = -1;
       if (outK === K_EDGE) {
         if (h1 > 0.42 * outD) continue;
-        sprite = EDGE + (h2 < 0.3 ? 0 : h2 < 0.7 ? 1 : 2) * 4 + ((h1 * 97) | 0) % EDGE_MARKS;
-      } else if (outK === K_EYE) {
-        sprite = EYE + (h1 < 0.75 ? 0 : 1);
+        const mark = (h2 < 0.3 ? 0 : h2 < 0.7 ? 1 : 2) * 4 + ((h1 * 97) | 0) % EDGE_MARKS;
+        if (pal.edge) sprite = EDGE + mark;
+        else sprite = EDGE_T + (along >= 0 && (h1 * 7919) % 1 < smooth(0.1, 0.95, s) ? along : tint) * 12 + mark;
       } else {
         const epoch = Math.floor(epochT + h2 * 5);
         const h3 = hash(ts * 31 + epoch, tt, sh.seed + 13);
@@ -888,10 +1136,14 @@ export function swim(canvas, options = {}) {
         else tone = clamp(1 + Math.floor((1 - dd) * 10), 1, 9);
         const band = tone === 0 ? BAND_DARK : tone <= 3 ? BAND_DENSE : tone <= 5 ? BAND_MID : tone <= 7 ? BAND_LIGHT : BAND_FAINT;
         const g = band[(h3 * band.length) | 0];
-        if (outK === K_SPOT) sprite = bodyId(tint, clamp(tone, 2, 6), 1, 13);
+        // toward the tail, a palette with along shades into the next colour
+        const ti = along >= 0 && (h1 * 7919) % 1 < smooth(0.1, 0.95, s) ? along : tint;
+        // an eye: an o one shade darker than the body there, in its own ink
+        if (outK === K_EYE) sprite = bodyId(ti, clamp(Math.floor((1 - d) * 10), 1, 8), 0, 13);
+        else if (outK === K_SPOT) sprite = bodyId(ti, clamp(tone, 2, 6), 1, 13);
         else if (h1 * 1000 % 1 < 0.035 && tone >= 2 && tone <= 7) sprite = accentId(((h2 * 61) | 0) % ACCENTS, tone <= 4 ? 1 : 0, g);
-        else if (h3 * 1000 % 1 < 0.03 && tone >= 2 && tone <= 6) sprite = bodyId(tint, tone, 1, g);
-        else sprite = bodyId(tint, tone, 0, g);
+        else if (h3 * 1000 % 1 < 0.03 && tone >= 2 && tone <= 6) sprite = bodyId(ti, tone, 1, g);
+        else sprite = bodyId(ti, tone, 0, g);
       }
       if (fbStamp[id] !== stampF) { fbStamp[id] = stampF; fbPrio[id] = -1; frameCells[frameCellCount++] = id; }
       const p = prio + (outK === K_EDGE ? 0 : 10);
@@ -901,7 +1153,273 @@ export function swim(canvas, options = {}) {
 
   // ---------- drawing
 
+  // The colour a species turns toward along its body, if the palette has one.
+  function alongTint(sp) {
+    return pal.along && pal.along[sp.tint] ? TINTS.indexOf(pal.along[sp.tint]) : -1;
+  }
+
+  // ---------- drawn without the grid (render: 'smooth')
+  //
+  // Each shark is painted once, lying straight, into its own image at the
+  // canvas's resolution: every pixel shaded from the body model the
+  // characters use, its edge smoothed by its distance to the outline. Each
+  // frame that image is laid along the bending spine in short overlapping
+  // slices, a drawImage each: far cheaper than filling shaded paths.
+
+  const SKIN_ALONG = 32, SKIN_LEVELS = 256, SKIN_MAX = 1.5;
+
+  function skin(sh) {
+    if (sh.skin && sh.skin.pal === pal && sh.skin.dpr === dpr && sh.skin.L === sh.L && sh.skin.eyes === o.eyes) return sh.skin;
+    const sp = sh.sp, L = sh.L, Ld = L * dpr, table = sp.table;
+    let R = 0;
+    for (let k = 0; k < SPINE - 1; k++) R = Math.max(R, sp.reach[k]);
+    const pad = 3, x0 = Math.ceil(0.045 * Ld) + pad, w = Math.ceil(x0 + 1.045 * Ld) + pad, yc = Math.ceil(R * Ld) + pad, h = 2 * yc;
+    // its colours, from the palette's tint toward its along tint, hazed
+    // toward the ground the deeper it swims
+    const A = tintRamp(pal.tints[sp.tint]), al = alongTint(sp), B = al >= 0 ? tintRamp(pal.tints[TINTS[al]]) : A;
+    const ground = rgb(pal.ground), haze = (1 - sh.z) * 0.22, lut = new Uint8Array(SKIN_ALONG * SKIN_LEVELS * 3);
+    for (let a = 0; a < SKIN_ALONG; a++) for (let lv = 0; lv < SKIN_LEVELS; lv++) {
+      const d = (lv / (SKIN_LEVELS - 1)) * SKIN_MAX;
+      const c = mixc(mixc(shadeAt(A, d), shadeAt(B, d), a / (SKIN_ALONG - 1)), ground, haze);
+      lut.set(c, (a * SKIN_LEVELS + lv) * 3);
+    }
+    const c = makeCanvas(w, h), g = c.getContext('2d'), img = g.createImageData(w, h), px = img.data;
+    const edgeM = 2 / Ld, dorsal = sp.dorsal, ext = new Float32Array(w);
+    for (let i = 0; i < w; i++) {
+      const s = (i + 0.5 - x0) / Ld;
+      if (s < -0.04 || s > 1.04) continue;
+      const k = clamp(Math.floor(s * (SPINE - 1)), 0, SPINE - 2), r = sp.reach[k] * Ld + 3;
+      const j0 = Math.max(0, Math.floor(yc - r)), j1 = Math.min(h - 1, Math.ceil(yc + r));
+      const sc = clamp(s, 0, 1), wb = table[(sc * 256 + 0.5) | 0], row = Math.round(alongMix(sc) * (SKIN_ALONG - 1)) * SKIN_LEVELS;
+      const fade = tailFade(sc), head = lerp(0.86, 1, smooth(0.01, 0.08, s));
+      const ridge = dorsal ? 0.12 * Math.sin(Math.PI * clamp((s - dorsal[0]) / (dorsal[1] - dorsal[0]), 0, 1)) : 0;
+      const saddle = sp.saddles ? 0.2 * smooth(0.2, 0.7, Math.sin(s * TAU * sp.saddles + 1.3)) * smooth(0.06, 0.1, s) * (1 - smooth(0.78, 0.82, s)) : 0;
+      for (let j = j0; j <= j1; j++) {
+        const t = (j + 0.5 - yc) / dpr, u = Math.abs(t) / L;
+        shape(sp, s, t, L, edgeM, 0, 1);
+        const cov = clamp(0.5 - outSD * Ld, 0, 1);
+        if (cov <= 0) continue;
+        let d;
+        if (outK === K_BODY && s >= 0 && s <= 1 && u <= wb) {
+          // the same shading as the characters', with its steps smoothed
+          const q = wb > 0 ? u / wb : 0;
+          d = (0.98 - 0.52 * q * q) * fade * head + ridge * (1 - smooth(0.2, 0.45, q)) + saddle;
+        } else if (outK === K_BODY || outK === K_FIN) d = outD;
+        else d = 0.46 * fade;
+        const o4 = (j * w + i) * 4, l3 = (row + clamp(Math.round((d / SKIN_MAX) * (SKIN_LEVELS - 1)), 0, SKIN_LEVELS - 1)) * 3;
+        px[o4] = lut[l3]; px[o4 + 1] = lut[l3 + 1]; px[o4 + 2] = lut[l3 + 2]; px[o4 + 3] = Math.round(cov * 255);
+        ext[i] = Math.max(ext[i], Math.abs(j + 0.5 - yc) + 1);
+      }
+    }
+    g.putImageData(img, 0, 0);
+    // Spots, and eyes if asked for, in the body's own colour a little darker
+    // than it is there: never ink.
+    const mark = (s, u, r, more) => {
+      const wb = table[(clamp(s, 0, 1) * 256 + 0.5) | 0], q = wb > 0 ? Math.min(1, Math.abs(u) / wb) : 0;
+      const d = (0.98 - 0.52 * q * q) * tailFade(s) + more, l3 = (Math.round(alongMix(s) * (SKIN_ALONG - 1)) * SKIN_LEVELS + clamp(Math.round((d / SKIN_MAX) * (SKIN_LEVELS - 1)), 0, SKIN_LEVELS - 1)) * 3;
+      g.fillStyle = `rgb(${lut[l3]},${lut[l3 + 1]},${lut[l3 + 2]})`;
+      g.beginPath(); g.arc(x0 + s * Ld, yc + u * Ld, r, 0, TAU); g.fill();
+    };
+    if (sp.spots) {
+      const r = Math.max(0.8 * dpr, 0.008 * Ld);
+      for (let i = 0; i < 20; i++) {
+        const s = 0.08 + 0.66 * hash(sh.seed, i, 11);
+        mark(s, (hash(sh.seed, i, 12) * 1.6 - 0.8) * table[(s * 256 + 0.5) | 0], r, 0.35);
+      }
+    }
+    if (o.eyes) {
+      const er = Math.max(1.1 * dpr, 0.0095 * Ld), hm = sp.hammer;
+      if (hm) for (const side of [1, -1]) mark((hm.sweep + hm.back + 0.006) / 2, hm.span * 0.93 * side, er, 0.1);
+      else if (sp.eyes) for (const side of [1, -1]) mark(sp.eyes[0], sp.eyes[1] * side, er, 0.1);
+    }
+    // how far each slice reaches across, so it is drawn no wider than it is
+    const n = SPINE - 1, seg = Ld / n, reach = new Float32Array(n);
+    for (let k = 0; k < n; k++) {
+      const a = k === 0 ? 0 : Math.max(0, Math.floor(x0 + k * seg - seg * 0.5)), b = k === n - 1 ? w : Math.min(w, Math.ceil(x0 + (k + 1) * seg + seg * 0.5));
+      for (let i = a; i < b; i++) reach[k] = Math.max(reach[k], ext[i]);
+      reach[k] = Math.min(yc, Math.ceil(reach[k]) + 1);
+    }
+    sh.skin = { pal, dpr, L, eyes: o.eyes, canvas: c, x0, yc, w, h, Ld, reach };
+    return sh.skin;
+  }
+
+  // The straight image laid along the spine: each slice turned to its
+  // segment and overlapping its neighbours just enough that no seam opens
+  // where the body bends. Slices off the canvas are skipped.
+  function drawShark(sh) {
+    const k = skin(sh), n = SPINE - 1, seg = k.Ld / n, qx = sh.qx, qy = sh.qy;
+    let was = Math.atan2(qy[1] - qy[0], qx[1] - qx[0]);
+    for (let i = 0; i < n; i++) {
+      const ax = qx[i] * dpr, ay = qy[i] * dpr, dx = qx[i + 1] * dpr - ax, dy = qy[i + 1] * dpr - ay, l = Math.hypot(dx, dy) || 1;
+      const ux = dx / l, uy = dy / l, xk = k.x0 + i * seg, r = k.reach[i];
+      if (r <= 0) continue;
+      const a = Math.atan2(dy, dx), next = i < n - 1 ? Math.atan2(qy[i + 2] - qy[i + 1], qx[i + 2] - qx[i + 1]) : a;
+      const bend = Math.max(Math.abs(wrap(a - was)), Math.abs(wrap(next - a)));
+      was = a;
+      const ov = Math.min(seg * 0.5, 1 + 0.5 * r * bend);
+      if (Math.max(ax, ax + dx) + r + ov < 0 || Math.min(ax, ax + dx) - r - ov > Wd || Math.max(ay, ay + dy) + r + ov < 0 || Math.min(ay, ay + dy) - r - ov > Hd) continue;
+      const sx0 = i === 0 ? 0 : xk - ov, sx1 = i === n - 1 ? k.w : xk + seg + ov;
+      ctx.setTransform(ux, uy, uy, -ux, ax - xk * ux - k.yc * uy, ay - xk * uy + k.yc * ux);
+      ctx.drawImage(k.canvas, sx0, k.yc - r, sx1 - sx0, 2 * r, sx0, k.yc - r, sx1 - sx0, 2 * r);
+    }
+  }
+
+  function renderSmooth() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalAlpha = 1;
+    if (o.ground) { ctx.fillStyle = pal.ground; ctx.fillRect(0, 0, W, H); } else ctx.clearRect(0, 0, W, H);
+    if (o.plankton) {
+      for (const m of motes) {
+        const life = Math.min(m.age / 1.5, (m.max - m.age) / 2, 1);
+        if (life < 0.15) continue;
+        ctx.globalAlpha = life;
+        if (m.dot) { ctx.fillStyle = pal.dot[m.shade]; ctx.fillRect(m.x - 1, m.y - 1, 2, 2); }
+        else { ctx.fillStyle = pal.dash[life < 0.55 ? 2 : m.shade]; ctx.fillRect(m.x - cw * 0.23, m.y - 0.5, cw * 0.46, 1); }
+      }
+      ctx.globalAlpha = 1;
+    }
+    for (const sh of sharks.slice().sort((a, b) => a.z - b.z)) drawShark(sh);
+  }
+
+  // ---------- a still field of dots (render: 'dots')
+  //
+  // Identical dots that never move; one lights up while a shark is under
+  // it, in the shark's colour and shade at its centre, and partly at the
+  // shark's edge, so the outline stays smooth. Only the dots that change are
+  // drawn again, each one sprite.
+
+  const LEVELS = 20, ALONG = 5;
+  const D_PLANK = TINTS.length * ALONG * LEVELS, D_WAKE = D_PLANK + 3, D_REST = D_WAKE + 2, D_SPRITES = D_REST + 1;
+
+  function buildDots() {
+    const pd = Math.max(3, Math.round(o.pitch * dpr)), dc = Math.ceil(Wd / pd) + 1, dr = Math.ceil(Hd / pd) + 1, n = dc * dr;
+    const g = {
+      pw: pd, ph: pd, cols: dc, rows: dr, ox: Math.floor((Wd - dc * pd) / 2), oy: Math.floor((Hd - dr * pd) / 2),
+      colX: new Float32Array(dc), rowY: new Float32Array(dr), mark: new Int32Array(n), bestD: new Float32Array(n),
+      bestS: new Float32Array(n), bestT: new Float32Array(n), list: new Int32Array(n), stamp: 0, wake: new Float32Array(n),
+      shown: new Int32Array(n), want: new Int32Array(n), wantA: new Float32Array(n), wantStamp: new Int32Array(n),
+      lit: new Int32Array(n), was: new Int32Array(n), wasN: 0, frame: 0, full: true, sprites: null, restFill: null,
+    };
+    for (let i = 0; i < dc; i++) g.colX[i] = (g.ox + (i + 0.5) * pd) / dpr;
+    for (let j = 0; j < dr; j++) g.rowY[j] = (g.oy + (j + 0.5) * pd) / dpr;
+    dots = g;
+    buildDotSprites();
+  }
+
+  function buildDotSprites() {
+    const g = dots, pd = g.pw, per = 32;
+    const c = makeCanvas(per * pd, Math.ceil(D_SPRITES / per) * pd), x = c.getContext('2d');
+    const ground = rgb(pal.ground), dark = (0.2126 * ground[0] + 0.7152 * ground[1] + 0.0722 * ground[2]) / 255 < 0.3;
+    const size = clamp(o.dot, 0.1, 1) * pd, square = o.shape === 'square';
+    const paint = (id, col) => {
+      const x0 = (id % per) * pd, y0 = Math.floor(id / per) * pd, cx = x0 + pd / 2, cy = y0 + pd / 2;
+      if (square) {
+        const side = Math.max(1, Math.round(size)), off = Math.floor((pd - side) / 2);
+        x.fillStyle = css(col); x.fillRect(x0 + off, y0 + off, side, side);
+      } else if (dark) {
+        // a lit LED: a bright core, its colour, a soft rim, all inside its own cell
+        const r = size / 2, outer = Math.min(pd / 2, r * 1.45), gr = x.createRadialGradient(cx, cy, 0, cx, cy, outer);
+        gr.addColorStop(0, css(mixc(col, [255, 255, 255], 0.22)));
+        gr.addColorStop((r * 0.65) / outer, css(col));
+        gr.addColorStop(r / outer, `rgba(${col[0]},${col[1]},${col[2]},0.55)`);
+        gr.addColorStop(1, `rgba(${col[0]},${col[1]},${col[2]},0)`);
+        x.fillStyle = gr; x.fillRect(x0, y0, pd, pd);
+      } else {
+        x.fillStyle = css(col); x.beginPath(); x.arc(cx, cy, size / 2, 0, TAU); x.fill();
+      }
+    };
+    TINTS.forEach((name, ti) => {
+      const A = tintRamp(pal.tints[name]), B = pal.along && pal.along[name] ? tintRamp(pal.tints[pal.along[name]]) : A;
+      for (let a = 0; a < ALONG; a++) for (let lv = 0; lv < LEVELS; lv++) {
+        const d = 0.1 + (lv / (LEVELS - 1)) * 1.2;
+        paint((ti * ALONG + a) * LEVELS + lv, mixc(shadeAt(A, d), shadeAt(B, d), a / (ALONG - 1)));
+      }
+    });
+    pal.dash.slice(0, 3).forEach((col, i) => paint(D_PLANK + i, rgb(col)));
+    pal.dot.slice(0, 2).forEach((col, i) => paint(D_WAKE + i, rgb(col)));
+    paint(D_REST, mixc(ground, rgb(pal.dash[0]), clamp(o.rest, 0, 1)));
+    g.sprites = c; g.full = true;
+  }
+
+  function renderDots() {
+    if (!dots) buildDots();
+    const g = dots, stamp = ++g.frame, pd = g.pw, pitch = pd / dpr, cols = g.cols;
+    let litN = 0;
+    const light = (id, sprite, alpha) => {
+      const st = sprite * 16 + Math.round(alpha * 15);
+      if (g.wantStamp[id] !== stamp) { g.wantStamp[id] = stamp; g.want[id] = st; g.wantA[id] = alpha; g.lit[litN++] = id; }
+      else if (alpha > g.wantA[id]) { g.want[id] = st; g.wantA[id] = alpha; }
+    };
+    for (const sh of sharks.slice().sort((a, b) => a.z - b.z)) {
+      const sp = sh.sp, L = sh.L, n = cover(sh, g, pitch * 0.8);
+      const edgeM = (pitch * 0.55) / L, eyeR = o.eyes ? Math.max(L * 0.011, pitch * 0.45) / L : 0, tex = cw * 0.95;
+      const tint = sp.tintIndex, along = alongTint(sp) >= 0;
+      for (let c = 0; c < n; c++) {
+        const id = g.list[c], s = g.bestS[id], t = g.bestT[id];
+        shape(sp, s, t, L, edgeM, eyeR, hash(Math.floor((s * L) / tex), Math.floor(t / tex) + 4096, sh.seed + 7));
+        if (outK === K_NONE) continue;
+        // an eye lights its dot a shade darker than the body there
+        const d = outK === K_EDGE ? 0.46 * tailFade(s) : outK === K_SPOT ? outD + 0.45 : outK === K_EYE ? outD + 0.1 : outD;
+        const lv = clamp(Math.round(((d - 0.1) / 1.2) * (LEVELS - 1)), 0, LEVELS - 1);
+        const a = along ? Math.round(alongMix(s) * (ALONG - 1)) : 0;
+        const alpha = clamp(0.5 - (outSD * L) / (pitch * 0.85), 0, 1);
+        if (alpha >= 1 / 30) light(id, (tint * ALONG + a) * LEVELS + lv, alpha);
+      }
+    }
+    if (o.wake) {
+      for (let id = 0; id < g.wake.length; id++) {
+        const v = g.wake[id];
+        if (v < 0.12 || g.wantStamp[id] === stamp) continue;
+        const hh = hash(id % cols, (id / cols) | 0, 991);
+        if (hh < 0.7) light(id, D_WAKE + (hh < 0.28 ? 1 : 0), Math.min(1, v) * 0.55);
+      }
+    }
+    if (o.plankton) {
+      for (const m of motes) {
+        const i = Math.floor((m.x * dpr - g.ox) / pd), j = Math.floor((m.y * dpr - g.oy) / pd);
+        if (i < 0 || j < 0 || i >= cols || j >= g.rows) continue;
+        const life = Math.min(m.age / 1.5, (m.max - m.age) / 2, 1), id = j * cols + i;
+        if (life < 0.15 || (g.wantStamp[id] === stamp && g.want[id] < D_PLANK * 16)) continue;
+        light(id, D_PLANK + (m.dot ? 2 : life < 0.55 ? 2 : m.shade), life * 0.4);
+      }
+    }
+    // draw what changed
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+    const sx = g.sprites, rest = o.rest > 0, per = 32;
+    ctx.fillStyle = pal.ground;
+    const clearDot = id => {
+      const x = g.ox + (id % cols) * pd, y = g.oy + ((id / cols) | 0) * pd;
+      if (o.ground) ctx.fillRect(x, y, pd, pd); else ctx.clearRect(x, y, pd, pd);
+      if (rest) ctx.drawImage(sx, (D_REST % per) * pd, Math.floor(D_REST / per) * pd, pd, pd, x, y, pd, pd);
+    };
+    if (g.full) {
+      g.full = false; g.wasN = 0; g.shown.fill(-1);
+      if (o.ground) ctx.fillRect(0, 0, Wd, Hd); else ctx.clearRect(0, 0, Wd, Hd);
+      if (rest) for (let id = 0; id < g.shown.length; id++) clearDot(id);
+    }
+    for (let k = 0; k < g.wasN; k++) {
+      const id = g.was[k];
+      if (g.wantStamp[id] !== stamp && g.shown[id] !== -1) { clearDot(id); g.shown[id] = -1; }
+    }
+    for (let k = 0; k < litN; k++) {
+      const id = g.lit[k], st = g.want[id];
+      if (g.shown[id] === st) continue;
+      clearDot(id);
+      const sprite = st >> 4, alpha = (st & 15) / 15;
+      if (alpha > 0) {
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(sx, (sprite % per) * pd, Math.floor(sprite / per) * pd, pd, pd, g.ox + (id % cols) * pd, g.oy + ((id / cols) | 0) * pd, pd, pd);
+        ctx.globalAlpha = 1;
+      }
+      g.shown[id] = st;
+    }
+    const was = g.was; g.was = g.lit; g.lit = was; g.wasN = litN;
+  }
+
   function render() {
+    if (o.render === 'smooth') { renderSmooth(); return; }
+    if (o.render === 'dots') { renderDots(); return; }
     stampF++; frameCellCount = 0;
     const order = sharks.slice().sort((a, b) => a.z - b.z);
     order.forEach((sh, i) => raster(sh, i));
@@ -1015,7 +1533,8 @@ export function swim(canvas, options = {}) {
     if (o.enter && !still) {
       const sides = [3, 1, 2, 0, 3, 1, 0, 2];
       const shift = (rnd() * 4) | 0;
-      slots.forEach((slot, i) => { const sh = spawn(slot, sides[(i + shift) % sides.length]); sh.boost = 1.4; sh.hold = i * 0.22 + rnd() * 0.12; });
+      // They come in already under way, fast, and ease to cruising.
+      slots.forEach((slot, i) => { const sh = spawn(slot, sides[(i + shift) % sides.length]); sh.boost = 1.4; sh.U = sh.base * 2.4; sh.hold = i * 0.22 + rnd() * 0.12; });
       stepPlankton(0, true);
       for (const m of motes) m.age = -rnd() * 1.5; // plankton fades in too
       return;
@@ -1097,6 +1616,10 @@ export function swim(canvas, options = {}) {
     if ('cell' in changes || 'aspect' in changes) { atlas = null; resize(); }
     if ('palette' in changes || 'font' in changes) { pal = resolvePalette(o.palette); buildAtlas(); buildGround(); }
     if ('ground' in changes) buildGround();
+    // the dot field is drawn afresh: rebuilt for a new pitch, repainted otherwise
+    if ('pitch' in changes) dots = null;
+    else if (dots && ('palette' in changes || 'ground' in changes || 'dot' in changes || 'shape' in changes || 'rest' in changes || 'eyes' in changes)) buildDotSprites();
+    else if (dots && 'render' in changes) dots.full = true;
     if ('avoid' in changes) readAvoid();
     if ('sharks' in changes) {
       const n = Math.max(0, changes.sharks | 0);

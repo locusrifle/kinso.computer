@@ -8,6 +8,7 @@
 //     → { open(), close(), toggle(), isOpen }
 
 import { activeKeyBindings } from './pi-card.js';
+import { themeOptions, chooseTheme } from './theme-choice.js';
 
 const el = (tag, className, text) => {
   const node = document.createElement(tag);
@@ -59,8 +60,7 @@ export function mountSettings({ signIn, signOut, chooseModel, usage, present, di
   // The themes: a swatch each, its ground, its text and its accent.
   const themes = el('div', 'settings-themes');
   async function paintThemes() {
-    let answer = {};
-    try { answer = await (await fetch('/themes.json', { cache: 'no-store' })).json(); } catch { answer = {}; }
+    const answer = await themeOptions();
     const list = answer.themes ?? [];
     const by = id => list.find(theme => theme.id === id);
     const items = [{ id: 'auto', name: 'Automatic', auto: true, current: Boolean(answer.auto) },
@@ -71,7 +71,7 @@ export function mountSettings({ signIn, signOut, chooseModel, usage, present, di
       pick.setAttribute('aria-pressed', String(theme.current));
       const face = el('span', 'settings-theme-face');
       if (theme.auto) {
-        const light = by('mac-light'), dark = by('mac-dark');
+        const light = by('kinso-light') ?? by('mac-light'), dark = by('kinso-dark') ?? by('mac-dark');
         face.style.background = `linear-gradient(135deg, ${light?.background ?? '#ffffff'} 50%, ${dark?.background ?? '#121214'} 50%)`;
       } else {
         face.style.background = theme.background;
@@ -84,7 +84,7 @@ export function mountSettings({ signIn, signOut, chooseModel, usage, present, di
       pick.append(face, el('span', 'settings-theme-name', theme.name));
       pick.onclick = async () => {
         for (const other of themes.children) other.setAttribute('aria-pressed', String(other === pick));
-        try { await fetch('/theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: theme.id }) }); }
+        try { await chooseTheme(theme.id); }
         catch { void paintThemes(); }
       };
       return pick;

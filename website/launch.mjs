@@ -1,23 +1,30 @@
-import { config } from './launch-config.mjs?v=plain-1';
+import { config } from './launch-config.mjs?v=kinso-lift-2';
 import { demoAddress, isDemoReady, waitForMedia, primeVideo, playVideo, firstVideoFrame, fadeDuration, preloadDue } from './media.mjs';
 import { createFilmLayer } from './film.mjs?v=plain-1';
 import { remembered, unlock } from './lock.mjs?v=sequoia-4';
-import { createLock } from './macos/lock.mjs?v=sequoia-4';
-import { MACOS } from './macos/timings.mjs?v=sequoia-4';
-import { createMacLaunch } from './macos/launch.mjs?v=kinso-install-1';
+import { createLock } from './macos/lock.mjs?v=kinso-lift-2';
+import { MACOS, animate, ease } from './macos/timings.mjs?v=sequoia-4';
+import { createMacLaunch } from './macos/launch.mjs?v=kinso-lift-2';
 import { createMac } from './mac/desktop.mjs?v=kinso-1';
-import { initShell, getShellWindow, setTrash, setDockIcon } from './mac/shell.mjs?v=kinso-install-1';
+import { initShell, getShellWindow, setTrash, setDockIcon } from './mac/shell.mjs?v=kinso-lift-2';
 import { initShop } from './shop.mjs?v=kinso-1';
 import { createPhone } from './mac/phone.mjs?v=clone-3';
-import { variant } from './variant.mjs?v=kinso-install-1';
+import { variant } from './variant.mjs?v=kinso-lift-2';
 // kinso.computer is this page made for Kinso (variant.mjs); what differs there is loaded only there (for-kinso/).
-const kinso = variant.id === 'kinso' ? await import('./for-kinso/site.mjs?v=kinso-install-1') : null;
+const kinso = variant.id === 'kinso' ? await import('./for-kinso/site.mjs?v=kinso-lift-2') : null;
 const $ = id => document.getElementById(id);
 const video = $('film'), frame = $('computer'), reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const introScreen = $('introScreen'), filmScreen = $('filmScreen'), demoScreen = $('demoScreen');
 const lockScreen = $('lockScreen'), hint = $('hint'), announce = $('announce');
 const layer = createFilmLayer({ video, canvas: $('filmCanvas'), screen: filmScreen, area: $('filmArea') });
 const kinsoIcons = kinso?.dressPage();
+// Decode behind the opener, so the sheet can never reveal an unpainted photograph.
+const desktopImage = new Image(); desktopImage.src = variant.wallpaper;
+const desktopPaint = desktopImage.decode().catch(() => {});
+// Tahlia's photograph is Apple's aerial, so the repository never holds it (.gitignore); the PC serves its copy. Where a
+// copy lacks it, imperfect's night shows through underneath instead of an empty desktop.
+const wallpaperImage = variant.wallpapers.map(url => `url("${url}")`).join(', ');
+document.querySelector('.mac-wall').style.backgroundImage = wallpaperImage;
 // Measurable behind the opener, still transparent and inert.
 $('macScreen').hidden = false;
 initShell({ stage: $('macScreen'), appWindow: document.querySelector('.mac-window'), frame, dock: document.querySelector('.mac-dock'),
@@ -36,7 +43,7 @@ const film = Boolean(config.videoUrl);
 const introForMac = () => intro;
 const macLaunch = createMacLaunch({ stage: $('macScreen'), introScreen, intro: introForMac, mac, reduced, film: config.quicktimeFilm,
   onphase: setPhase, ondesktop: () => { if (!frame.getAttribute('src')) requestDemo(); }, onfinish: showMac,
-  ...(kinso ? { player: options => (kinsoFilm = kinso.createKinsoFilm(options)) } : {}) });
+  ...(kinso ? { wallpaperImage, player: options => (kinsoFilm = kinso.createKinsoFilm(options)) } : {}) });
 let phase = 'loading', intro = null, introReady = false, openerDone = false, lockChecked = false;
 let workbench = null, demo = null, unlocked = false, primed = false, skipped = false;
 let generation = 0, pendingMedia = null, stallTimer = null, hintTimer = null, skyLive = false;
@@ -116,8 +123,25 @@ function showLock() {
   sharks?.start();
   lock.show({ focus: matchMedia('(pointer: fine)').matches }); say('Enter the password.');
 }
+async function liftLock() {
+  const timing = config.kinsoUnlock;
+  await desktopPaint;
+  sharks?.cover(); introScreen.hidden = true; lockScreen.inert = true;
+  lockScreen.dataset.departure = 'fade';
+  if (reduced.matches) {
+    await animate(MACOS.reduceMs, t => { lockScreen.style.opacity = String(1 - ease(t, timing.fadeEase)); }).finished;
+  } else {
+    await lock.leave({ ms: timing.fadeMs, curve: timing.fadeEase, zoom: false });
+    // Give the decoded desktop two paint opportunities before any of the sea moves.
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    lockScreen.dataset.departure = 'lift';
+    await animate(timing.liftMs, t => { lockScreen.style.transform = `translateY(${-100 * ease(t, timing.liftEase)}%)`; }).finished;
+  }
+  lock.hide(); sharks?.stop(); lockScreen.dataset.departure = 'done';
+}
 function leaveLock({ skip = false } = {}) {
   if (skip || lockScreen.hidden) { lock.hide(); sharks?.stop(); return; }
+  if (kinso) return liftLock();
   void sharks?.fade(reduced.matches ? MACOS.reduceMs : MACOS.unlockMs);
   return lock.leave().then(() => { lock.hide(); sharks?.stop(); });
 }
@@ -125,9 +149,9 @@ function leaveLock({ skip = false } = {}) {
 // then the build (macos/launch.mjs).
 function afterLock() {
   if (skipped) { leaveLock({ skip: true }); openComputer(); }
-  else macLaunch.enter({ leave: leaveLock });
+  else macLaunch.enter({ leave: leaveLock, sheet: Boolean(kinso) });
 }
-const lock = createLock({ screen: lockScreen, reduced, ...(kinsoIcons ? { identity: { name: variant.lock.name, picture: kinsoIcons.now.avatar } } : {}), onsubmit: password => {
+const lock = createLock({ screen: lockScreen, reduced, ...(kinsoIcons ? { identity: { name: variant.lock.name, picture: kinsoIcons.now.avatar } } : {}), ...kinso?.logoLock($('wordmark'), lockScreen), onsubmit: password => {
   if (phase !== 'ready') return;
   gesture(); setPhase('unlocking'); lock.checking(); say('Checking…');
   unlock(password).then(bench => {
@@ -317,7 +341,7 @@ function gaveUp() {
   openerDone = true; showLock();
 }
 const introTimer = setTimeout(gaveUp, config.mediaTimeoutMs);
-import('./intro/intro.mjs?v=kinso-install-1').then(async module => {
+import('./intro/intro.mjs?v=kinso-lift-2').then(async module => {
   intro = module.intro; await module.ready;
   clearTimeout(introTimer); introReady = true;
   if (openerDone) { intro.lockSky(true); return; }

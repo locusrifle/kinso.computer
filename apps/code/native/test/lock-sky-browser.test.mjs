@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { launchChromium } from '../../../../tools/test-browser.mjs';
 import { fileURLToPath } from 'node:url';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -11,6 +12,8 @@ import { WORD } from '../../../../website/wordmark.mjs';
 import { goatTimes } from '../../../../website/intro/goat.mjs';
 import { bubblePath } from '../../../../website/bubble.mjs';
 import { serveDirectory } from '../../../../tools/serve.mjs';
+// The tag launch.mjs asks intro.mjs under: the test drives the page's own instance, not a second copy.
+const INTRO = `intro/intro.mjs?v=${readFileSync(new URL('../../../../website/launch.mjs', import.meta.url), 'utf8').match(/intro\/intro\.mjs\?v=([^'"]+)/)[1]}`;
 
 // imperfect OS's lock page (desktop/lock), played in Chromium on stepped clocks, and the sky it leaves behind
 // imperfect's window (arrival.js, kept-sky.js). The lock's own WebKit and imperfect's Electron are the OS's to
@@ -61,7 +64,7 @@ test('the actual website and native lock adapters run identical centred boot fra
     await site.goto(server.origin + '/website/index.html');
     await site.waitForFunction(() => window.__launch?.().phase === 'intro' && window.__launch().intro.started, null, { timeout: 60000 });
     await lock.page.evaluate(() => window.lock.key(1));
-    await site.evaluate(async () => { (await import('/website/intro/intro.mjs?v=kinso-1')).intro.approach(); });
+    await site.evaluate(async path => { (await import(path)).intro.approach(); }, `/website/${INTRO}`);
     const stepSite = seconds => site.evaluate(async seconds => {
       window.__introClock += seconds; window.__introWall += seconds;
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -72,7 +75,9 @@ test('the actual website and native lock adapters run identical centred boot fra
     assert.deepEqual((await lock.state()).contact, [VIEW.width / 2, VIEW.height / 2], 'native touch is centred');
     const project = s => Object.fromEntries(['tau', 'bubble', 'wordmark', 'goat', 'mark', 'source', 'lens', 'starOpacity', 'contact', 'world'].map(k => [k, s[k]]));
     let last = 0;
-    for (const tau of [.65, 1.19, 3, BURST + .1, WORD.out + .3, WORD.gone + .2, goatTimes().gone - .1]) {
+    // Compare while both boots own their clocks. The website pauses its boot after the word,
+    // whereas the native lock keeps accepting input; neither adapter shows the archived goat beat.
+    for (const tau of [.65, 1.19, 3, BURST + .1, WORD.out + .3, WORD.gone - .02]) {
       const dt = tau - last; await lock.step(dt, dt); await stepSite(dt); last = tau;
       const native = await lock.state(), publicState = await site.evaluate(() => window.__launch().intro);
       assert.deepEqual(project(native), project(publicState), `identical shared frame at ${tau} s`);
@@ -86,6 +91,10 @@ test('the actual website and native lock adapters run identical centred boot fra
         assert.deepEqual(project(turned), project(publicTurned), 'the resized hosts still draw the same boot');
       }
     }
+    await lock.step(.22, .22); await stepSite(.22);
+    await site.waitForFunction(() => !['intro', 'contact'].includes(window.__launch().phase));
+    assert.equal((await lock.state()).phase, 'box');
+    assert.equal(await site.evaluate(() => window.__launch().lock.unlocked), true, 'the remembered website hands off instead of continuing a native idle clock');
     assert.deepEqual(lock.errors, []);
   } finally { await browser.close(); await new Promise(r => server.server.close(r)); }
 });

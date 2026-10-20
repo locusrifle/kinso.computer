@@ -2,10 +2,9 @@
 // lands on a word: the cursor takes an app from the Dock and lets go of it in Kinso's window as that word is said, and
 // the product inside paints its part (launch.mjs, assembly). Until Noah records the voice-over its words are
 // subtitles, read at PACE; with his recording and its word timings (script.mjs MEDIA) the same steps follow his voice.
-import { BEATS, MEDIA } from './script.mjs?v=kinso-1';
+import { BEATS, MEDIA } from './script.mjs?v=kinso-logo-lock-1';
 import { createNarration, mediaURL } from './narration.mjs?v=kinso-1';
 import { cueTime } from './timeline.mjs?v=kinso-1';
-import { glowMenu, openCodeWindow } from '../mac/shell.mjs?v=kinso-install-1';
 import { primeVideo } from '../media.mjs';
 
 // Where in the window each kind of app goes: the conversation, the panel on the right, the sidebar on the left.
@@ -24,15 +23,13 @@ export const DRAGS = Object.freeze([
   { app: 'instagram', build: null, to: SIDEBAR, on: { para: 4, word: 'Instagram,', edge: 'end' } },
 ]);
 // The other moments: the window opens (beat 1), the film becomes a file (6), the product is done and its browser shows
-// the Kinso Computer page (8), the cursor lets go (9), Code is lit and opened (10).
+// the Kinso Computer page (8), the cursor lets go (9). The last words point to Get yours on that page.
 export const MOMENTS = Object.freeze({
   open: { para: 0 },
   file: { para: 5, word: 'file', edge: 'end' },
   done: { para: 7 },
   page: { para: 7, word: 'thirty-nine' },
   letGo: { para: 8, word: 'real.', edge: 'end' },
-  glow: { para: 9, word: 'Code' },
-  code: { para: 9, word: 'Copy' },
 });
 const PICK_S = .55, CARRY_S = 1.1, MIN_CARRY_S = .7;
 
@@ -106,17 +103,12 @@ export function createKinsoBuild({ stage, film, reduced, media = MEDIA }) {
       const { x, y } = api.at();
       await api.move(x + 36, y - 60, 500);
       await api.onfinish?.();
-      // Beat 10: Code in the menu bar, and its one command.
-      if (!await wait(when(MOMENTS.glow))) return;
-      beat = 9; api.step(9);
-      glowMenu('code');
-      if (!await wait(when(MOMENTS.code))) return;
-      openCodeWindow();
+      // The page stays in the browser for the source invitation and the closing words.
       if (!await wait(narration.duration)) return;
-      beat = 10; glowMenu('code', false);
+      beat = 10;
       narration.stop();
     },
-    stop() { stopped = true; narration.stop(); glowMenu('code', false); caption.hidden = true; },
+    stop() { stopped = true; narration.stop(); caption.hidden = true; },
     state: () => ({ beat, narration: narration.state() }),
   };
 }

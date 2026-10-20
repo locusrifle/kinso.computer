@@ -29,3 +29,6 @@ apps/code/native/public/kinso
 
 # Local Kinso reference type (including symlinks) stays out of Git.
 apps/code/native/public/fonts/inter-tight.woff2
+# Tahlia's desktop for kinso.computer's Mac (website/variant.mjs): Apple's Sonoma aerial S013_C001_F01, a frame at
+# its native 3840x2160. Apple's, so never in this source; the PC serves it, and without it the night wallpaper shows.
+website/mac/wallpaper-kinso.webp

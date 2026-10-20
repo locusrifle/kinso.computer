@@ -3,7 +3,7 @@
 // is black with its words as subtitles, read aloud at PACE, and the launch video is a plain five-second slot.
 // Then the build (build.mjs) takes over: the film steps back as Kinso's window opens (recede), and later becomes a file
 // in Files (intoFiles). It is macos/launch.mjs's player: prime, prepare, play, stop, state.
-import { MEDIA, OPENER, LAUNCH_SLOT_S } from './script.mjs?v=kinso-1';
+import { MEDIA, OPENER, LAUNCH_SLOT_S } from './script.mjs?v=kinso-logo-lock-1';
 import { createNarration, mediaURL } from './narration.mjs?v=kinso-1';
 import { primeVideo } from '../media.mjs';
 

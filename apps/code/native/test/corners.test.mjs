@@ -23,5 +23,5 @@ test('every corner comes from look.css', async () => {
 
 test('look.css names every radius', async () => {
   const look = await readFile(new URL('../public/css/look.css', import.meta.url), 'utf8');
-  for (const name of ['--radius-xs', '--radius-s', '--radius', '--radius-l', '--radius-xl', '--radius-pill', '--radius-window']) assert.match(look, new RegExp(`${name}:\\s*\\d`), name);
+  for (const name of ['--radius-xs', '--radius-s', '--radius-m', '--radius', '--radius-card', '--radius-l', '--radius-xl', '--radius-pill', '--radius-window']) assert.match(look, new RegExp(`${name}:\\s*\\d`), name);
 });

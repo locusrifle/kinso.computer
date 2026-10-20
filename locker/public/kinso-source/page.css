@@ -1,0 +1,58 @@
+/* kinso.computer/source: the source, paid for once (locker/shop.mjs). Kinso's look: warm paper, their type for the
+   headings (Inter Tight, from the git-ignored rebuild of their page at /kinso/a/), a black pill, the gradient price. */
+@font-face { font-family: 'Kinso Inter Tight'; src: url('/kinso/a/db1cd1e8d78c4905.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Kinso Inter Tight'; src: url('/kinso/a/938081690ba37404.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Kinso Inter Tight'; src: url('/kinso/a/2d29d853f4dcef7e.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+
+:root { color-scheme: light; --ink: #0d0d0d; --soft: #6b6b6b; --line: #e6e3df; --grad: linear-gradient(90deg, #e8774f, #c79f8a 45%, #6fa7a3 75%, #3f8d8f); }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  min-height: 100vh; display: grid; place-items: center; padding: 48px 20px;
+  background:
+    radial-gradient(60% 70% at 0% 20%, #f6c9b499, transparent 70%),
+    radial-gradient(55% 65% at 100% 10%, #b7d6d299, transparent 70%),
+    #fcfcfb;
+  color: var(--ink); font: 400 17px/1.5 'Inter', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.source { width: min(560px, 100%); text-align: center; }
+.source-mark { display: block; width: fit-content; margin: 0 auto 28px; }
+.source-mark img { display: block; width: 46px; height: auto; }
+.source-label {
+  display: inline-block; margin: 0 0 18px; padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px;
+  background: #ffffffb3; color: #444; font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+}
+h1 {
+  margin: 0 0 14px; font: 600 clamp(34px, 6vw, 48px)/1.05 'Kinso Inter Tight', 'Inter', -apple-system, system-ui, sans-serif;
+  letter-spacing: -.035em; text-wrap: balance;
+}
+.source-lead { margin: 0 auto 28px; max-width: 30em; color: var(--soft); text-wrap: pretty; }
+.source-price { margin: 0 0 16px; font-size: 20px; color: #2a2a2a; }
+.source-price strong {
+  font: 600 30px/1 'Kinso Inter Tight', 'Inter', system-ui, sans-serif; letter-spacing: -.02em;
+  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.source-pill {
+  display: inline-flex; align-items: center; gap: 8px; padding: 11px 26px; border: 0; border-radius: 999px;
+  background: #0d0d0d; color: #fff; font: 500 15px/1.2 'Inter', -apple-system, system-ui, sans-serif; cursor: pointer;
+  box-shadow: 0 1px 1px #0000000a, 0 6px 16px -6px #00000059; transition: transform .15s ease, opacity .15s ease;
+}
+.source-pill:hover { transform: translateY(-1px); }
+.source-pill:disabled { opacity: .55; cursor: default; transform: none; }
+.source-small { margin: 14px 0 0; color: var(--soft); font-size: 13px; min-height: 1.5em; }
+.source-small a { color: inherit; }
+.source-foot { margin-top: 44px; }
+.source-line {
+  display: flex; align-items: center; gap: 10px; margin: 0 auto; padding: 8px 8px 8px 16px; text-align: left;
+  border: 1px solid var(--line); border-radius: 12px; background: #fff; box-shadow: 0 8px 24px -14px #0000004d;
+}
+.source-line code {
+  flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 14px/1.6 ui-monospace, 'SF Mono', Menlo, monospace;
+  color: #1a1a1a; user-select: all;
+}
+.source-line button {
+  flex: none; padding: 8px 16px; border: 0; border-radius: 8px; background: #0d0d0d; color: #fff;
+  font: 500 13px/1.2 'Inter', -apple-system, system-ui, sans-serif; cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) { .source-pill { transition: none; } }
